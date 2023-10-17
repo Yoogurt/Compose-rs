@@ -1,18 +1,26 @@
 #![allow(warnings)]
 
 use std::hash::Hash;
+use std::default::Default as STDefault;
 use minifb::{Key, Scale, ScaleMode, Window, WindowOptions};
 use skia_safe::{
     surface, surfaces, AlphaType, Color, Color4f, ColorSpace, ColorType, ImageInfo, Rect, Surface,
 };
 use std::time::Duration;
-use compose::foundation::{Composer};
+use skia_safe::canvas::lattice::RectType::Default;
+use compose::Box;
+use compose::foundation::{Composer, Modifier};
 use compose_macro::Compose;
 
 #[Compose]
-fn test(param1: i32, param2: u64, param3: Box<u64>) {
-    let mut current_composer : &Composer = current_composer;
-    println!("hello world");
+fn test() {
+    println!("test {}", current_composer.hash.borrow());
+    Box! {
+        let a = 123;
+    }
+
+
+    // println!("hello world 2");
 }
 
 
@@ -74,5 +82,5 @@ fn test(param1: i32, param2: u64, param3: Box<u64>) {
 // }
 
 fn main() {
-    test(1, 2, Box::new(3));
+    test();
 }

@@ -1,5 +1,4 @@
-impl Default for LayoutNode {
-    fn default() -> Self {
-        LayoutNode {}
-    }
+pub struct LayoutNode {
+    children: Vec<Box<LayoutNode>>,
+    modifier: Modifier,
 }

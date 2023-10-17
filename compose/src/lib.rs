@@ -1,6 +1,2 @@
-include!("foundation/mod.rs");
-
-#[test]
-fn test() {
-    let a = foundation::LayoutNode::default();
-}
+pub mod foundation;
+pub mod widgets;

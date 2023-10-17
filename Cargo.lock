@@ -115,6 +115,9 @@ dependencies = [
 [[package]]
 name = "compose"
 version = "0.1.0"
+dependencies = [
+ "compose_macro",
+]
 
 [[package]]
 name = "compose_macro"

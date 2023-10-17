@@ -10,21 +10,30 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bab96035-0d90-458a-ae88-8c7bdab60e45" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/Cargo.lock" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/Cargo.toml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/composer.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/layout_node.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/lib.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose_macro/Cargo.lock" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose_macro/Cargo.toml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose_macro/src/lib.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/composer_impl.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/internal/measurable_layout.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/internal/mod.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/layout_node_guard.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/layout_node_guard_impl.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/layout_node_impl.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/layout_result.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/layout_result_impl.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/measurable.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/modifier.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/modifier_impl.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/test.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/widgets/box.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/widgets/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/compose/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/compose/Cargo.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/composer.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/composer.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_node.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_node.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose_macro/src/lib.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose_macro/src/lib.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,7 +57,7 @@
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="ProjectErrors" />
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 2
@@ -58,25 +67,25 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Cargo.Run Compose-rs [Compose-rs].executor": "Run",
-    "Cargo.Run.executor": "Run",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "WebServerToolWindowFactoryState": "false",
-    "git-widget-placeholder": "master",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
-    "org.rust.disableDetachedFileInspection/Users/mariklin/RustroverProjects/Compose-rs/target/debug/build/opencv-7185ca1168df2528/out/opencv/core.rs": "true",
-    "settings.editor.selected.configurable": "language.rust.build.tool.cargo",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Cargo.Run Compose-rs [Compose-rs].executor&quot;: &quot;Run&quot;,
+    &quot;Cargo.Run.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
+    &quot;org.rust.disableDetachedFileInspection/Users/mariklin/RustroverProjects/Compose-rs/target/debug/build/opencv-7185ca1168df2528/out/opencv/core.rs&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;language.rust.cargo.check&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/compose/src/foundation" />
@@ -158,7 +167,9 @@
       <workItem from="1697167801195" duration="27000" />
       <workItem from="1697167868388" duration="6000" />
       <workItem from="1697171602610" duration="273000" />
-      <workItem from="1697171881221" duration="14776000" />
+      <workItem from="1697171881221" duration="18961000" />
+      <workItem from="1697425212805" duration="14004000" />
+      <workItem from="1697460364331" duration="3821000" />
     </task>
     <servers />
   </component>
@@ -186,7 +197,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/compose_macro/src/lib.rs</url>
-          <line>17</line>
+          <line>18</line>
           <option name="timeStamp" value="5" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">

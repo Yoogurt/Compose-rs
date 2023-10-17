@@ -1,11 +1,8 @@
-use crate::foundation::Composer;
+use std::any::Any;
 
-impl Composer {
-    pub fn skip_compose() {
+pub struct Composer {
+    pub hash: RefCell<i64>,
+    pub depth: RefCell<usize>,
 
-    }
-
-    pub fn skip_to_group() {
-
-    }
+    pub(crate) slot_table: Vec<Box<dyn Any>>,
 }
