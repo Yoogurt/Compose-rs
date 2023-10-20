@@ -1,4 +1,7 @@
-use super::{LayoutResult, LayoutNode};
+use std::cell::RefCell;
+use std::ops::{ DerefMut};
+use std::rc::Rc;
+use super::{Placeable, LayoutNode, MeasurePolicyDelegate, Modifier, Constraint, MeasureResult, InnerPlaceable};
 use super::Measurable;
 
 impl Default for LayoutNode {
@@ -6,12 +9,65 @@ impl Default for LayoutNode {
         LayoutNode {
             children: Default::default(),
             modifier: Default::default(),
+            measure_policy: None,
+            parent_data: None,
+            measure_result: Default::default(),
+            inner_layout_node: InnerPlaceable::new(),
         }
     }
 }
 
-impl Measurable for LayoutNode {
-    fn perform_measure(&self) -> LayoutResult {
-        todo!()
+impl   Measurable for LayoutNode {
+    fn measure(&mut self, constraint: &Constraint) -> Placeable {
+        Placeable {
+            width: 0,
+            height:0,
+            measured_width: 0,
+            measured_height: 0
+        }
+    }
+}
+
+impl LayoutNode {
+    pub fn update(&mut self,
+                  modifier: Modifier,
+                  measure_policy: MeasurePolicyDelegate) {
+        self.modifier = modifier;
+        self.measure_policy = Some(measure_policy);
+    }
+
+    fn layout(width: usize, height: usize) -> MeasureResult{
+        MeasureResult {
+            width,
+            height
+        }
+    }
+
+    pub fn handle_measured_result(&mut self,measure_result: MeasureResult) {
+        dbg!("layout node measured: {:?}", &measure_result);
+        self.inner_layout_node.measure_result = measure_result;
+    }
+
+    pub(crate) fn adopt_child(&mut self, child: Rc<RefCell<LayoutNode>>) {
+        self.children.push(child);
+    }
+
+    pub fn measure(& self, constraint: &Constraint) -> MeasureResult {
+        let mut children_ref = self.children.iter().map(|child| {
+            child.borrow_mut()
+        }).collect::<Vec<_>>();
+
+        let children = children_ref.iter_mut().map(|value| {
+            value.deref_mut() as &mut dyn Measurable
+        }).collect::<Vec<_>>();
+
+        match self.measure_policy {
+            Some(measure_policy_delegate) => {
+                return measure_policy_delegate(&children[..], constraint)
+            }
+            _ => {}
+        }
+
+        Self::layout(0,0)
     }
 }

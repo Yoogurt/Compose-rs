@@ -1,6 +1,3 @@
-use crate::foundation::{Modifier, ComposeAttribute, LayoutNodeGuard};
-use std::pin::Pin;
-
 #[macro_export]
 macro_rules! Box {
     ( $modifier_expr:tt, $($fn_body:tt)* ) => {
@@ -16,10 +13,11 @@ macro_rules! Box {
     };
 }
 
+fn box_measure_policy(measurable: &[&mut dyn Measurable], constraint: &Constraint) -> MeasureResult {
+    MeasureResult::default()
+}
 
-#[Compose(Mutable)]
-pub fn box_internal(modifier: Modifier, child: fn()) {
-    let node: LayoutNodeGuard<'_> = current_composer.begin_node();
-
-    let node2 = node;
+#[Compose]
+pub fn box_internal(modifier: Modifier, content: fn()) {
+    layout(modifier, box_measure_policy, content);
 }

@@ -1,47 +1,130 @@
 use std::any::{Any, TypeId};
-use std::cell::RefCell;
-use std::pin::Pin;
-use crate::foundation::{Composer, LayoutNode, LayoutNodeGuard};
+use std::cell::{Cell, RefCell};
+use std::rc::Rc;
+use crate::foundation::{Composer, ComposerInner, Constraint, LayoutNode, LayoutNodeGuard, SlotTableType};
+use crate::foundation::SlotTableType::LayoutNodeType;
 
-impl Composer {
-    pub fn begin_group(&mut self, hash: i64) {
-        *self.depth.get_mut() += 1;
-        *self.hash.get_mut() ^= hash;
+thread_local! {
+    pub static COMPOSER : Composer = Composer::default()
+}
+
+impl ComposerInner {
+    pub fn dispatch_layout_to_first_layout_node(&self, constraint: &Constraint) {
+        for slot_table_type in &self.slot_table.data {
+            match slot_table_type {
+                SlotTableType::LayoutNodeType(layout_node) => {
+                    let measure_result = layout_node.borrow().measure(constraint);
+                    layout_node.borrow_mut().handle_measured_result(measure_result);
+                    return
+                }
+                _=> {}
+            }
+        }
     }
 
-    pub fn begin_node(&mut self) -> LayoutNodeGuard {
-        let node = LayoutNode::default();
-        self.slot_table.push(Box::new(node));
+    pub fn begin_group(&mut self, hash: i64) {
+        self.hash ^= hash;
+        self.depth += 1;
 
-        let node = self.slot_table.last().unwrap();
-        Self::validate_type(node, TypeId::of::<LayoutNode>());
-
-        LayoutNodeGuard::new(node.downcast_ref().unwrap(), self)
+        self.slot_table.push(SlotTableType::Group {
+            hash: self.hash,
+            depth: self.depth
+        });
     }
 
     pub fn end_group(&mut self, hash: i64) {
-        *self.depth.get_mut() -= 1;
-        *self.hash.get_mut() ^= hash;
+        self.depth -= 1;
+        self.hash ^= hash;
+    }
+
+    pub fn begin_node(&mut self) -> Rc<RefCell<LayoutNode>> {
+        let node = LayoutNode::default();
+        let node = self.slot_table.push(LayoutNodeType(Rc::new(RefCell::new(node))));
+
+        match node {
+            SlotTableType::LayoutNodeType(node) => {
+                self.layout_node_stack.push(node.clone());
+                return node.clone();
+            }
+            _ => {
+                panic!("unexpect type")
+            }
+        }
+    }
+
+    pub fn end_node(&mut self) {
+        let current = self.layout_node_stack.pop();
+
+        match current {
+            None => {
+                panic!("unexpect current node no found")
+            }
+
+            Some(current) => {
+                if let Some(parent) = self.layout_node_stack.last() {
+                    parent.borrow_mut().adopt_child(current);
+                }
+            }
+        }
+    }
+}
+
+impl Composer {
+    pub fn dispatch_layout_to_first_layout_node(constraint: &Constraint) {
+        COMPOSER.with(|local_composer| {
+            local_composer.inner.borrow().dispatch_layout_to_first_layout_node(constraint);
+        })
+    }
+
+    pub fn begin_group(hash: i64) {
+        COMPOSER.with(|local_composer| {
+            local_composer.inner.borrow_mut().begin_group(hash);
+        })
+    }
+
+    pub fn begin_node() -> LayoutNodeGuard {
+        COMPOSER.with(|local_composer| {
+            LayoutNodeGuard::new(local_composer.inner.borrow_mut().begin_node())
+        })
+    }
+
+    pub fn end_node(_guard: LayoutNodeGuard) {
+        COMPOSER.with(|local_composer| {
+            local_composer.inner.borrow_mut().end_node();
+        })
+    }
+
+    pub fn end_group(hash: i64) {
+        COMPOSER.with(|local_composer| {
+            local_composer.inner.borrow_mut().end_group(hash);
+        })
     }
 
     pub fn validate_group(&self) -> bool {
-        return *self.depth.borrow() == 0 && *self.hash.borrow() == 0;
+        // return *self.depth.borrow() == 0 && *self.hash.borrow() == 0;
+        return true;
     }
 
     pub fn skip_compose() {}
 
     pub fn skip_to_group() {}
-
-    fn validate_type(target: impl AsRef<dyn Any>, expect: std::any::TypeId) {
-        assert_eq!(target.as_ref().type_id(), expect);
-    }
 }
 
 impl Default for Composer {
     fn default() -> Self {
         Composer {
-            hash: RefCell::new(0),
-            depth: RefCell::new(0),
+            inner: RefCell::new(Default::default()),
+        }
+    }
+}
+
+impl Default for ComposerInner {
+    fn default() -> Self {
+        ComposerInner {
+            hash: 0,
+            depth: 0,
+            insertion: false,
+            layout_node_stack: Default::default(),
             slot_table: Default::default(),
         }
     }

@@ -1,7 +1,13 @@
 #![allow(warnings)]
 
+mod attribute_parser;
+mod signature_checker;
+mod function_params_collector;
+mod hash_code_generator;
+
 use proc_macro::{Span, TokenStream, TokenTree};
 use std::collections::HashSet;
+use std::fmt::format;
 use std::process::id;
 use lazy_static::lazy_static;
 use quote::{quote, ToTokens};
@@ -9,156 +15,73 @@ use rand::random;
 use syn::*;
 use std::sync::RwLock;
 use syn::spanned::Spanned;
-
-lazy_static! {
-    static ref COMPOSER_HASH : RwLock<HashSet<i64>> = RwLock::new(HashSet::new());
-}
+use crate::attribute_parser::parse_attribute;
+use crate::signature_checker::verify_signature;
+use crate::function_params_collector::collect_function_params;
+use crate::hash_code_generator::generate_hash_code;
 
 #[proc_macro_attribute]
 pub fn Compose(attribute: TokenStream, funtion: TokenStream) -> TokenStream {
     let function = parse_macro_input!(funtion as ItemFn);
-    // dbg!(&tokens);
-    let attribute = attribute.into_iter().map_while(|value| {
-        match value {
-            TokenTree::Ident(ident) => {
-                ident.span().source_text()
-            }
-            _ => {
-                None
-            }
-        }
-    }).collect::<HashSet<String>>();
+    let attribute = parse_attribute(attribute);
 
-    let mutable_composer_export = if attribute.contains(&"Mutable".to_owned()) {
-        quote! {
-            let current_composer: &mut compose::foundation::Composer = current_composer;
-        }
-    } else {
-        quote! {
-            let current_composer: & compose::foundation::Composer = current_composer;
-        }
-    };
+    let mutable_composer_export =
+        attribute.compose_mutable_descriptor();
 
     let signature = &function.sig;
-
-    if let Some(_) = signature.asyncness {
-        let error = syn::Error::new_spanned(&function.sig.asyncness,
-                                            "Compose function can not be async");
-        return error.to_compile_error().into();
-    }
-    if !signature.generics.params.is_empty() {
-        let error = syn::Error::new_spanned(&signature.generics,
-                                            "Compose function can not have generics types");
-        return error.to_compile_error().into();
-    }
-    if signature.receiver().is_some() {
-        let error = syn::Error::new_spanned(&signature.receiver(),
-                                            "Compose function can not have receiver");
-        return error.to_compile_error().into();
+    match verify_signature(signature) {
+        Err(token_stream) => {
+            return token_stream;
+        }
+        _ => {}
     }
 
-    let function_return = &signature.output;
-    if function_return != &ReturnType::Default {
-        let error = syn::Error::new_spanned(function_return,
-                                            "Compose function should be return nothing");
-        return error.to_compile_error().into();
-    }
-    let function_input = &signature.inputs;
+    let function_inputs_with_type = &signature.inputs;
+    let function_inputs = match collect_function_params(function_inputs_with_type) {
+        Err(error) => {
+            return error;
+        }
+        Ok(result) => { result }
+    };
     let function_visibility = function.vis;
 
-    let function_in_params = {
-        let mut error = Option::<Error>::None;
-        let result = function_input.iter().filter_map(|arg| {
-            if error.is_some() {
-                return None;
-            }
-
-            match arg {
-                FnArg::Typed(pat) => {
-                    match pat.ty.as_ref() {
-                        Type::Path(_) | Type::BareFn(_) => {}
-                        _ => {
-                            error = Some(syn::Error::new_spanned(pat.ty.as_ref(),
-                                                                 "Compose function should own params"));
-                        }
-                    }
-
-                    match pat.pat.as_ref() {
-                        Pat::Ident(ident) => {
-                            Some(&ident.ident)
-                        }
-                        _ => {
-                            None
-                        }
-                    }
-                }
-                FnArg::Receiver(_) => {
-                    None
-                }
-            }
-        }).collect::<Vec<_>>();
-
-        match error {
-            Some(error) => {
-                return error.into_compile_error().into();
-            }
-            _ => {
-                result
-            }
-        }
-    };
-
     let origin_function_name = &signature.ident;
-    let function_name = Ident::new(&format!("__{}__symmetric__", origin_function_name), Span::mixed_site().into());
-
-    let mut hash: i64 = random();
-
-    {
-        let mut composer_hash = COMPOSER_HASH.write().unwrap();
-
-        while composer_hash.contains(&hash) {
-            hash = random();
-        };
-        composer_hash.insert(hash.clone());
-    }
-
+    let function_name = Ident::new(&format!("__{}__compose_synthesis__", origin_function_name), Span::mixed_site().into());
     let function_body = function.block.as_ref();
 
-    dbg!(&mutable_composer_export);
-    let wrapped_function = if !function_in_params.is_empty() {
+    let hash = generate_hash_code();
+
+    let wrapped_function = if !function_inputs.is_empty() {
         (quote! {
          #[inline]
-            #function_visibility fn #function_name(#function_input, current_composer: &mut compose::foundation::Composer) {
-                current_composer.begin_group(#hash);
+            #function_visibility fn #function_name(#function_inputs_with_type) {
+                compose::foundation::Composer::begin_group(#hash);
                 {
-                    #mutable_composer_export
                     #function_body
                 }
-                current_composer.end_group(#hash);
+                compose::foundation::Composer::end_group(#hash);
             }
     })
     } else {
         (quote! {
          #[inline]
-            #function_visibility fn #function_name(current_composer: &mut compose::foundation::Composer) {
-                current_composer.begin_group(#hash);
+            #function_visibility fn #function_name() {
+                compose::foundation::Composer::begin_group(#hash);
                 {
-                    #mutable_composer_export
                     #function_body
                 }
-                current_composer.end_group(#hash);
+                compose::foundation::Composer::end_group(#hash);
             }
     })
     };
 
-    if !function_input.is_empty() {
+    let result = if !function_inputs.is_empty() {
         (quote! {
         #[inline]
-        #function_visibility fn #origin_function_name(#function_input) {
+        #function_visibility fn #origin_function_name(#function_inputs_with_type) {
             #wrapped_function
 
-            let mut __composer = compose::foundation::Composer::default();
-            #function_name(#(#function_in_params),*, &mut __composer);
+            #function_name(#(#function_inputs),*);
         }
     })
     } else {
@@ -167,9 +90,10 @@ pub fn Compose(attribute: TokenStream, funtion: TokenStream) -> TokenStream {
         #function_visibility fn #origin_function_name() {
             #wrapped_function
 
-            let mut __composer = compose::foundation::Composer::default();
-            #function_name(&mut __composer);
+            #function_name();
         }
     })
-    }.into()
+    };
+
+    result.into()
 }

@@ -1,20 +1,21 @@
-use std::ops::Deref;
-use super::{Composer, LayoutNode, LayoutNodeGuard};
+#![allow(warnings)]
+use std::cell::{Ref, RefMut, RefCell};
+use std::ops::{Deref, DerefMut};
+use super::{LayoutNode, LayoutNodeGuard};
+use std::rc::Rc;
 
-impl<'a> LayoutNodeGuard<'a> {
-    pub(crate) fn new(node: &'a LayoutNode, composer: &'a Composer) -> LayoutNodeGuard<'a> {
+impl LayoutNodeGuard {
+    pub(crate) fn new(layout_node: Rc<RefCell<LayoutNode>>) -> LayoutNodeGuard {
         LayoutNodeGuard {
-            node,
-            composer,
-            _data: Default::default()
+            inner: layout_node
         }
     }
-}
 
-impl Deref for LayoutNodeGuard<'_> {
-    type Target = LayoutNode;
+    pub(crate) fn borrow(&self) -> Ref<'_, LayoutNode> {
+        return self.inner.borrow();
+    }
 
-    fn deref(&self) -> &Self::Target {
-        self.node
+    pub(crate) fn borrow_mut(&self) -> RefMut<'_, LayoutNode> {
+        return self.inner.borrow_mut();
     }
 }

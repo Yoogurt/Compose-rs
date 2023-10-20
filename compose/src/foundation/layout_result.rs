@@ -1,6 +1,6 @@
-pub(crate) struct LayoutResult {
-    left: i32,
-    top: i32,
-    right: i32,
-    bottom: i32,
+pub struct Placeable {
+    pub width: usize,
+    pub height: usize,
+    pub measured_width: usize,
+    pub measured_height: usize,
 }
