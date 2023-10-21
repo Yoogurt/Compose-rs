@@ -20,6 +20,7 @@ include!("canvas.rs");
 include!("layout_node_wrapper.rs");
 include!("outer_placeable.rs");
 include!("layout_state.rs");
+include!("layout_receiver.rs");
 
 pub mod bridge;
 pub mod measure_result_impl;
@@ -34,3 +35,4 @@ pub(crate) mod inner_placeable_impl;
 pub mod canvas_impl;
 pub(crate) mod outer_placeable_impl;
 pub(crate) mod layout_node_wrapper_impl;
+pub mod layout_receiver_impl;

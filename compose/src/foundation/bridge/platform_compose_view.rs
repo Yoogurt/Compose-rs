@@ -8,8 +8,7 @@ pub struct MacOSComposeView {
 
 impl MacOSComposeView {
     pub fn new() -> MacOSComposeView {
-        let mut root_layout_node = LayoutNode::default();
-        
+        let mut root_layout_node = LayoutNode::new();
 
         MacOSComposeView {
             root: root_layout_node,

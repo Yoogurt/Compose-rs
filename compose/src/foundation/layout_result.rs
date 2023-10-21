@@ -3,4 +3,7 @@ pub struct Placeable {
     pub height: usize,
     pub measured_width: usize,
     pub measured_height: usize,
+
+    left: usize,
+    top: usize,
 }

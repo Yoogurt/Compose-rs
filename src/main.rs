@@ -37,10 +37,10 @@ fn run_skia() {
     )
         .unwrap();
 
-    let mut buffer = [0u32; 800 * 500];
+    let mut buffer = vec![0;800 * 500];
     const BYTE_PER_PIXEL: usize = 4;
 
-    test();
+    // test();
 
     let image_info = ImageInfo::new(
         (800, 500),
@@ -61,14 +61,14 @@ fn run_skia() {
     let mut painter = skia_safe::Paint::default();
     painter.set_color(<u32 as Into<Color>>::into(0xff0000ffu32));
 
-    let canvas = new_canvas(surface.canvas());
+    let mut canvas = new_canvas(surface.canvas());
     let mut compose_view = MacOSComposeView::new();
 
     while window.is_open() && !window.is_key_down(Key::Escape) {
         std::thread::sleep(Duration::from_millis(500));
 
         compose_view.dispatch_measure(800, 500);
-        compose_view.dispatch_draw(&canvas);
+        compose_view.dispatch_draw(&mut canvas);
     }
 }
 

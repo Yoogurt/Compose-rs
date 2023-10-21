@@ -1,10 +1,23 @@
 use std::cell::RefCell;
 use std::ops::{DerefMut};
 use std::rc::Rc;
-use super::{Measurable, Canvas, Placeable, LayoutNode, MeasurePolicyDelegate, Modifier, Constraint, MeasureResult, InnerPlaceable, OuterPlaceable, LayoutNodeWrapper, LayoutState};
+use super::{Measurable, Canvas, Placeable, LayoutNode, MeasurePolicyDelegate, Modifier, Constraint, MeasureResult, InnerPlaceable, OuterPlaceable, LayoutNodeWrapper, LayoutState, LayoutReceiver};
 
-impl Default for LayoutNode {
-    fn default() -> Self {
+impl Measurable for LayoutNode {
+    fn measure(&mut self, constraint: &Constraint) -> Placeable {
+        Placeable {
+            width: 0,
+            height: 0,
+            measured_width: 0,
+            measured_height: 0,
+            left: 0,
+            top: 0,
+        }
+    }
+}
+
+impl LayoutNode {
+    pub(crate) fn new() -> Self {
         let node = LayoutNode {
             children: Default::default(),
             modifier: Default::default(),
@@ -20,20 +33,7 @@ impl Default for LayoutNode {
 
         node
     }
-}
 
-impl Measurable for LayoutNode {
-    fn measure(&mut self, constraint: &Constraint) -> Placeable {
-        Placeable {
-            width: 0,
-            height: 0,
-            measured_width: 0,
-            measured_height: 0,
-        }
-    }
-}
-
-impl LayoutNode {
     pub fn update(&mut self,
                   modifier: Modifier,
                   measure_policy: MeasurePolicyDelegate) {
@@ -62,13 +62,14 @@ impl LayoutNode {
             child.borrow_mut()
         }).collect::<Vec<_>>();
 
-        let children = children_ref.iter_mut().map(|value| {
+        let mut children = children_ref.iter_mut().map(|value| {
             value.deref_mut() as &mut dyn Measurable
         }).collect::<Vec<_>>();
 
         match self.measure_policy {
             Some(measure_policy_delegate) => {
-                return measure_policy_delegate(&children[..], constraint);
+                let layout_receiver = LayoutReceiver::new();
+                return measure_policy_delegate(layout_receiver, &mut children[..], constraint);
             }
             _ => {}
         }

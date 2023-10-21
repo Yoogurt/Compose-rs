@@ -1,9 +1,11 @@
 mod macos_canvas_impl;
+
 pub mod canvas_impl {
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
     use crate::foundation::canvas_impl::macos_canvas_impl::MacOSCanvas;
 
-    #[cfg(target_os = "macos")]
-    pub fn new_canvas<'a>(skia_canvas: &'a skia_safe::Canvas) -> MacOSCanvas<'a>{
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
+    pub fn new_canvas(skia_canvas: &mut skia_safe::Canvas) -> MacOSCanvas {
         MacOSCanvas::new(skia_canvas)
     }
 }

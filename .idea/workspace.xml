@@ -9,32 +9,22 @@
     <cargoProject FILE="$PROJECT_DIR$/compose/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bab96035-0d90-458a-ae88-8c7bdab60e45" name="Changes" comment="foundation">
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/bridge/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/bridge/platform_compose_view.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/bridge/root_measure_policy.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/canvas.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/canvas_impl/macos_canvas_impl.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/canvas_impl/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/geometry/mod.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/geometry/rect.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/geometry/rect_impl.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/layout_node_wrapper.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/layout_node_wrapper_impl.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/layout_state.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/measure_result_impl.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/outer_placeable.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/outer_placeable_impl.rs" afterDir="false" />
+    <list default="true" id="bab96035-0d90-458a-ae88-8c7bdab60e45" name="Changes" comment="fix measure policy">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/compose/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/compose/Cargo.toml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/constraint_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/constraint_impl.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_node.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_node.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/bridge/platform_compose_view.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/bridge/platform_compose_view.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/bridge/root_measure_policy.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/bridge/root_measure_policy.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/composer_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/composer_impl.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/geometry/offset.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/geometry/offset.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/geometry/offset_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/geometry/offset_impl.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_node_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_node_impl.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_receiver.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_receiver.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_receiver_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_receiver_impl.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/measurable.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/measurable.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/measure_result_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/measure_result_impl.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/outer_placeable.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/outer_placeable.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/outer_placeable_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/outer_placeable_impl.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/widgets/box.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/widgets/box.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -79,6 +69,7 @@
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/Project/Compose-rs&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -135,7 +126,7 @@
       <option name="command" value="run --package Compose-rs --bin Compose-rs" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <option name="emulateTerminal" value="true" />
-      <option name="channel" value="NIGHTLY" />
+      <option name="channel" value="DEFAULT" />
       <option name="requiredFeatures" value="true" />
       <option name="allFeatures" value="false" />
       <option name="withSudo" value="false" />
@@ -214,6 +205,9 @@
       <workItem from="1697425212805" duration="14004000" />
       <workItem from="1697460364331" duration="48730000" />
       <workItem from="1697870815207" duration="6089000" />
+      <workItem from="1697888491971" duration="1641000" />
+      <workItem from="1697890146187" duration="4147000" />
+      <workItem from="1697951804927" duration="3782000" />
     </task>
     <task id="LOCAL-00001" summary="init">
       <option name="closed" value="true" />
@@ -231,7 +225,15 @@
       <option name="project" value="LOCAL" />
       <updated>1697793789017</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="fix measure policy">
+      <option name="closed" value="true" />
+      <created>1697894098761</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1697894098761</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -251,7 +253,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="init" />
     <MESSAGE value="foundation" />
-    <option name="LAST_COMMIT_MESSAGE" value="foundation" />
+    <MESSAGE value="fix measure policy" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix measure policy" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

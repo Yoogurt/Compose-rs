@@ -1,13 +1,12 @@
-use crate::foundation::{LayoutNode, LayoutReceiver};
+use crate::foundation::{LayoutNode, LayoutReceiver, MeasureResult};
 
 impl LayoutReceiver {
-    pub(crate) fn new(layout_node: &mut LayoutNode) {
-        return  LayoutReceiver {
-            layout_node
+    pub(crate) fn new() -> LayoutReceiver {
+        LayoutReceiver {
         }
     }
 
-    pub fn layout(width: usize, height: usize) {
-
+    pub fn layout(&self, width: usize, height: usize) -> MeasureResult {
+        (width, height).into()
     }
 }

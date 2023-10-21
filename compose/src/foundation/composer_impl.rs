@@ -38,7 +38,7 @@ impl ComposerInner {
     }
 
     pub fn begin_node(&mut self) -> Rc<RefCell<LayoutNode>> {
-        let node = LayoutNode::default();
+        let node = LayoutNode::new();
         let node = self.slot_table.push(LayoutNodeType(Rc::new(RefCell::new(node))));
 
         match node {

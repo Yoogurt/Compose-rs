@@ -13,8 +13,8 @@ macro_rules! Box {
     };
 }
 
-fn box_measure_policy(measurable: &[&mut dyn Measurable], constraint: &Constraint) -> MeasureResult {
-    MeasureResult::default()
+fn box_measure_policy(layout_receiver: LayoutReceiver, measurable: &mut [&mut dyn Measurable], constraint: &Constraint) -> MeasureResult {
+    layout_receiver.layout(0,0)
 }
 
 #[Compose]

@@ -1,5 +1,5 @@
 pub trait  Canvas {
-     fn save(&self);
-    fn restore(&self);
+     fn save(&mut self);
+    fn restore(&mut self);
 
 }
