@@ -1,5 +1,4 @@
 #![allow(warnings)]
-#![feature(concat_idents)]
 
 use std::hash::Hash;
 use std::default::Default as STDefault;
@@ -11,12 +10,16 @@ use std::time::Duration;
 use skia_safe::canvas::lattice::RectType::Default;
 use compose::Box;
 use compose::foundation::{Composer, Constraint, Modifier};
+use compose::foundation::bridge::platform_compose_view::MacOSComposeView;
 use compose_macro::Compose;
+use compose::foundation::canvas_impl::canvas_impl::new_canvas;
 
 #[Compose]
 fn test() {
     Box! {
+        Box! {
 
+        }
     }
 }
 
@@ -37,6 +40,8 @@ fn run_skia() {
     let mut buffer = [0u32; 800 * 500];
     const BYTE_PER_PIXEL: usize = 4;
 
+    test();
+
     let image_info = ImageInfo::new(
         (800, 500),
         ColorType::BGRA8888,
@@ -56,10 +61,14 @@ fn run_skia() {
     let mut painter = skia_safe::Paint::default();
     painter.set_color(<u32 as Into<Color>>::into(0xff0000ffu32));
 
+    let canvas = new_canvas(surface.canvas());
+    let mut compose_view = MacOSComposeView::new();
+
     while window.is_open() && !window.is_key_down(Key::Escape) {
         std::thread::sleep(Duration::from_millis(500));
 
-        Composer::dispatch_layout_to_first_layout_node(&Constraint::unbounded());
+        compose_view.dispatch_measure(800, 500);
+        compose_view.dispatch_draw(&canvas);
     }
 }
 

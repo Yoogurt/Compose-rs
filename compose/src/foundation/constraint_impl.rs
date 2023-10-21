@@ -20,12 +20,19 @@ impl Constraint {
         }
     }
 
-    pub const fn fixed(width : usize, height: usize) -> Constraint{
+    pub const fn fixed(width: usize, height: usize) -> Constraint {
         Constraint {
             min_width: width,
             max_width: width,
             min_height: height,
-            max_height: height
+            max_height: height,
         }
+    }
+}
+
+impl PartialEq for Constraint {
+    fn eq(&self, other: &Self) -> bool {
+        self.min_width == other.min_width && self.max_width == other.max_width &&
+            self.min_height == other.min_height && self.max_height == other.max_height
     }
 }

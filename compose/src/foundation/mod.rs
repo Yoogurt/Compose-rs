@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
+use skia_safe::Canvas as SkiaCanvas;
 
 include!("composer.rs");
 include!("layout_node.rs");
@@ -15,7 +16,13 @@ include!("measure_result.rs");
 include!("parent_data.rs");
 include!("measured.rs");
 include!("inner_placeable.rs");
+include!("canvas.rs");
+include!("layout_node_wrapper.rs");
+include!("outer_placeable.rs");
+include!("layout_state.rs");
 
+pub mod bridge;
+pub mod measure_result_impl;
 pub mod composer_impl;
 pub mod layout_node_impl;
 pub mod modifier_impl;
@@ -24,3 +31,6 @@ pub mod layout_node_guard_impl;
 pub(crate) mod slot_table_impl;
 pub mod constraint_impl;
 pub(crate) mod inner_placeable_impl;
+pub mod canvas_impl;
+pub(crate) mod outer_placeable_impl;
+pub(crate) mod layout_node_wrapper_impl;

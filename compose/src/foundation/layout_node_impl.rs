@@ -1,29 +1,34 @@
 use std::cell::RefCell;
-use std::ops::{ DerefMut};
+use std::ops::{DerefMut};
 use std::rc::Rc;
-use super::{Placeable, LayoutNode, MeasurePolicyDelegate, Modifier, Constraint, MeasureResult, InnerPlaceable};
-use super::Measurable;
+use super::{Measurable, Canvas, Placeable, LayoutNode, MeasurePolicyDelegate, Modifier, Constraint, MeasureResult, InnerPlaceable, OuterPlaceable, LayoutNodeWrapper, LayoutState};
 
 impl Default for LayoutNode {
     fn default() -> Self {
-        LayoutNode {
+        let node = LayoutNode {
             children: Default::default(),
             modifier: Default::default(),
             measure_policy: None,
             parent_data: None,
             measure_result: Default::default(),
-            inner_layout_node: InnerPlaceable::new(),
-        }
+            inner_placeable: InnerPlaceable::new(),
+            inner_layout_node: LayoutNodeWrapper::new(),
+            outer_placeable: OuterPlaceable::new(),
+            outer_layout_node: LayoutNodeWrapper::new(),
+            layout_state: Default::default(),
+        };
+
+        node
     }
 }
 
-impl   Measurable for LayoutNode {
+impl Measurable for LayoutNode {
     fn measure(&mut self, constraint: &Constraint) -> Placeable {
         Placeable {
             width: 0,
-            height:0,
+            height: 0,
             measured_width: 0,
-            measured_height: 0
+            measured_height: 0,
         }
     }
 }
@@ -36,23 +41,23 @@ impl LayoutNode {
         self.measure_policy = Some(measure_policy);
     }
 
-    fn layout(width: usize, height: usize) -> MeasureResult{
+    fn layout(width: usize, height: usize) -> MeasureResult {
         MeasureResult {
             width,
-            height
+            height,
         }
     }
 
-    pub fn handle_measured_result(&mut self,measure_result: MeasureResult) {
-        dbg!("layout node measured: {:?}", &measure_result);
-        self.inner_layout_node.measure_result = measure_result;
+    pub fn handle_measured_result(&mut self, measure_result: MeasureResult) {
+        dbg!(&measure_result);
+        self.inner_placeable.measure_result = measure_result;
     }
 
     pub(crate) fn adopt_child(&mut self, child: Rc<RefCell<LayoutNode>>) {
         self.children.push(child);
     }
 
-    pub fn measure(& self, constraint: &Constraint) -> MeasureResult {
+    pub fn measure(&self, constraint: &Constraint) -> MeasureResult {
         let mut children_ref = self.children.iter().map(|child| {
             child.borrow_mut()
         }).collect::<Vec<_>>();
@@ -63,11 +68,20 @@ impl LayoutNode {
 
         match self.measure_policy {
             Some(measure_policy_delegate) => {
-                return measure_policy_delegate(&children[..], constraint)
+                return measure_policy_delegate(&children[..], constraint);
             }
             _ => {}
         }
 
-        Self::layout(0,0)
+        Self::layout(0, 0)
     }
+
+    pub fn remeasure(&mut self, constraint: &Constraint) -> bool {
+        let outer_placeable = &mut self.outer_placeable;
+        outer_placeable.remeasure(self.layout_state, constraint, |layout_state| {
+            self.layout_state = layout_state;
+        })
+    }
+
+    fn draw(canvas: &dyn Canvas) {}
 }
