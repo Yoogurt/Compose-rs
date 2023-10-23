@@ -32,7 +32,7 @@ pub mod layout_node_guard_impl;
 pub(crate) mod slot_table_impl;
 pub mod constraint_impl;
 pub(crate) mod inner_placeable_impl;
-pub mod canvas_impl;
+pub mod drawing;
 pub(crate) mod outer_placeable_impl;
 pub(crate) mod layout_node_wrapper_impl;
 pub mod layout_receiver_impl;
