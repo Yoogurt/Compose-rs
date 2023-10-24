@@ -2,47 +2,53 @@ use std::cell::RefCell;
 use std::mem::MaybeUninit;
 use std::ops::{Deref, DerefMut};
 use std::rc::{Weak, Rc};
-use crate::foundation::{Constraint, InnerPlaceable, MeasureResult, LayoutNode, LayoutNodeWrapper, LayoutNodeWrapperImpl, LayoutReceiver, Measurable, Measured, Placeable, PlaceAction};
+use crate::foundation::{Constraint, InnerCoordinator, MeasureResult, LayoutNode, LayoutNodeWrapper, LayoutNodeWrapperImpl, LayoutReceiver, Measurable, Measured, Placeable, PlaceAction, LayoutNodeLayoutDelegate};
 use crate::foundation::geometry::{IntOffset, IntSize};
 use crate::widgets::layout;
 
 fn error_measure_policy(layout_receiver: LayoutReceiver, children: &mut [&mut dyn Measurable], constraint: &Constraint) -> MeasureResult {
-    panic!("no measure policy provide")
+    panic!("no measure policy provided")
 }
 
-impl InnerPlaceable {
-    pub(crate) fn new() -> InnerPlaceable {
-        InnerPlaceable {
-            children: vec![],
+impl InnerCoordinator {
+    pub(crate) fn new() -> InnerCoordinator {
+        InnerCoordinator {
             measure_policy: error_measure_policy,
+            layout_node_layout_delegate: MaybeUninit::uninit(),
             layout_node_wrapper_impl: LayoutNodeWrapperImpl::new(),
         }
+    }
+
+    pub(crate) fn attach(&mut self, layout_node_layout_delegate: Rc<RefCell<LayoutNodeLayoutDelegate>>) {
+        self.layout_node_layout_delegate = MaybeUninit::new(layout_node_layout_delegate);
     }
 
     pub(crate) fn handle_measured_result(&mut self, measure_result: MeasureResult) {
         dbg!(&measure_result);
         // self.set_measured_size(measure_result);
     }
-
-    pub(crate) fn adopt_child(&mut self, child: Rc<RefCell<LayoutNode>>) {
-        self.children.push(child);
-    }
 }
 
-impl Measurable for InnerPlaceable {
+impl Measurable for InnerCoordinator {
     fn measure(&mut self, constraint: &Constraint) -> &mut dyn Placeable {
         let measure_policy = self.measure_policy;
         let measure_result = {
-            let mut children_ref = self.children.iter().map(|child| {
+            let children = &unsafe {self.layout_node_layout_delegate.assume_init_mut()}.borrow_mut().children;
+
+            let mut children_rc = children.iter().map(|child| {
+                child.borrow_mut().layout_node_layout_delegate.clone()
+            }).collect::<Vec<_>>();
+
+            let mut children_ref_mut = children_rc.iter().map(|child| {
                 child.borrow_mut()
             }).collect::<Vec<_>>();
 
-            let mut children = children_ref.iter_mut().map(|value| {
-                value.deref_mut() as &mut dyn Measurable
+            let mut children_ref_mut = children_ref_mut.iter_mut().map(|child| {
+                child.deref_mut() as &mut dyn Measurable
             }).collect::<Vec<_>>();
 
             let mut layout_receiver = LayoutReceiver::new();
-            measure_policy(layout_receiver, &mut children[..], constraint)
+            measure_policy(layout_receiver, &mut children_ref_mut[..], constraint)
         };
 
         self.handle_measured_result(measure_result);
@@ -50,7 +56,7 @@ impl Measurable for InnerPlaceable {
     }
 }
 
-impl Placeable for InnerPlaceable {
+impl Placeable for InnerCoordinator {
     fn get_width(&self) -> usize {
         self.layout_node_wrapper_impl.get_width()
     }
@@ -76,7 +82,7 @@ impl Placeable for InnerPlaceable {
     }
 }
 
-impl Measured for InnerPlaceable {
+impl Measured for InnerCoordinator {
     fn get_measured_width(&self) -> usize {
         self.layout_node_wrapper_impl.get_measured_width()
     }
@@ -86,7 +92,7 @@ impl Measured for InnerPlaceable {
     }
 }
 
-impl LayoutNodeWrapper for InnerPlaceable {
+impl LayoutNodeWrapper for InnerCoordinator {
     fn layout_node(&self) -> Weak<RefCell<LayoutNode>> {
         self.layout_node_wrapper_impl.layout_node()
     }

@@ -3,9 +3,9 @@ use std::mem::MaybeUninit;
 use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
 use crate::foundation::geometry::{IntOffset, IntSize};
-use super::{Constraint, MeasuredImpl, OuterMeasurePlaceable, LayoutNode, LayoutState, Measurable, Placeable, LayoutNodeWrapper, Measured, PlaceAction, PlaceableImpl, LayoutNodeWrapperImpl};
+use super::{Constraint, MeasuredImpl, OuterCoordinator, LayoutNode, LayoutState, Measurable, Placeable, LayoutNodeWrapper, Measured, PlaceAction, PlaceableImpl, LayoutNodeWrapperImpl};
 
-impl Deref for OuterMeasurePlaceable {
+impl Deref for OuterCoordinator {
     type Target = dyn LayoutNodeWrapper;
 
     fn deref(&self) -> &Self::Target {
@@ -13,15 +13,15 @@ impl Deref for OuterMeasurePlaceable {
     }
 }
 
-impl DerefMut for OuterMeasurePlaceable {
+impl DerefMut for OuterCoordinator {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.layout_node_wrapper
     }
 }
 
-impl OuterMeasurePlaceable {
-    pub(crate) fn new() -> OuterMeasurePlaceable {
-        OuterMeasurePlaceable {
+impl OuterCoordinator {
+    pub(crate) fn new() -> OuterCoordinator {
+        OuterCoordinator {
             layout_node_wrapper: LayoutNodeWrapperImpl::new(),
             layout_node: MaybeUninit::uninit(),
         }
@@ -49,7 +49,7 @@ impl OuterMeasurePlaceable {
     }
 }
 
-impl Measurable for OuterMeasurePlaceable {
+impl Measurable for OuterCoordinator {
     fn measure(&mut self, constraint: &Constraint) -> &mut dyn Placeable {
         self.remeasure(constraint);
         &mut self.layout_node_wrapper

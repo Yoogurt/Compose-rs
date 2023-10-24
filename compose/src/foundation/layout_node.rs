@@ -1,13 +1,14 @@
 #[derive(Debug)]
-pub struct LayoutNode {
+pub(crate) struct LayoutNode {
+    node_chain: NodeChain,
+    layout_node_layout_delegate: Rc<RefCell<LayoutNodeLayoutDelegate>>,
     usage_by_parent: UsageByParent,
-    modifier: Modifier,
-    parent_data: Option<Box<dyn ParentData>>,
-    measure_result: MeasureResult,
-    inner_placeable: Rc<RefCell<InnerPlaceable>>,
-    outer_measurable_placeable: OuterMeasurePlaceable,
-    outer_layout_node: Rc<RefCell<dyn LayoutNodeWrapper>>,
     layout_state: LayoutState,
+}
+
+#[derive(Debug)]
+pub(crate) struct LayoutNodeLayoutDelegate {
+    children: Vec<Rc<RefCell<LayoutNode>>>,
 }
 
 #[derive(Debug)]

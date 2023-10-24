@@ -14,7 +14,7 @@ impl ComposerInner {
         for slot_table_type in &self.slot_table.data {
             match slot_table_type {
                 SlotTableType::LayoutNodeType(layout_node) => {
-                    let measure_result = layout_node.borrow_mut().measure(constraint);
+                    // let measure_result = layout_node.borrow_mut().measure(constraint);
                     // layout_node.borrow_mut().handle_measured_result(measure_result);
                     return
                 }

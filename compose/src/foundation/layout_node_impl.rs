@@ -1,25 +1,37 @@
 use std::cell::RefCell;
-use std::ops::{DerefMut};
+use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
-use super::{Measurable, Canvas, Placeable, LayoutNode, LayoutNodeWrapperImpl, MultiChildrenMeasurePolicy, Modifier, Constraint, MeasureResult, InnerPlaceable, OuterMeasurePlaceable, LayoutNodeWrapper, LayoutState, LayoutReceiver, UsageByParent};
+use super::{Measurable, Canvas, Placeable, LayoutNode, LayoutNodeWrapperImpl, MultiChildrenMeasurePolicy, Modifier, Constraint, MeasureResult, InnerCoordinator, OuterCoordinator, LayoutNodeWrapper, LayoutState, LayoutReceiver, UsageByParent, NodeChain, LayoutNodeLayoutDelegate};
+
+impl Deref for LayoutNode {
+    type Target = NodeChain;
+
+    fn deref(&self) -> &Self::Target {
+        &self.node_chain
+    }
+}
+
+impl DerefMut for LayoutNode {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.node_chain
+    }
+}
 
 impl LayoutNode {
     pub(crate) fn new() -> Rc<RefCell<Self>> {
         let mut node = LayoutNode {
+            node_chain: NodeChain::new(),
+            layout_node_layout_delegate: Rc::new(RefCell::new(LayoutNodeLayoutDelegate::new())),
             usage_by_parent: UsageByParent::NotUsed,
-            modifier: Modifier,
-            parent_data: None,
-            measure_result: Default::default(),
-            inner_placeable: Rc::new(RefCell::new(InnerPlaceable::new())),
-            outer_measurable_placeable: OuterMeasurePlaceable::new(),
-            outer_layout_node: Rc::new(RefCell::new(LayoutNodeWrapperImpl::new())),
             layout_state: Default::default(),
         };
 
         let node = Rc::new(RefCell::new(node));
         {
+            let layout_node_layout_delegate = node.borrow().layout_node_layout_delegate.clone();
+
             let mut node_mut = node.borrow_mut();
-            node_mut.inner_placeable.borrow_mut().attach(Rc::downgrade(&node));
+            node_mut.inner_placeable.borrow_mut().attach(layout_node_layout_delegate);
             let inner_layout_node_wrapper = node_mut.inner_placeable.clone();
             node_mut.outer_measurable_placeable.attach(inner_layout_node_wrapper);
         }
@@ -34,16 +46,14 @@ impl LayoutNode {
 
         self.modifier = modifier;
 
-            let layout_node_wrapper: Rc<RefCell<dyn LayoutNodeWrapper>> = self.inner_placeable.clone();
+        let outer_wrapper = self.modifier.fold_out::<Rc<RefCell<dyn LayoutNodeWrapper>>>(self.inner_placeable.clone(), &mut |modifier, to_wrap| {
+            let mut wrapper = to_wrap;
 
-        // let outer_wrapper = self.modifier.fold_out(layout_node_wrapper, &mut |modifier, to_wrap| {
-        //     let mut wrapper = to_wrap;
-        //
-        //     wrapper
-        // });
+            wrapper
+        });
     }
 
-    pub fn set_measure_policy(& self,
+    pub fn set_measure_policy(&self,
                               measure_policy: MultiChildrenMeasurePolicy) {
         self.inner_placeable.borrow_mut().measure_policy = measure_policy;
     }
@@ -55,8 +65,8 @@ impl LayoutNode {
         }
     }
 
-    pub(crate) fn adopt_child(& self, child: Rc<RefCell<LayoutNode>>) {
-        self.inner_placeable.borrow_mut().adopt_child(child);
+    pub(crate) fn adopt_child(&self, child: Rc<RefCell<LayoutNode>>) {
+        // self.inner_placeable.borrow_mut().adopt_child(child);
     }
 
     pub fn remeasure(&mut self, constraint: &Constraint) -> bool {
@@ -67,8 +77,17 @@ impl LayoutNode {
     fn draw(canvas: &dyn Canvas) {}
 }
 
-impl Measurable for LayoutNode {
+impl LayoutNodeLayoutDelegate {
+    pub(crate) fn new() -> Self {
+        LayoutNodeLayoutDelegate {
+            children: vec![],
+        }
+    }
+}
+
+impl Measurable for LayoutNodeLayoutDelegate {
     fn measure(&mut self, constraint: &Constraint) -> &mut dyn Placeable {
-        self.outer_measurable_placeable.measure(constraint)
+        todo!()
+        // self.outer_measurable_placeable.measure(constraint)
     }
 }

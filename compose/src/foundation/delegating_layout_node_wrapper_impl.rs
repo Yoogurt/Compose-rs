@@ -62,3 +62,14 @@ impl DelegatingLayoutNodeWrapper for DelegatingLayoutNodeWrapperImpl {
         self.modifier = modifier;
     }
 }
+
+impl DelegatingLayoutNodeWrapperImpl {
+    pub(crate) fn new() -> Self {
+        todo!()
+        // DelegatingLayoutNodeWrapperImpl {
+        //     wrapped: Rc::new(RefCell::new(())),
+        //     modifier: Default::default(),
+        //     layout_node_wrapper_impl: LayoutNodeWrapperImpl {},
+        // }
+    }
+}

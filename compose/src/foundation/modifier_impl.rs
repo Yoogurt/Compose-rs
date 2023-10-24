@@ -3,24 +3,24 @@ use crate::foundation::Modifier;
 use std::ops::Add;
 
 impl Modifier {
-    pub fn fold_in<R>(self, initial: R, mut operation: impl FnMut(R, &Modifier) -> R) -> R {
+    pub fn fold_in<R>(&self, initial: R, mut operation: impl FnMut(R, &Modifier) -> R) -> R {
         match self {
             Modifier::Combined { left, right } => {
                 right.fold_in(left.fold_in(initial, &mut operation), operation)
             }
             _ => {
-                operation(initial, &self)
+                operation(initial, self)
             }
         }
     }
 
-    pub fn fold_out<R>(self, initial: R, operation: &mut dyn FnMut(&Modifier, R) -> R) -> R {
+    pub fn fold_out<R>(&self, initial: R, operation: &mut dyn FnMut(&Modifier, R) -> R) -> R {
         match self {
             Modifier::Combined { left, right } => {
                 left.fold_out(right.fold_out(initial, operation), operation)
             }
             _ => {
-                operation(&self, initial)
+                operation(self, initial)
             }
         }
     }
