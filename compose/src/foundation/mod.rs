@@ -21,7 +21,11 @@ include!("layout_node_wrapper.rs");
 include!("outer_placeable.rs");
 include!("layout_state.rs");
 include!("layout_receiver.rs");
+include!("layout_direction.rs");
+include!("delegating_layout_node_wrapper.rs");
+include!("modified_layout_node.rs");
 
+pub mod geometry;
 pub mod bridge;
 pub mod measure_result_impl;
 pub mod composer_impl;
@@ -36,3 +40,5 @@ pub mod drawing;
 pub(crate) mod outer_placeable_impl;
 pub(crate) mod layout_node_wrapper_impl;
 pub mod layout_receiver_impl;
+pub mod measured_impl;
+pub(crate) mod delegating_layout_node_wrapper_impl;

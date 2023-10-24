@@ -28,6 +28,14 @@ impl Constraint {
             max_height: height,
         }
     }
+
+    pub fn width_range(&self) -> RangeInclusive<usize> {
+        self.min_width..=self.max_width
+    }
+
+    pub fn height_range(&self) -> RangeInclusive<usize> {
+        self.min_height..=self.max_height
+    }
 }
 
 impl PartialEq for Constraint {

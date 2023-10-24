@@ -11,8 +11,8 @@ use skia_safe::canvas::lattice::RectType::Default;
 use compose::Box;
 use compose::foundation::{Composer, Constraint, Modifier};
 use compose::foundation::bridge::platform_compose_view::MacOSComposeView;
+use compose::foundation::drawing::canvas_impl::new_canvas;
 use compose_macro::Compose;
-use compose::foundation::canvas_impl::canvas_impl::new_canvas;
 
 #[Compose]
 fn test() {
@@ -24,7 +24,6 @@ fn test() {
 }
 
 fn run_skia() {
-    // test(1, 2);
     let mut window = Window::new(
         "Compose",
         800,
@@ -37,7 +36,7 @@ fn run_skia() {
     )
         .unwrap();
 
-    let mut buffer = vec![0;800 * 500];
+    let mut buffer = vec![0; 800 * 500];
     const BYTE_PER_PIXEL: usize = 4;
 
     // test();

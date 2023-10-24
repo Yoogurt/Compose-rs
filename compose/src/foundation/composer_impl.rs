@@ -1,5 +1,6 @@
 use std::any::{Any, TypeId};
 use std::cell::{Cell, RefCell};
+use crate::foundation::Measurable;
 use std::rc::Rc;
 use crate::foundation::{Composer, ComposerInner, Constraint, LayoutNode, LayoutNodeGuard, SlotTableType};
 use crate::foundation::SlotTableType::LayoutNodeType;
@@ -13,8 +14,8 @@ impl ComposerInner {
         for slot_table_type in &self.slot_table.data {
             match slot_table_type {
                 SlotTableType::LayoutNodeType(layout_node) => {
-                    let measure_result = layout_node.borrow().measure(constraint);
-                    layout_node.borrow_mut().handle_measured_result(measure_result);
+                    let measure_result = layout_node.borrow_mut().measure(constraint);
+                    // layout_node.borrow_mut().handle_measured_result(measure_result);
                     return
                 }
                 _=> {}
@@ -39,7 +40,7 @@ impl ComposerInner {
 
     pub fn begin_node(&mut self) -> Rc<RefCell<LayoutNode>> {
         let node = LayoutNode::new();
-        let node = self.slot_table.push(LayoutNodeType(Rc::new(RefCell::new(node))));
+        let node = self.slot_table.push(LayoutNodeType(node));
 
         match node {
             SlotTableType::LayoutNodeType(node) => {

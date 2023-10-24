@@ -1,7 +1,7 @@
-use crate::foundation::MeasurePolicyDelegate;
+use crate::foundation::MultiChildrenMeasurePolicy;
 
 #[inline]
-pub(crate) fn rootMeasurePolicy() -> MeasurePolicyDelegate {
+pub(crate) fn root_measure_policy() -> MultiChildrenMeasurePolicy {
     |layout_receiver, measurables, constraint| {
         match measurables.len() {
             0 => {
@@ -9,7 +9,7 @@ pub(crate) fn rootMeasurePolicy() -> MeasurePolicyDelegate {
             }
             1 => {
                 let placeable = measurables[0].measure(constraint);
-                (placeable.width, placeable.height).into()
+                (placeable.get_width(), placeable.get_height()).into()
             }
             _ => {
                 let mut max_width = 0;
@@ -17,14 +17,13 @@ pub(crate) fn rootMeasurePolicy() -> MeasurePolicyDelegate {
 
                 let placeables = measurables.into_iter().map(|measurable| {
                     let placeable = measurable.measure(constraint);
-                                max_width = max_width.max(placeable.width);
-                    max_height = max_height.max(placeable.height);
+                                max_width = max_width.max(placeable.get_width());
+                    max_height = max_height.max(placeable.get_height());
                     placeable
                 });
 
                 (max_width, max_height).into()
             }
         }
-
     }
 }

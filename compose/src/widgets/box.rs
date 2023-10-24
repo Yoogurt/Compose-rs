@@ -14,7 +14,18 @@ macro_rules! Box {
 }
 
 fn box_measure_policy(layout_receiver: LayoutReceiver, measurable: &mut [&mut dyn Measurable], constraint: &Constraint) -> MeasureResult {
-    layout_receiver.layout(0,0)
+    let children_count = measurable.len();
+    match children_count {
+        0 => { layout_receiver.layout(constraint.min_width, constraint.min_height) }
+        1 => {
+            let mut placeable = measurable[0].measure(constraint);
+            placeable.place_at((0,0).into(), 0.0, &|_| {});
+            todo!()
+        }
+        _ =>{
+            todo!()
+        }
+    }
 }
 
 #[Compose]

@@ -1,8 +1,11 @@
-use crate::foundation::{LayoutNode, LayoutReceiver, MeasureResult};
+use crate::foundation::{LayoutDirection, LayoutNode, LayoutReceiver, MeasureResult};
 
 impl LayoutReceiver {
     pub(crate) fn new() -> LayoutReceiver {
         LayoutReceiver {
+            density: 1.0,
+            font_scale: 1.0,
+            layout_direction: LayoutDirection::Ltr,
         }
     }
 

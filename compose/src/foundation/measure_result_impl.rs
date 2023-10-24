@@ -8,3 +8,9 @@ use crate::foundation::MeasureResult;
         }
     }
 }
+
+impl From<MeasureResult> for (usize, usize) {
+    fn from(value: MeasureResult) -> Self {
+        (value.width,value.height)
+    }
+}

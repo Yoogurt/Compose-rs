@@ -5,26 +5,52 @@
   </component>
   <component name="CargoProjects">
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
-    <cargoProject FILE="$PROJECT_DIR$/compose_macro/Cargo.toml" />
-    <cargoProject FILE="$PROJECT_DIR$/compose/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="bab96035-0d90-458a-ae88-8c7bdab60e45" name="Changes" comment="fix measure policy">
+    <list default="true" id="f35c522e-8109-41f2-b8c3-469eae6550ac" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/delegating_layout_node_wrapper.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/delegating_layout_node_wrapper_impl.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/geometry/converter.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/geometry/ranges.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/geometry/size.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/geometry/size_impl.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/layout_direction.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/measured_impl.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/modified_layout_node.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/compose/Cargo.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/compose/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/bridge/platform_compose_view.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/bridge/platform_compose_view.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/bridge/root_measure_policy.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/bridge/root_measure_policy.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/composer_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/composer_impl.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/constraint.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/constraint.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/constraint_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/constraint_impl.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/geometry/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/geometry/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/geometry/offset.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/geometry/offset.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/geometry/offset_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/geometry/offset_impl.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/inner_placeable.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/inner_placeable.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/inner_placeable_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/inner_placeable_impl.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_node.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_node.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_node_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_node_impl.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_node_wrapper.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_node_wrapper.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_node_wrapper_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_node_wrapper_impl.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_receiver.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_receiver.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_receiver_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_receiver_impl.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_result.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_result.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_result_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_result_impl.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/measurable.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/measurable.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/measure_result.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/measure_result.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/measure_result_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/measure_result_impl.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/measured.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/measured.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/mod.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/modifier.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/modifier.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/modifier_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/modifier_impl.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/outer_placeable.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/outer_placeable.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/outer_placeable_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/outer_placeable_impl.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/widgets/box.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/widgets/box.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/widgets/layout.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/widgets/layout.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,70 +67,49 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/compose/src/foundation/geometry/offset.rs" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/compose/src/foundation/geometry/size.rs" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/compose/src/foundation/inner_placeable.rs" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/compose/src/foundation/inner_placeable_impl.rs" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/compose/src/foundation/layout_node_wrapper.rs" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/compose/src/foundation/layout_result.rs" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/compose/src/foundation/layout_result_impl.rs" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/compose/src/foundation/measured_impl.rs" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/compose/src/foundation/outer_placeable.rs" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/compose/src/foundation/outer_placeable_impl.rs" root0="SKIP_INSPECTION" />
+  </component>
   <component name="MacroExpansionManager">
-    <option name="directoryName" value="ei4fo78g" />
+    <option name="directoryName" value="bdcn0mku" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
-  <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
-  </component>
   <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
   &quot;associatedIndex&quot;: 2
 }</component>
-  <component name="ProjectId" id="2Wb7R3z0yxieSgHSg6HNQqpZaMQ" />
+  <component name="ProjectId" id="2XBqmhxhxL7qvXSuRLh5ZlPG4Gw" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Cargo.Debug Macro.executor&quot;: &quot;Run&quot;,
-    &quot;Cargo.Run Compose-rs [Compose-rs].executor&quot;: &quot;Run&quot;,
-    &quot;Cargo.Run Compose-rs.executor&quot;: &quot;Run&quot;,
-    &quot;Cargo.Run.executor&quot;: &quot;Run&quot;,
-    &quot;Cargo.Test foundation::constraint_impl::test_constraint.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/Project/Compose-rs&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;org.rust.cargo.project.model.PROJECT_DISCOVERY&quot;: &quot;true&quot;,
-    &quot;org.rust.disableDetachedFileInspection/Users/mariklin/RustroverProjects/Compose-rs/target/debug/build/opencv-7185ca1168df2528/out/opencv/core.rs&quot;: &quot;true&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;language.rust.cargo.check&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Cargo.Run Compose-rs.executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "master",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
-  <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/compose/src/foundation/bridge" />
-      <recent name="$PROJECT_DIR$/compose/src/foundation" />
-    </key>
-  </component>
-  <component name="RunManager" selected="Cargo.Run">
-    <configuration name="Debug Macro" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="build" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <envs />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
+}]]></component>
+  <component name="RunManager">
     <configuration name="Run Compose-rs" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="command" value="run --package Compose-rs --bin Compose-rs" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -122,51 +127,9 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-      <option name="command" value="run --package Compose-rs --bin Compose-rs" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="FULL" />
-      <envs />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="Test foundation::constraint_impl::test_constraint" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package compose --lib foundation::constraint_impl::test_constraint -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$/compose" />
-      <option name="emulateTerminal" value="true" />
-      <option name="channel" value="DEFAULT" />
-      <option name="requiredFeatures" value="true" />
-      <option name="allFeatures" value="false" />
-      <option name="withSudo" value="false" />
-      <option name="buildTarget" value="REMOTE" />
-      <option name="backtrace" value="SHORT" />
-      <envs />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
-    <list>
-      <item itemvalue="Cargo.Run" />
-      <item itemvalue="Cargo.Run Compose-rs" />
-      <item itemvalue="Cargo.Test foundation::constraint_impl::test_constraint" />
-      <item itemvalue="Cargo.Debug Macro" />
-    </list>
     <recent_temporary>
       <list>
         <item itemvalue="Cargo.Run Compose-rs" />
-        <item itemvalue="Cargo.Test foundation::constraint_impl::test_constraint" />
-        <item itemvalue="Cargo.Debug Macro" />
       </list>
     </recent_temporary>
   </component>
@@ -176,109 +139,44 @@
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="bab96035-0d90-458a-ae88-8c7bdab60e45" name="Changes" comment="" />
-      <created>1696989413528</created>
+      <changelist id="f35c522e-8109-41f2-b8c3-469eae6550ac" name="Changes" comment="" />
+      <created>1698112981618</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1696989413528</updated>
-      <workItem from="1696989415326" duration="500000" />
-      <workItem from="1696989922011" duration="438000" />
-      <workItem from="1696990367062" duration="2321000" />
-      <workItem from="1697013645828" duration="2085000" />
-      <workItem from="1697015740870" duration="1859000" />
-      <workItem from="1697017610888" duration="1562000" />
-      <workItem from="1697075704026" duration="440000" />
-      <workItem from="1697076150730" duration="17000" />
-      <workItem from="1697076172760" duration="255000" />
-      <workItem from="1697076432819" duration="59000" />
-      <workItem from="1697076496813" duration="524000" />
-      <workItem from="1697077026076" duration="457000" />
-      <workItem from="1697077488983" duration="13410000" />
-      <workItem from="1697102555728" duration="5325000" />
-      <workItem from="1697167517492" duration="15000" />
-      <workItem from="1697167548972" duration="11000" />
-      <workItem from="1697167773953" duration="8000" />
-      <workItem from="1697167801195" duration="27000" />
-      <workItem from="1697167868388" duration="6000" />
-      <workItem from="1697171602610" duration="273000" />
-      <workItem from="1697171881221" duration="18961000" />
-      <workItem from="1697425212805" duration="14004000" />
-      <workItem from="1697460364331" duration="48730000" />
-      <workItem from="1697870815207" duration="6089000" />
-      <workItem from="1697888491971" duration="1641000" />
-      <workItem from="1697890146187" duration="4147000" />
-      <workItem from="1697951804927" duration="3782000" />
+      <updated>1698112981618</updated>
+      <workItem from="1698112982675" duration="652000" />
+      <workItem from="1698113650937" duration="24728000" />
     </task>
-    <task id="LOCAL-00001" summary="init">
-      <option name="closed" value="true" />
-      <created>1697512465338</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1697512465338</updated>
-    </task>
-    <task id="LOCAL-00002" summary="foundation">
-      <option name="closed" value="true" />
-      <created>1697793789017</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1697793789017</updated>
-    </task>
-    <task id="LOCAL-00003" summary="fix measure policy">
-      <option name="closed" value="true" />
-      <created>1697894098761</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1697894098761</updated>
-    </task>
-    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
-  <component name="Vcs.Log.Tabs.Properties">
-    <option name="TAB_STATES">
-      <map>
-        <entry key="MAIN">
-          <value>
-            <State />
-          </value>
-        </entry>
-      </map>
+  <component name="Vcs.Log.History.Properties">
+    <option name="COLUMN_ID_ORDER">
+      <list>
+        <option value="Default.Root" />
+        <option value="Default.Author" />
+        <option value="Default.Date" />
+        <option value="Default.Subject" />
+        <option value="Space.CommitStatus" />
+      </list>
     </option>
-  </component>
-  <component name="VcsManagerConfiguration">
-    <MESSAGE value="init" />
-    <MESSAGE value="foundation" />
-    <MESSAGE value="fix measure policy" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix measure policy" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$USER_HOME$/.cargo/registry/src/index.crates.io-6f17d22bba15001f/opencv-0.82.1/build.rs</url>
-          <line>289</line>
+          <url>file://$PROJECT_DIR$/compose/src/foundation/layout_node_wrapper_impl.rs</url>
+          <line>90</line>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/compose/src/foundation/inner_placeable_impl.rs</url>
+          <line>47</line>
           <option name="timeStamp" value="4" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$USER_HOME$/.cargo/registry/src/index.crates.io-6f17d22bba15001f/syn-2.0.38/src/item.rs</url>
-          <line>136</line>
-          <option name="timeStamp" value="6" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/compose/src/foundation/composer_impl.rs</url>
-          <line>64</line>
-          <option name="timeStamp" value="11" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
-  </component>
-  <component name="XSLT-Support.FileAssociations.UIState">
-    <expand />
-    <select />
   </component>
 </project>
