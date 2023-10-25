@@ -69,6 +69,14 @@ impl Placeable for LayoutNodeWrapperImpl {
     fn get_measurement_constraint(&self) -> &Constraint {
         self.placeable_impl.get_measurement_constraint()
     }
+
+    fn set_measurement_constraint(&mut self, constraint: &Constraint) {
+        self.placeable_impl.set_measurement_constraint(constraint)
+    }
+
+    fn perfroming_measure(&mut self, constraint: &Constraint, block: & mut dyn FnMut() -> MeasureResult) -> &dyn Placeable {
+        self.placeable_impl.perfroming_measure(constraint,block)
+    }
 }
 
 impl LayoutNodeWrapperImpl {

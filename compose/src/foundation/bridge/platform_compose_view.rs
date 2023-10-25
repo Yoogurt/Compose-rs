@@ -29,7 +29,7 @@ impl MacOSComposeView {
         }
 
         self.root_constraint = constraint;
-        self.root.borrow_mut().remeasure(&self.root_constraint);
+        self.root.borrow().remeasure().borrow_mut().remeasure(&self.root_constraint);
     }
 
     pub fn dispatch_draw(&mut self, canvas: &dyn Canvas) {}

@@ -44,11 +44,15 @@ impl Measurable for InnerCoordinator {
             }).collect::<Vec<_>>();
 
             let mut children_ref_mut = children_ref_mut.iter_mut().map(|child| {
-                child.deref_mut() as &mut dyn Measurable
+                child.deref_mut().as_measurable_mut()
+            }).collect::<Vec<_>>();
+
+            let mut children_dyn_measurable = children_ref_mut.iter_mut().map(|child| {
+                child.deref_mut()
             }).collect::<Vec<_>>();
 
             let mut layout_receiver = LayoutReceiver::new();
-            measure_policy(layout_receiver, &mut children_ref_mut[..], constraint)
+            measure_policy(layout_receiver, &mut children_dyn_measurable[..], constraint)
         };
 
         self.handle_measured_result(measure_result);
@@ -79,6 +83,14 @@ impl Placeable for InnerCoordinator {
 
     fn place_at(&mut self, position: IntOffset, z_index: f32, place_action: PlaceAction) {
         self.layout_node_wrapper_impl.place_at(position, z_index, place_action)
+    }
+
+    fn set_measurement_constraint(&mut self, constraint: &Constraint) {
+        self.layout_node_wrapper_impl.set_measurement_constraint(constraint)
+    }
+
+    fn perfroming_measure(&mut self, constraint: &Constraint, block: & mut dyn FnMut() -> MeasureResult) -> &dyn Placeable {
+        self.layout_node_wrapper_impl.perfroming_measure(constraint, block)
     }
 }
 

@@ -9,9 +9,10 @@ use skia_safe::{
 use std::time::Duration;
 use skia_safe::canvas::lattice::RectType::Default;
 use compose::Box;
-use compose::foundation::{Composer, Constraint, Modifier};
+use compose::foundation::{Composer, Constraint, MeasureResult, Modifier};
 use compose::foundation::bridge::platform_compose_view::MacOSComposeView;
 use compose::foundation::drawing::canvas_impl::new_canvas;
+use compose::foundation::geometry::IntSize;
 use compose_macro::Compose;
 
 #[Compose]
@@ -71,6 +72,12 @@ fn run_skia() {
     }
 }
 
+fn run_compose_raw() {
+    let mut compose_view = MacOSComposeView::new();
+    compose_view.dispatch_measure(800, 500);
+}
+
 fn main() {
-    run_skia()
+    // run_skia()
+    run_compose_raw()
 }

@@ -1,7 +1,8 @@
-use std::cell::RefCell;
+use std::cell::{Ref, RefCell, RefMut};
+use std::mem::MaybeUninit;
 use std::ops::{Deref, DerefMut};
-use std::rc::Rc;
-use super::{Measurable, Canvas, Placeable, LayoutNode, LayoutNodeWrapperImpl, MultiChildrenMeasurePolicy, Modifier, Constraint, MeasureResult, InnerCoordinator, OuterCoordinator, LayoutNodeWrapper, LayoutState, LayoutReceiver, UsageByParent, NodeChain, LayoutNodeLayoutDelegate};
+use std::rc::{Rc, Weak};
+use super::{Measurable, Remeasurable, Canvas, Placeable, LayoutNode, LayoutNodeWrapperImpl, MultiChildrenMeasurePolicy, Modifier, Constraint, MeasureResult, InnerCoordinator, OuterCoordinator, LayoutNodeWrapper, LayoutState, LayoutReceiver, UsageByParent, NodeChain, LayoutNodeLayoutDelegate, MeasurePassDelegate, Measured, PlaceableImpl, LookaheadPassDelegate};
 
 impl Deref for LayoutNode {
     type Target = NodeChain;
@@ -21,9 +22,8 @@ impl LayoutNode {
     pub(crate) fn new() -> Rc<RefCell<Self>> {
         let mut node = LayoutNode {
             node_chain: NodeChain::new(),
-            layout_node_layout_delegate: Rc::new(RefCell::new(LayoutNodeLayoutDelegate::new())),
+            layout_node_layout_delegate: LayoutNodeLayoutDelegate::new(),
             usage_by_parent: UsageByParent::NotUsed,
-            layout_state: Default::default(),
         };
 
         let node = Rc::new(RefCell::new(node));
@@ -69,25 +69,81 @@ impl LayoutNode {
         // self.inner_placeable.borrow_mut().adopt_child(child);
     }
 
-    pub fn remeasure(&mut self, constraint: &Constraint) -> bool {
-        let outer_placeable = &mut self.outer_measurable_placeable;
-        outer_placeable.remeasure(constraint)
+    pub fn remeasure(&self) -> Rc<RefCell<dyn Remeasurable>> {
+        self.layout_node_layout_delegate.borrow().measure_pass_delegate.clone()
     }
 
     fn draw(canvas: &dyn Canvas) {}
 }
 
-impl LayoutNodeLayoutDelegate {
-    pub(crate) fn new() -> Self {
-        LayoutNodeLayoutDelegate {
-            children: vec![],
-        }
+impl Remeasurable for MeasurePassDelegate {
+    fn remeasure(&mut self, constraint: &Constraint) -> bool {
+        // let mut previous_size: IntSize;
+        // let new_size = {
+        //     let parent = self.parent.upgrade();
+        //         if parent.is_none() {
+        //             panic!("parent node was in used or not exists")
+        //         }
+        //
+        //     let mut inner_layout_node = unsafe { parent.unwrap().borrow_mut() };
+        //     previous_size = inner_layout_node.get_measured_size();
+        //
+        //     inner_layout_node.measure(constraint);
+        //     inner_layout_node.get_measured_size()
+        // };
+        // let size_changed = previous_size != new_size
+        //     || self.get_width() != new_size.width() || self.get_height() != new_size.height();
+        //
+        // self.set_measured_size(new_size);
+        // size_changed
+        todo!()
     }
 }
 
-impl Measurable for LayoutNodeLayoutDelegate {
+impl MeasurePassDelegate {
+    fn new() -> Self {
+        MeasurePassDelegate {
+            placeable_impl: PlaceableImpl::new(),
+            parent: Weak::new(),
+        }
+    }
+
+    pub(crate) fn attach(&mut self, parent: Weak<RefCell<LayoutNodeLayoutDelegate>>) {
+        self.parent = parent;
+    }
+}
+
+impl LayoutNodeLayoutDelegate {
+    pub(crate) fn new() -> Rc<RefCell<Self>> {
+        let result = Rc::new(RefCell::new(LayoutNodeLayoutDelegate {
+            measure_pass_delegate: Rc::new(RefCell::new(MeasurePassDelegate::new())),
+            lookahead_pass_delegate: Rc::new(RefCell::new(LookaheadPassDelegate::new())),
+            layout_state: LayoutState::Ready,
+            children: vec![],
+        }));
+
+        result.borrow().measure_pass_delegate.borrow_mut().attach(Rc::downgrade(&result));
+        result
+    }
+
+    pub(crate) fn as_measurable(&self) -> Ref<dyn Measurable> {
+        self.measure_pass_delegate.borrow()
+    }
+
+    pub(crate) fn as_measurable_mut(&self) -> RefMut<dyn Measurable> {
+        self.measure_pass_delegate.borrow_mut()
+    }
+}
+
+impl Measurable for MeasurePassDelegate {
     fn measure(&mut self, constraint: &Constraint) -> &mut dyn Placeable {
-        todo!()
-        // self.outer_measurable_placeable.measure(constraint)
+        let parent =self.parent.upgrade();
+        if parent.is_none() {
+            panic!("unable to parent")
+        }
+        parent.unwrap().borrow().lookahead_pass_delegate.borrow_mut().measure(constraint);
+
+        self.remeasure(constraint);
+        &mut self.placeable_impl
     }
 }

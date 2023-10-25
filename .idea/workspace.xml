@@ -7,51 +7,32 @@
     <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f35c522e-8109-41f2-b8c3-469eae6550ac" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/delegating_layout_node_wrapper.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/delegating_layout_node_wrapper_impl.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/geometry/converter.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/geometry/ranges.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/geometry/size.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/geometry/size_impl.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/layout_direction.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/measured_impl.rs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/compose/src/foundation/modified_layout_node.rs" afterDir="false" />
+    <list default="true" id="f35c522e-8109-41f2-b8c3-469eae6550ac" name="Changes" comment="foundation modifier &amp; layout node wrapper trait">
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/look_ahead_pass_delegate.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/look_ahead_pass_delegate_impl.rs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/compose/src/foundation/remeasurable.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/compose/Cargo.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/compose/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/bridge/platform_compose_view.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/bridge/platform_compose_view.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/bridge/root_measure_policy.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/bridge/root_measure_policy.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/composer_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/composer_impl.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/constraint.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/constraint.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/constraint_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/constraint_impl.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/geometry/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/geometry/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/geometry/offset.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/geometry/offset.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/geometry/offset_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/geometry/offset_impl.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/inner_placeable.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/inner_placeable.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/inner_placeable_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/inner_placeable_impl.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/delegating_layout_node_wrapper.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/delegating_layout_node_wrapper.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/delegating_layout_node_wrapper_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/delegating_layout_node_wrapper_impl.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/geometry/size_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/geometry/size_impl.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/inner_placeable.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/inner_coodinator.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/inner_placeable_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/inner_coordinator_impl.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_node.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_node.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_node_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_node_impl.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_node_wrapper.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_node_wrapper.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_node_wrapper_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_node_wrapper_impl.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_receiver.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_receiver.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_receiver_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_receiver_impl.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_result.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_result.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/layout_result_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/layout_result_impl.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/measurable.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/measurable.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/measure_result.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/measure_result.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/measure_result_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/measure_result_impl.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/measured.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/measured.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/compose/src/foundation/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/mod.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/modifier.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/modifier.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/modifier_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/modifier_impl.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/outer_placeable.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/outer_placeable.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/foundation/outer_placeable_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/outer_placeable_impl.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/widgets/box.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/widgets/box.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compose/src/widgets/layout.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/widgets/layout.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/modified_layout_node.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/modified_layout_node.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/modified_layout_node_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/modified_layout_node_impl.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/compose/src/foundation/outer_placeable_impl.rs" beforeDir="false" afterPath="$PROJECT_DIR$/compose/src/foundation/outer_coordinator_impl.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
     </list>
+    <list id="1b2764e8-494d-48a8-ae33-fcecc12e4e2b" name="local" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -140,13 +121,23 @@
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="f35c522e-8109-41f2-b8c3-469eae6550ac" name="Changes" comment="" />
+      <changelist id="1b2764e8-494d-48a8-ae33-fcecc12e4e2b" name="local" comment="" />
       <created>1698112981618</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1698112981618</updated>
       <workItem from="1698112982675" duration="652000" />
-      <workItem from="1698113650937" duration="24728000" />
+      <workItem from="1698113650937" duration="36603000" />
     </task>
+    <task id="LOCAL-00001" summary="foundation modifier &amp; layout node wrapper trait">
+      <option name="closed" value="true" />
+      <created>1698147994656</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1698147994656</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -163,18 +154,17 @@
       </list>
     </option>
   </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="foundation modifier &amp; layout node wrapper trait" />
+    <option name="LAST_COMMIT_MESSAGE" value="foundation modifier &amp; layout node wrapper trait" />
+  </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
           <url>file://$PROJECT_DIR$/compose/src/foundation/layout_node_wrapper_impl.rs</url>
-          <line>90</line>
+          <line>98</line>
           <option name="timeStamp" value="3" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
-          <url>file://$PROJECT_DIR$/compose/src/foundation/inner_placeable_impl.rs</url>
-          <line>47</line>
-          <option name="timeStamp" value="4" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

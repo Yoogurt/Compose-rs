@@ -30,28 +30,11 @@ impl OuterCoordinator {
     pub(crate) fn attach(&mut self, layout_node: Rc<RefCell<dyn LayoutNodeWrapper>>) {
         self.layout_node = MaybeUninit::new(layout_node);
     }
-
-    pub(crate) fn remeasure(&mut self,
-                            constraint: &Constraint) -> bool {
-        let mut previous_size: IntSize;
-        let new_size = {
-            let mut inner_layout_node = unsafe { self.layout_node.assume_init_ref().borrow_mut() };
-             previous_size = inner_layout_node.get_measured_size();
-
-            inner_layout_node.measure(constraint);
-            inner_layout_node.get_measured_size()
-        };
-        let size_changed = previous_size != new_size
-            || self.get_width() != new_size.width() || self.get_height() != new_size.height();
-
-        self.set_measured_size(new_size);
-        size_changed
-    }
 }
 
 impl Measurable for OuterCoordinator {
     fn measure(&mut self, constraint: &Constraint) -> &mut dyn Placeable {
-        self.remeasure(constraint);
+        // self.remeasure(constraint);
         &mut self.layout_node_wrapper
     }
 }

@@ -58,8 +58,9 @@ impl<T> Div<T> for Size<T> where T: U64ConverterUnsigned {
     }
 }
 
-impl<T> From<(T, T)> for Size<T> where T: U64ConverterUnsigned {
-    fn from(value: (T, T)) -> Self {
-        Size::new(value.0, value.1)
+impl<R,T> From<R> for Size<T> where R: Into<(T,T)> , T: U64ConverterUnsigned {
+    fn from(value: R) -> Self {
+        let value = value.into();
+        Self::new(value.0, value.1)
     }
 }

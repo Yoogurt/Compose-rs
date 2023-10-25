@@ -1,25 +1,15 @@
 use std::ops::{Deref, DerefMut};
-use crate::foundation::{Constraint, Measured, MeasuredImpl, Placeable, PlaceableImpl, PlacementScope};
+use crate::foundation::{Constraint, Measured, MeasuredImpl, MeasureResult, Placeable, PlaceableImpl, PlacementScope};
 use crate::foundation::geometry::{IntOffset, IntSize, CoerceIn};
-
-impl Measured for PlaceableImpl {
-    fn get_measured_width(&self) -> usize {
-        self.measured.get_measured_width()
-    }
-
-    fn get_measured_height(&self) -> usize {
-        self.measured.get_measured_height()
-    }
-}
 
 impl PlaceableImpl {
     pub(crate) fn new() -> Self {
         PlaceableImpl {
             width: 0,
             height: 0,
-            measured: Box::new(MeasuredImpl::new()),
+            measured: MeasuredImpl::new(),
             measured_size: IntSize::zero(),
-            measurement_constraint: Constraint::unbounded()
+            measurement_constraint: Constraint::unbounded(),
         }
     }
 }
@@ -50,7 +40,17 @@ impl Placeable for PlaceableImpl {
 
     fn place_at(&mut self, position: IntOffset, z_index: f32, place_action: &dyn FnOnce(&dyn PlacementScope)) {}
 
+    fn set_measurement_constraint(&mut self, constraint: &Constraint) {
+        self.measurement_constraint = *constraint;
+    }
+
     fn get_measurement_constraint(&self) -> &Constraint {
         &self.measurement_constraint
+    }
+
+    fn perfroming_measure(&mut self, constraint: &Constraint, block: & mut dyn FnMut() -> MeasureResult) -> &dyn Placeable {
+        self.set_measurement_constraint(constraint);
+        self.set_measured_size(block().into());
+        return self as &dyn Placeable;
     }
 }

@@ -1,4 +1,5 @@
-pub trait  Measured : Debug{
+#[delegate]
+pub trait  Measured {
     fn get_measured_width(&self) -> usize;
     fn get_measured_height(&self) -> usize;
 }
