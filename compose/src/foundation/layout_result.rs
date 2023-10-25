@@ -7,7 +7,8 @@ pub trait PlacementScope {
     fn parent_layout_direction(&self) -> LayoutDirection;
 }
 
-pub type PlaceAction = &'static dyn FnOnce(&dyn PlacementScope);
+pub type PlaceAction = Box<dyn FnOnce(&dyn PlacementScope)>;
+pub type MeasureAction = Box<dyn FnOnce() -> MeasureResult>;
 
 #[delegate]
 pub trait Placeable: Measured {
@@ -20,7 +21,7 @@ pub trait Placeable: Measured {
     fn set_measurement_constraint(&mut self, constraint: &Constraint);
     fn get_measurement_constraint(&self) -> &Constraint;
 
-    fn perfroming_measure(&mut self, constraint: &Constraint, block: & mut dyn FnMut() -> MeasureResult) -> &dyn Placeable;
+    fn perfroming_measure(&mut self, constraint: &Constraint, block: MeasureAction) -> &dyn Placeable;
 
     fn place_at(&mut self, position: IntOffset, z_index: f32, place_action: PlaceAction);
 }

@@ -98,7 +98,7 @@ impl Placeable for InnerCoordinator {
         self.layout_node_wrapper_impl.set_measurement_constraint(constraint)
     }
 
-    fn perfroming_measure(&mut self, constraint: &Constraint, block: & mut dyn FnMut() -> MeasureResult) -> &dyn Placeable {
+    fn perfroming_measure(&mut self, constraint: &Constraint, block: MeasureAction) -> &dyn Placeable {
         self.layout_node_wrapper_impl.perfroming_measure(constraint, block)
     }
 }
