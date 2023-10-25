@@ -1,8 +1,8 @@
 use std::cell::{Ref, RefCell, RefMut};
-use std::mem::MaybeUninit;
+
 use std::ops::{Deref, DerefMut};
 use std::rc::{Rc, Weak};
-use super::{Measurable, Remeasurable, Canvas, Placeable, LayoutNode, LayoutNodeWrapperImpl, MultiChildrenMeasurePolicy, Modifier, Constraint, MeasureResult, InnerCoordinator, OuterCoordinator, LayoutNodeWrapper, LayoutState, LayoutReceiver, UsageByParent, NodeChain, LayoutNodeLayoutDelegate, MeasurePassDelegate, Measured, PlaceableImpl, LookaheadPassDelegate};
+use super::{Measurable, Remeasurable, Canvas, Placeable, LayoutNode, MultiChildrenMeasurePolicy, Modifier, Constraint, MeasureResult, LayoutNodeWrapper, LayoutState, UsageByParent, NodeChain, LayoutNodeLayoutDelegate, MeasurePassDelegate, PlaceableImpl, LookaheadPassDelegate};
 
 impl Deref for LayoutNode {
     type Target = NodeChain;
@@ -20,7 +20,7 @@ impl DerefMut for LayoutNode {
 
 impl LayoutNode {
     pub(crate) fn new() -> Rc<RefCell<Self>> {
-        let mut node = LayoutNode {
+        let node = LayoutNode {
             node_chain: NodeChain::new(),
             layout_node_layout_delegate: LayoutNodeLayoutDelegate::new(),
             usage_by_parent: UsageByParent::NotUsed,
@@ -46,8 +46,8 @@ impl LayoutNode {
 
         self.modifier = modifier;
 
-        let outer_wrapper = self.modifier.fold_out::<Rc<RefCell<dyn LayoutNodeWrapper>>>(self.inner_placeable.clone(), &mut |modifier, to_wrap| {
-            let mut wrapper = to_wrap;
+        let _outer_wrapper = self.modifier.fold_out::<Rc<RefCell<dyn LayoutNodeWrapper>>>(self.inner_placeable.clone(), &mut |_modifier, to_wrap| {
+            let wrapper = to_wrap;
 
             wrapper
         });
@@ -65,7 +65,7 @@ impl LayoutNode {
         }
     }
 
-    pub(crate) fn adopt_child(&self, child: Rc<RefCell<LayoutNode>>) {
+    pub(crate) fn adopt_child(&self, _child: Rc<RefCell<LayoutNode>>) {
         // self.inner_placeable.borrow_mut().adopt_child(child);
     }
 
@@ -73,11 +73,11 @@ impl LayoutNode {
         self.layout_node_layout_delegate.borrow().measure_pass_delegate.clone()
     }
 
-    fn draw(canvas: &dyn Canvas) {}
+    fn draw(_canvas: &dyn Canvas) {}
 }
 
 impl Remeasurable for MeasurePassDelegate {
-    fn remeasure(&mut self, constraint: &Constraint) -> bool {
+    fn remeasure(&mut self, _constraint: &Constraint) -> bool {
         // let mut previous_size: IntSize;
         // let new_size = {
         //     let parent = self.parent.upgrade();

@@ -1,4 +1,4 @@
-use std::ops::{Add, Div, Mul, Neg, Rem, Shl, Sub};
+use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
 include!("rect.rs");
 include!("offset.rs");

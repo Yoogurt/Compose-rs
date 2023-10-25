@@ -20,7 +20,7 @@ impl Deref for LayoutNodeWrapperImpl {
 }
 
 impl Measurable for LayoutNodeWrapperImpl {
-    fn measure(&mut self, constraint: &Constraint) -> &mut dyn Placeable {
+    fn measure(&mut self, _constraint: &Constraint) -> &mut dyn Placeable {
         unimplemented!("layout node wrapper should implement measure")
     }
 }

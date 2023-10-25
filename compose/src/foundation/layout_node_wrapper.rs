@@ -1,4 +1,4 @@
-use std::process::Output;
+
 use crate::foundation::geometry::IntOffset;
 
 pub(crate) trait LayoutNodeWrapper: Placeable + Debug + Measurable {
@@ -7,7 +7,7 @@ pub(crate) trait LayoutNodeWrapper: Placeable + Debug + Measurable {
     fn on_initialize(&self) {}
     fn on_place(&self) {}
 
-    fn perform_measure(&mut self, block: &dyn FnOnce()-> Box<dyn Placeable>) {
+    fn perform_measure(&mut self, _block: &dyn FnOnce()-> Box<dyn Placeable>) {
 
     }
 }

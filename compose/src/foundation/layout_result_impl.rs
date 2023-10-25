@@ -1,5 +1,5 @@
-use std::ops::{Deref, DerefMut};
-use crate::foundation::{Constraint, Measured, MeasuredImpl, MeasureResult, Placeable, PlaceableImpl, PlacementScope};
+
+use crate::foundation::{Constraint, MeasuredImpl, MeasureResult, Placeable, PlaceableImpl, PlacementScope};
 use crate::foundation::geometry::{IntOffset, IntSize, CoerceIn};
 
 impl PlaceableImpl {
@@ -38,7 +38,7 @@ impl Placeable for PlaceableImpl {
         self.measured_size = size;
     }
 
-    fn place_at(&mut self, position: IntOffset, z_index: f32, place_action: &dyn FnOnce(&dyn PlacementScope)) {}
+    fn place_at(&mut self, _position: IntOffset, _z_index: f32, _place_action: &dyn FnOnce(&dyn PlacementScope)) {}
 
     fn set_measurement_constraint(&mut self, constraint: &Constraint) {
         self.measurement_constraint = *constraint;

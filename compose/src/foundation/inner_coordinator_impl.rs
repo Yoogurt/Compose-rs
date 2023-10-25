@@ -1,12 +1,12 @@
 use std::cell::RefCell;
 use std::mem::MaybeUninit;
-use std::ops::{Deref, DerefMut};
+use std::ops::{DerefMut};
 use std::rc::{Weak, Rc};
 use crate::foundation::{Constraint, InnerCoordinator, MeasureResult, LayoutNode, LayoutNodeWrapper, LayoutNodeWrapperImpl, LayoutReceiver, Measurable, Measured, Placeable, PlaceAction, LayoutNodeLayoutDelegate};
 use crate::foundation::geometry::{IntOffset, IntSize};
-use crate::widgets::layout;
 
-fn error_measure_policy(layout_receiver: LayoutReceiver, children: &mut [&mut dyn Measurable], constraint: &Constraint) -> MeasureResult {
+
+fn error_measure_policy(_layout_receiver: LayoutReceiver, _children: &mut [&mut dyn Measurable], _constraint: &Constraint) -> MeasureResult {
     panic!("no measure policy provided")
 }
 
@@ -35,7 +35,7 @@ impl Measurable for InnerCoordinator {
         let measure_result = {
             let children = &unsafe {self.layout_node_layout_delegate.assume_init_mut()}.borrow_mut().children;
 
-            let mut children_rc = children.iter().map(|child| {
+            let children_rc = children.iter().map(|child| {
                 child.borrow_mut().layout_node_layout_delegate.clone()
             }).collect::<Vec<_>>();
 
@@ -51,7 +51,7 @@ impl Measurable for InnerCoordinator {
                 child.deref_mut()
             }).collect::<Vec<_>>();
 
-            let mut layout_receiver = LayoutReceiver::new();
+            let layout_receiver = LayoutReceiver::new();
             measure_policy(layout_receiver, &mut children_dyn_measurable[..], constraint)
         };
 

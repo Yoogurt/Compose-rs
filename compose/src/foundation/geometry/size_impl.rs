@@ -1,6 +1,6 @@
-use std::f64::INFINITY;
-use std::ops::{Add, Div, Mul, Neg, RangeInclusive, Rem, Shl, Sub};
-use lazy_static::lazy_static;
+
+use std::ops::{Div, Mul};
+
 use super::{Size, U64ConverterUnsigned};
 
 impl U64ConverterUnsigned for usize {

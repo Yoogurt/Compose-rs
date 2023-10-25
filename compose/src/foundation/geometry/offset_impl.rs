@@ -1,7 +1,7 @@
-use std::f64::INFINITY;
-use std::ops::{Add, Div, Mul, Neg, Rem, Shl, Sub};
+
+use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 use lazy_static::lazy_static;
-use super::{IntOffset, Offset, U64ConverterSigned, U64ConverterUnsigned};
+use super::{Offset, U64ConverterSigned, U64ConverterUnsigned};
 
 impl U64ConverterUnsigned for i32 {
     fn as_u64(self) -> u64 {

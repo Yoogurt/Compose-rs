@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use crate::foundation::{Canvas, Constraint, LayoutNode, Modifier};
+use crate::foundation::{Canvas, Constraint, LayoutNode};
 use std::rc::Rc;
 use crate::foundation::bridge::root_measure_policy::root_measure_policy;
 
@@ -10,9 +10,9 @@ pub struct MacOSComposeView {
 
 impl MacOSComposeView {
     pub fn new() -> MacOSComposeView {
-        let mut root_layout_node = LayoutNode::new();
+        let root_layout_node = LayoutNode::new();
 
-        let mut result = MacOSComposeView {
+        let result = MacOSComposeView {
             root: root_layout_node,
             root_constraint: Constraint::fixed(0, 0),
         };
@@ -32,5 +32,5 @@ impl MacOSComposeView {
         self.root.borrow().remeasure().borrow_mut().remeasure(&self.root_constraint);
     }
 
-    pub fn dispatch_draw(&mut self, canvas: &dyn Canvas) {}
+    pub fn dispatch_draw(&mut self, _canvas: &dyn Canvas) {}
 }

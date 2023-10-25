@@ -1,4 +1,4 @@
-use crate::foundation::{LayoutDirection, LayoutNode, LayoutReceiver, MeasureResult};
+use crate::foundation::{LayoutDirection, LayoutReceiver, MeasureResult};
 
 impl LayoutReceiver {
     pub(crate) fn new() -> LayoutReceiver {
