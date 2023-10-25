@@ -1,7 +1,7 @@
 
 use crate::foundation::geometry::{IntOffset, IntSize, CoerceIn};
 
-use super::{layout_result::{PlaceableImpl, Placeable, PlacementScope}, measured::MeasuredImpl, constraint::Constraint, measure_result::MeasureResult};
+use super::{layout_result::{PlaceableImpl, Placeable, PlacementScope, MeasureAction, PlaceAction}, measured::MeasuredImpl, constraint::Constraint, measure_result::MeasureResult};
 
 impl PlaceableImpl {
     pub(crate) fn new() -> Self {
@@ -39,7 +39,7 @@ impl Placeable for PlaceableImpl {
         self.measured_size = size;
     }
 
-    fn place_at(&mut self, _position: IntOffset, _z_index: f32, _place_action: &dyn FnOnce(&dyn PlacementScope)) {}
+    fn place_at(&mut self, _position: IntOffset, _z_index: f32, _place_action: PlaceAction) {}
 
     fn set_measurement_constraint(&mut self, constraint: &Constraint) {
         self.measurement_constraint = *constraint;
@@ -49,7 +49,7 @@ impl Placeable for PlaceableImpl {
         &self.measurement_constraint
     }
 
-    fn perfroming_measure(&mut self, constraint: &Constraint, block: & mut dyn FnMut() -> MeasureResult) -> &dyn Placeable {
+    fn perfroming_measure(&mut self, constraint: &Constraint, block: MeasureAction) -> &dyn Placeable {
         self.set_measurement_constraint(constraint);
         self.set_measured_size(block().into());
         return self as &dyn Placeable;

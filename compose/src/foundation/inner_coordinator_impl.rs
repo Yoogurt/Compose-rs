@@ -8,7 +8,7 @@ use super::constraint::Constraint;
 use super::inner_coodinator::InnerCoordinator;
 use super::layout_node::{LayoutNodeLayoutDelegate, LayoutNode};
 use super::layout_receiver::LayoutReceiver;
-use super::layout_result::{Placeable, PlaceAction};
+use super::layout_result::{Placeable, PlaceAction, MeasureAction};
 use super::look_ahead_capable_placeable::{LayoutNodeWrapperImpl, LayoutNodeWrapper};
 use super::measurable::Measurable;
 use super::measure_result::MeasureResult;
@@ -98,7 +98,7 @@ impl Placeable for InnerCoordinator {
         self.layout_node_wrapper_impl.set_measurement_constraint(constraint)
     }
 
-    fn perfroming_measure(&mut self, constraint: &Constraint, block: & mut dyn FnMut() -> MeasureResult) -> &dyn Placeable {
+    fn perfroming_measure(&mut self, constraint: &Constraint, block: MeasureAction) -> &dyn Placeable {
         self.layout_node_wrapper_impl.perfroming_measure(constraint, block)
     }
 }

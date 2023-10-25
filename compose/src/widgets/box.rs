@@ -25,7 +25,7 @@ fn box_measure_policy(layout_receiver: LayoutReceiver, measurable: &mut [&mut dy
         0 => { layout_receiver.layout(constraint.min_width, constraint.min_height) }
         1 => {
             let placeable = measurable[0].measure(constraint);
-            placeable.place_at((0,0).into(), 0.0, &|_| {});
+            placeable.place_at((0,0).into(), 0.0, Box::new(|_| {}));
             todo!()
         }
         _ =>{

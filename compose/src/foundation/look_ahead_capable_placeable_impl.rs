@@ -6,7 +6,7 @@ use crate::foundation::geometry::{IntOffset, IntSize};
 
 use super::constraint::Constraint;
 use super::layout_node::LayoutNode;
-use super::layout_result::{Placeable, PlaceAction, PlaceableImpl};
+use super::layout_result::{Placeable, PlaceAction, PlaceableImpl, MeasureAction};
 use super::look_ahead_capable_placeable::{LayoutNodeWrapperImpl, LayoutNodeWrapper};
 use super::measurable::Measurable;
 use super::measure_result::MeasureResult;
@@ -81,7 +81,7 @@ impl Placeable for LayoutNodeWrapperImpl {
         self.placeable_impl.set_measurement_constraint(constraint)
     }
 
-    fn perfroming_measure(&mut self, constraint: &Constraint, block: & mut dyn FnMut() -> MeasureResult) -> &dyn Placeable {
+    fn perfroming_measure(&mut self, constraint: &Constraint, block: MeasureAction) -> &dyn Placeable {
         self.placeable_impl.perfroming_measure(constraint,block)
     }
 }
