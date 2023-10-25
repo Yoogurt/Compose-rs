@@ -1,4 +1,4 @@
-use crate::foundation::MeasureResult;
+use super::measure_result::MeasureResult;
 
  impl From<(usize, usize)> for MeasureResult {
     fn from(value: (usize, usize)) -> Self {

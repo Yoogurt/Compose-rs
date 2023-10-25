@@ -1,5 +1,5 @@
-use std::ops::{RangeInclusive};
-use crate::foundation::Constraint;
+use super::constraint::Constraint;
+use std::ops::RangeInclusive;
 
 impl Constraint {
     pub const fn unbounded() -> Constraint {
@@ -40,7 +40,9 @@ impl Constraint {
 
 impl PartialEq for Constraint {
     fn eq(&self, other: &Self) -> bool {
-        self.min_width == other.min_width && self.max_width == other.max_width &&
-            self.min_height == other.min_height && self.max_height == other.max_height
+        self.min_width == other.min_width
+            && self.max_width == other.max_width
+            && self.min_height == other.min_height
+            && self.max_height == other.max_height
     }
 }

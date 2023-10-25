@@ -1,3 +1,5 @@
+use super::measurable::SingleChildMeasurePolicy;
+
 pub const Modifier: Modifier = Modifier::Unit;
 
 #[derive(Default, Debug, PartialEq)]

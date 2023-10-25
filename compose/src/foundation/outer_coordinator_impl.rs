@@ -3,7 +3,11 @@ use std::mem::MaybeUninit;
 use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
 
-use super::{Constraint, OuterCoordinator, Measurable, Placeable, LayoutNodeWrapper, LayoutNodeWrapperImpl};
+use super::constraint::Constraint;
+use super::layout_result::Placeable;
+use super::look_ahead_capable_placeable::{LayoutNodeWrapper, LayoutNodeWrapperImpl};
+use super::measurable::Measurable;
+use super::outer_coordinator::OuterCoordinator;
 
 impl Deref for OuterCoordinator {
     type Target = dyn LayoutNodeWrapper;

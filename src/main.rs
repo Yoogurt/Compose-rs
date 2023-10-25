@@ -9,7 +9,6 @@ use skia_safe::{
 use std::time::Duration;
 use skia_safe::canvas::lattice::RectType::Default;
 use compose::Box;
-use compose::foundation::{Composer, Constraint, MeasureResult, Modifier};
 use compose::foundation::bridge::platform_compose_view::MacOSComposeView;
 use compose::foundation::drawing::canvas_impl::new_canvas;
 use compose::foundation::geometry::IntSize;

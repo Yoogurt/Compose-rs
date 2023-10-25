@@ -1,8 +1,10 @@
 #![allow(warnings)]
 use std::cell::{Ref, RefMut, RefCell};
 use std::ops::{Deref, DerefMut};
-use super::{LayoutNode, LayoutNodeGuard};
 use std::rc::Rc;
+
+use super::layout_node::LayoutNode;
+use super::layout_node_guard::LayoutNodeGuard;
 
 impl LayoutNodeGuard {
     pub(crate) fn new(layout_node: Rc<RefCell<LayoutNode>>) -> LayoutNodeGuard {

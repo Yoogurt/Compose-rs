@@ -1,4 +1,4 @@
-use crate::foundation::{Measured, MeasuredImpl};
+use super::measured::{MeasuredImpl, Measured};
 
 impl MeasuredImpl {
     pub(crate) fn new() -> MeasuredImpl {

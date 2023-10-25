@@ -1,3 +1,5 @@
+use auto_delegate::delegate;
+
 #[delegate]
 pub trait  Measured {
     fn get_measured_width(&self) -> usize;
@@ -6,6 +8,6 @@ pub trait  Measured {
 
 #[derive(Debug)]
 pub(crate) struct MeasuredImpl {
-    measured_width: usize,
-    measured_height: usize,
+    pub(crate) measured_width: usize,
+    pub(crate) measured_height: usize,
 }

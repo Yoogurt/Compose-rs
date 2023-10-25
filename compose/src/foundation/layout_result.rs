@@ -1,6 +1,6 @@
 
-use auto_delegate::delegate;
-use crate::foundation::geometry::IntSize;
+use auto_delegate::{delegate, Delegate};
+use super::{layout_direction::LayoutDirection, constraint::Constraint, measured::{Measured, MeasuredImpl}, geometry::{IntSize, IntOffset}, measure_result::MeasureResult};
 
 pub trait PlacementScope {
     fn parent_width(&self) -> usize;
@@ -27,10 +27,10 @@ pub trait Placeable: Measured {
 
 #[derive(Debug, Delegate)]
 pub(crate) struct PlaceableImpl {
-    width: usize,
-    height: usize,
+    pub(crate) width: usize,
+    pub(crate) height: usize,
     #[to(Measured)]
-    measured: MeasuredImpl,
-    measured_size: IntSize,
-    measurement_constraint: Constraint,
+    pub(crate) measured: MeasuredImpl,
+    pub(crate) measured_size: IntSize,
+    pub(crate) measurement_constraint: Constraint,
 }

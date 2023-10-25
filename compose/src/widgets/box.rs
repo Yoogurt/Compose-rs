@@ -1,13 +1,19 @@
+use compose_macro::Compose;
+
+use crate::foundation::{layout_receiver::LayoutReceiver, measurable::Measurable, constraint::Constraint, measure_result::MeasureResult, modifier::Modifier};
+use crate::{self as compose, foundation};
+use crate::widgets::layout::layout;
+
 #[macro_export]
 macro_rules! Box {
     ( $modifier_expr:tt, $($fn_body:tt)* ) => {
-        compose::widgets::box_internal($modifier_expr, || {
+        compose::widgets::r#box::box_internal($modifier_expr, || {
              $($fn_body)*
         });
     };
 
     ( $($fn_body:tt)* ) => {
-        compose::widgets::box_internal(std::default::Default::default(), || {
+        compose::widgets::r#box::box_internal(std::default::Default::default(), || {
              $($fn_body)*
         });
     };

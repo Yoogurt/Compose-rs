@@ -1,7 +1,9 @@
 use std::cell::RefCell;
-use crate::foundation::{Canvas, Constraint, LayoutNode};
 use std::rc::Rc;
 use crate::foundation::bridge::root_measure_policy::root_measure_policy;
+use crate::foundation::canvas::Canvas;
+use crate::foundation::constraint::Constraint;
+use crate::foundation::layout_node::LayoutNode;
 
 pub struct MacOSComposeView {
     root: Rc<RefCell<LayoutNode>>,

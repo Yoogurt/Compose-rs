@@ -1,5 +1,7 @@
+use super::slot_table_type::SlotTableType;
+
 #[derive(Debug)]
 pub(crate) struct SlotTable {
-    data: Vec<SlotTableType>,
-        index: usize,
+    pub(crate) data: Vec<SlotTableType>,
+    pub(crate) index: usize,
 }

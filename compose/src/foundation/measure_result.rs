@@ -1,5 +1,5 @@
 #[derive(Default, Debug, PartialEq)]
 pub struct MeasureResult {
-    width : usize,
-        height: usize,
+    pub(crate) width : usize,
+    pub(crate)  height: usize,
 }

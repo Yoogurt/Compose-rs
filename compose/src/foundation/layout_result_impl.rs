@@ -1,6 +1,7 @@
 
-use crate::foundation::{Constraint, MeasuredImpl, MeasureResult, Placeable, PlaceableImpl, PlacementScope};
 use crate::foundation::geometry::{IntOffset, IntSize, CoerceIn};
+
+use super::{layout_result::{PlaceableImpl, Placeable, PlacementScope}, measured::MeasuredImpl, constraint::Constraint, measure_result::MeasureResult};
 
 impl PlaceableImpl {
     pub(crate) fn new() -> Self {

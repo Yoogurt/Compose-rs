@@ -1,3 +1,10 @@
+use compose_macro::Compose;
+
+use crate::foundation::composer::Composer;
+use crate::foundation::measurable::MultiChildrenMeasurePolicy;
+use crate as compose;
+use crate::foundation::modifier::Modifier;
+
 #[Compose]
 pub fn layout(modifier: Modifier, measure_policy: MultiChildrenMeasurePolicy, content: fn()) {
     let node = Composer::begin_node();

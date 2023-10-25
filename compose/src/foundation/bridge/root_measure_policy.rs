@@ -1,4 +1,4 @@
-use crate::foundation::MultiChildrenMeasurePolicy;
+use crate::foundation::measurable::MultiChildrenMeasurePolicy;
 
 #[inline]
 pub(crate) fn root_measure_policy() -> MultiChildrenMeasurePolicy {

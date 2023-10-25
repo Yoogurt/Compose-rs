@@ -1,4 +1,4 @@
-use crate::foundation::{SlotTable, SlotTableType};
+use super::{slot_table_type::SlotTableType, slot_table::SlotTable};
 
 impl SlotTable {
     pub(crate) fn push(&mut self, data: SlotTableType) -> &SlotTableType{

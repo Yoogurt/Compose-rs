@@ -1,4 +1,4 @@
-use crate::foundation::{CanvasSaveGuard, Canvas, CanvasExtension};
+use crate::foundation::canvas::{Canvas, CanvasSaveGuard, CanvasExtension};
 
 pub struct MacOSCanvas<'a> {
     inner: &'a mut skia_safe::Canvas,

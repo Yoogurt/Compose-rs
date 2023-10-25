@@ -1,9 +1,9 @@
 
-use std::cell::{RefCell};
+use std::{rc::Rc, cell::RefCell};
 
-use std::rc::Rc;
-use crate::foundation::{Composer, ComposerInner, Constraint, LayoutNode, LayoutNodeGuard, SlotTableType};
-use crate::foundation::SlotTableType::LayoutNodeType;
+use crate::foundation::composer::Composer;
+
+use super::{constraint::Constraint, slot_table_type::SlotTableType, layout_node::LayoutNode, composer::ComposerInner, layout_node_guard::LayoutNodeGuard};
 
 thread_local! {
     pub static COMPOSER : Composer = Composer::default()
@@ -40,7 +40,7 @@ impl ComposerInner {
 
     pub fn begin_node(&mut self) -> Rc<RefCell<LayoutNode>> {
         let node = LayoutNode::new();
-        let node = self.slot_table.push(LayoutNodeType(node));
+        let node = self.slot_table.push(SlotTableType::LayoutNodeType(node));
 
         match node {
             SlotTableType::LayoutNodeType(node) => {

@@ -55,22 +55,22 @@ pub fn Compose(attribute: TokenStream, funtion: TokenStream) -> TokenStream {
         (quote! {
          #[inline]
             #function_visibility fn #function_name(#function_inputs_with_type) {
-                compose::foundation::Composer::begin_group(#hash);
+                compose::foundation::composer::Composer::begin_group(#hash);
                 {
                     #function_body
                 }
-                compose::foundation::Composer::end_group(#hash);
+                compose::foundation::composer::Composer::end_group(#hash);
             }
     })
     } else {
         (quote! {
          #[inline]
             #function_visibility fn #function_name() {
-                compose::foundation::Composer::begin_group(#hash);
+                compose::foundation::composer::Composer::begin_group(#hash);
                 {
                     #function_body
                 }
-                compose::foundation::Composer::end_group(#hash);
+                compose::foundation::composer::Composer::end_group(#hash);
             }
     })
     };

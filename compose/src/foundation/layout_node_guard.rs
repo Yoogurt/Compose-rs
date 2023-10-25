@@ -1,3 +1,7 @@
+use std::{rc::Rc, cell::RefCell};
+
+use super::layout_node::LayoutNode;
+
 pub struct LayoutNodeGuard {
-    inner: Rc<RefCell<LayoutNode>>
+    pub(crate) inner: Rc<RefCell<LayoutNode>>
 }

@@ -1,6 +1,7 @@
 
-use crate::foundation::Modifier;
 use std::ops::Add;
+
+use super::modifier::Modifier;
 
 impl Modifier {
     pub fn fold_in<R>(&self, initial: R, mut operation: impl FnMut(R, &Modifier) -> R) -> R {
