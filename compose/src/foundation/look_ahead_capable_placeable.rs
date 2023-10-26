@@ -1,6 +1,8 @@
 
 use std::{rc::Weak, cell::RefCell, mem::MaybeUninit};
 use core::fmt::Debug;
+use auto_delegate::Delegate;
+
 use super::{layout_result::{Placeable, PlaceableImpl}, measurable::Measurable, layout_node::LayoutNode, measure_result::MeasureResult};
 
 pub(crate) trait LayoutNodeWrapper: Placeable + Debug + Measurable {
@@ -14,8 +16,9 @@ pub(crate) trait LayoutNodeWrapper: Placeable + Debug + Measurable {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Delegate)]
 pub(crate) struct LayoutNodeWrapperImpl {
+    #[to(Placeable, Measured)]
     pub(crate) placeable_impl: PlaceableImpl,
     pub(crate) measure_result: MeasureResult,
     pub(crate) wrapped_by: Option<Box<dyn LayoutNodeWrapper>>,

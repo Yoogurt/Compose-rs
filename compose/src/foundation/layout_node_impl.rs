@@ -14,7 +14,7 @@ use super::measurable::{MultiChildrenMeasurePolicy, Measurable};
 use super::measure_result::MeasureResult;
 use super::modifier::Modifier;
 use super::node_chain::NodeChain;
-use super::remeasurable::Remeasurable;
+use super::remeasurable::{Remeasurable, StatefulRemeasurable};
 
 impl Deref for LayoutNode {
     type Target = NodeChain;
@@ -81,7 +81,7 @@ impl LayoutNode {
         // self.inner_placeable.borrow_mut().adopt_child(child);
     }
 
-    pub fn remeasure(&self) -> Rc<RefCell<dyn Remeasurable>> {
+    pub fn as_remeasurable(&self) -> Rc<RefCell<dyn StatefulRemeasurable>> {
         self.layout_node_layout_delegate.borrow().measure_pass_delegate.clone()
     }
 
@@ -108,7 +108,14 @@ impl Remeasurable for MeasurePassDelegate {
         //
         // self.set_measured_size(new_size);
         // size_changed
+        self.remeasure_pending = false;
         todo!()
+    }
+}
+
+impl StatefulRemeasurable for MeasurePassDelegate {
+    fn mark_remeasure_pending(&mut self) {
+        self.remeasure_pending = true;
     }
 }
 
@@ -117,6 +124,7 @@ impl MeasurePassDelegate {
         MeasurePassDelegate {
             placeable_impl: PlaceableImpl::new(),
             parent: Weak::new(),
+            remeasure_pending: false,
         }
     }
 

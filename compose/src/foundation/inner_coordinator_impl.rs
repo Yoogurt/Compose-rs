@@ -2,17 +2,15 @@ use std::cell::RefCell;
 use std::mem::MaybeUninit;
 use std::ops::DerefMut;
 use std::rc::{Weak, Rc};
-use crate::foundation::geometry::{IntOffset, IntSize};
 
 use super::constraint::Constraint;
 use super::inner_coodinator::InnerCoordinator;
 use super::layout_node::{LayoutNodeLayoutDelegate, LayoutNode};
 use super::layout_receiver::LayoutReceiver;
-use super::layout_result::{Placeable, PlaceAction, MeasureAction};
+use super::layout_result::Placeable;
 use super::look_ahead_capable_placeable::{LayoutNodeWrapperImpl, LayoutNodeWrapper};
 use super::measurable::Measurable;
 use super::measure_result::MeasureResult;
-use super::measured::Measured;
 
 
 fn error_measure_policy(_layout_receiver: LayoutReceiver, _children: &mut [&mut dyn Measurable], _constraint: &Constraint) -> MeasureResult {
@@ -65,51 +63,7 @@ impl Measurable for InnerCoordinator {
         };
 
         self.handle_measured_result(measure_result);
-        self.layout_node_wrapper_impl.deref_mut()
-    }
-}
-
-impl Placeable for InnerCoordinator {
-    fn get_width(&self) -> usize {
-        self.layout_node_wrapper_impl.get_width()
-    }
-
-    fn get_height(&self) -> usize {
-        self.layout_node_wrapper_impl.get_height()
-    }
-
-    fn set_measured_size(&mut self, size: IntSize) {
-       self.layout_node_wrapper_impl.set_measured_size(size)
-    }
-
-    fn get_measured_size(&self) -> IntSize {
-        self.layout_node_wrapper_impl.get_measured_size()
-    }
-
-    fn get_measurement_constraint(&self) -> &Constraint {
-        self.layout_node_wrapper_impl.get_measurement_constraint()
-    }
-
-    fn place_at(&mut self, position: IntOffset, z_index: f32, place_action: PlaceAction) {
-        self.layout_node_wrapper_impl.place_at(position, z_index, place_action)
-    }
-
-    fn set_measurement_constraint(&mut self, constraint: &Constraint) {
-        self.layout_node_wrapper_impl.set_measurement_constraint(constraint)
-    }
-
-    fn perfroming_measure(&mut self, constraint: &Constraint, block: MeasureAction) -> &dyn Placeable {
-        self.layout_node_wrapper_impl.perfroming_measure(constraint, block)
-    }
-}
-
-impl Measured for InnerCoordinator {
-    fn get_measured_width(&self) -> usize {
-        self.layout_node_wrapper_impl.get_measured_width()
-    }
-
-    fn get_measured_height(&self) -> usize {
-        self.layout_node_wrapper_impl.get_measured_height()
+        &mut self.layout_node_wrapper_impl
     }
 }
 

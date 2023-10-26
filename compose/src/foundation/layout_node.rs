@@ -16,6 +16,7 @@ pub(crate) struct LayoutNode {
 pub(crate) struct MeasurePassDelegate {
     pub(crate) placeable_impl: PlaceableImpl,
     pub(crate) parent: Weak<RefCell<LayoutNodeLayoutDelegate>>,
+    pub(crate) remeasure_pending: bool,
 }
 
 #[derive(Debug)]

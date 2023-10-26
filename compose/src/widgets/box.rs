@@ -1,7 +1,7 @@
 use compose_macro::Compose;
 
 use crate::foundation::{layout_receiver::LayoutReceiver, measurable::Measurable, constraint::Constraint, measure_result::MeasureResult, modifier::Modifier};
-use crate::{self as compose, foundation};
+use crate::{self as compose};
 use crate::widgets::layout::layout;
 
 #[macro_export]
