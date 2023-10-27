@@ -5,17 +5,17 @@ use crate::foundation::geometry::IntSize;
 use super::constraint::Constraint;
 use super::layout_node::LayoutNode;
 use super::layout_result::{Placeable, PlaceableImpl};
-use super::look_ahead_capable_placeable::{LayoutNodeWrapperImpl, LayoutNodeWrapper};
+use super::look_ahead_capable_placeable::{NodeCoordinatorImpl, NodeCoordinator};
 use super::measurable::Measurable;
 use super::measure_result::MeasureResult;
 
-impl Measurable for LayoutNodeWrapperImpl {
+impl Measurable for NodeCoordinatorImpl {
     fn measure(&mut self, _constraint: &Constraint) -> &mut dyn Placeable {
         unimplemented!("layout node wrapper should implement measure")
     }
 }
 
-impl LayoutNodeWrapper for LayoutNodeWrapperImpl {
+impl NodeCoordinator for NodeCoordinatorImpl {
     fn attach(&mut self, layout_node: Weak<RefCell<LayoutNode>>) {
         self.layout_node = MaybeUninit::new(layout_node);
     }
@@ -25,9 +25,9 @@ impl LayoutNodeWrapper for LayoutNodeWrapperImpl {
     }
 }
 
-impl LayoutNodeWrapperImpl {
+impl NodeCoordinatorImpl {
     pub(crate) fn new() -> Self {
-        LayoutNodeWrapperImpl {
+        NodeCoordinatorImpl {
             placeable_impl: PlaceableImpl::new(),
             wrapped_by: None,
             layout_node: MaybeUninit::uninit(),

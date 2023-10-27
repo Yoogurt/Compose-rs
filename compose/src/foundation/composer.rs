@@ -11,6 +11,7 @@ pub(crate) struct ComposerInner {
     pub(crate) layout_node_stack: Vec<Rc<RefCell<LayoutNode>>>,
     // pub(crate) group_stack: Vec<>
     pub(crate) slot_table: SlotTable,
+    pub(crate) root: Option<Rc<RefCell<LayoutNode>>>,
 }
 
 #[derive(Debug)]

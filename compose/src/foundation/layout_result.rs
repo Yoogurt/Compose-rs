@@ -21,8 +21,6 @@ pub trait Placeable: Measured {
     fn set_measurement_constraint(&mut self, constraint: &Constraint);
     fn get_measurement_constraint(&self) -> &Constraint;
 
-    fn perfroming_measure(&mut self, constraint: &Constraint, block: MeasureAction) -> &dyn Placeable;
-
     fn place_at(&mut self, position: IntOffset, z_index: f32, place_action: PlaceAction);
 }
 

@@ -4,16 +4,22 @@ use crate::foundation::constraint::Constraint;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::measure_and_layout_delegate::MeasureAndLayoutDelegate;
 use std::cell::RefCell;
+use std::ptr::read_unaligned;
 use std::rc::Rc;
+use crate::foundation::composer::Composer;
 
 pub struct MacOSComposeView {
     measure_and_layout_delegate: MeasureAndLayoutDelegate,
 }
 
+impl Drop for MacOSComposeView {
+    fn drop(&mut self) {
+        Composer::deattach_root_layout_node();
+    }
+}
+
 impl MacOSComposeView {
     pub fn new() -> MacOSComposeView {
-        let root_layout_node = LayoutNode::new();
-
         let result = MacOSComposeView {
             measure_and_layout_delegate: MeasureAndLayoutDelegate::new(),
         };
@@ -21,6 +27,11 @@ impl MacOSComposeView {
         result
             .measure_and_layout_delegate
             .update_root_measure_policy(root_measure_policy());
+
+        if !Composer::attach_root_layout_node(result.measure_and_layout_delegate.root.clone()) {
+            panic!("unable to create multiple compose view in single thread");
+        }
+
         result
     }
 

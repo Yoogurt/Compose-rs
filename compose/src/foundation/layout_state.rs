@@ -1,9 +1,9 @@
-#[derive(Default,Debug, Copy, Clone)]
+#[derive(Default,Debug, Copy, Clone, PartialEq, PartialOrd, Eq, Ord)]
 pub(crate) enum LayoutState {
-    NeedRemeasure,
     Measuring,
-    NeedLayout,
+    LookaheadMeasuring,
     LayingOut,
+    LookaheadLayingOut,
     #[default]
-    Ready,
+    Idle,
 }

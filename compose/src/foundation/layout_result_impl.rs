@@ -49,9 +49,9 @@ impl Placeable for PlaceableImpl {
         &self.measurement_constraint
     }
 
-    fn perfroming_measure(&mut self, constraint: &Constraint, block: MeasureAction) -> &dyn Placeable {
-        self.set_measurement_constraint(constraint);
-        self.set_measured_size(block().into());
-        return self as &dyn Placeable;
-    }
+    // fn perfroming_measure(&mut self, constraint: &Constraint, block: MeasureAction) -> &dyn Placeable {
+    //     self.set_measurement_constraint(constraint);
+    //     self.set_measured_size(block().into());
+    //     return self as &dyn Placeable;
+    // }
 }

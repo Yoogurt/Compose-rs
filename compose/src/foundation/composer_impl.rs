@@ -1,5 +1,6 @@
 
 use std::{rc::Rc, cell::RefCell};
+use std::cell::Ref;
 
 use crate::foundation::composer::Composer;
 
@@ -21,6 +22,19 @@ impl ComposerInner {
                 _=> {}
             }
         }
+    }
+
+    pub fn attach_root_layout_node(&mut self, root : Rc<RefCell<LayoutNode>>) -> bool {
+        if self.root.is_some() {
+            return false;
+        }
+
+        self.root = Some(root);
+        true
+    }
+
+    pub fn deattach_root_layout_node(&mut self) {
+        self.root = None;
     }
 
     pub fn begin_group(&mut self, hash: i64) {
@@ -62,8 +76,14 @@ impl ComposerInner {
             }
 
             Some(current) => {
-                if let Some(parent) = self.layout_node_stack.last() {
-                    parent.borrow_mut().adopt_child(current);
+                match self.layout_node_stack.last() {
+                    Some(parent) => {
+                        parent.borrow_mut().adopt_child(current);
+                    }
+                    None => {
+                        // attach to root node
+                        self.root.clone().unwrap().borrow_mut().adopt_child(current);
+                    }
                 }
             }
         }
@@ -74,6 +94,18 @@ impl Composer {
     pub fn dispatch_layout_to_first_layout_node(constraint: &Constraint) {
         COMPOSER.with(|local_composer| {
             local_composer.inner.borrow().dispatch_layout_to_first_layout_node(constraint);
+        })
+    }
+
+    pub(crate) fn attach_root_layout_node( root : Rc<RefCell<LayoutNode>>) -> bool {
+        COMPOSER.with(|local_composer| {
+            local_composer.inner.borrow_mut().attach_root_layout_node(root)
+        })
+    }
+
+    pub(crate) fn deattach_root_layout_node() {
+        COMPOSER.with(|local_composer| {
+            local_composer.inner.borrow_mut().deattach_root_layout_node();
         })
     }
 
@@ -127,6 +159,7 @@ impl Default for ComposerInner {
             insertion: false,
             layout_node_stack: Default::default(),
             slot_table: Default::default(),
+            root: None,
         }
     }
 }

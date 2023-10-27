@@ -17,9 +17,6 @@ use compose_macro::Compose;
 #[Compose]
 fn test() {
     Box! {
-        Box! {
-
-        }
     }
 }
 
@@ -71,12 +68,11 @@ fn run_skia() {
     }
 }
 
-fn run_compose_raw() {
-    let mut compose_view = MacOSComposeView::new();
-    compose_view.dispatch_measure(800, 500);
-}
 
 fn main() {
+    let mut compose_view = MacOSComposeView::new();
     // run_skia()
-    run_compose_raw()
+    test();
+
+    compose_view.dispatch_measure(800, 500);
 }

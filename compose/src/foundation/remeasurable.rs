@@ -1,7 +1,7 @@
 use super::constraint::Constraint;
 
 pub trait Remeasurable {
-    fn remeasure(&mut self, constraint: Option<Constraint>) -> bool;
+    fn remeasure(&mut self, constraint: &Constraint) -> bool;
 }
 
 pub trait StatefulRemeasurable : Remeasurable {
