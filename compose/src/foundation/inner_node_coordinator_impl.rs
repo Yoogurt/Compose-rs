@@ -1,13 +1,14 @@
 use std::cell::RefCell;
-use std::mem::MaybeUninit;
+use std::fmt::{Debug, Formatter};
+
 use std::ops::DerefMut;
-use std::rc::{Weak, Rc};
+use std::rc::{Weak};
 use crate::foundation::layout_node::UsageByParent;
 use crate::foundation::measurable::MultiChildrenMeasurePolicy;
 
 use super::constraint::Constraint;
-use super::inner_node_coodinator::InnerNodeCoordinator;
-use super::layout_node::{LayoutNodeLayoutDelegate, LayoutNode};
+use super::inner_node_coordinator::InnerNodeCoordinator;
+use super::layout_node::{LayoutNode};
 use super::layout_receiver::LayoutReceiver;
 use super::layout_result::Placeable;
 use super::look_ahead_capable_placeable::{NodeCoordinatorImpl, NodeCoordinator};
@@ -22,7 +23,7 @@ fn error_measure_policy(_layout_receiver: LayoutReceiver, _children: &mut [&mut 
 impl InnerNodeCoordinator {
     pub(crate) fn new() -> InnerNodeCoordinator {
         InnerNodeCoordinator {
-            measure_policy: error_measure_policy,
+            measure_policy: Box::new(error_measure_policy),
             layout_node: Weak::new(),
             node_coordinator_impl: NodeCoordinatorImpl::new(),
         }
@@ -52,8 +53,8 @@ impl Measurable for InnerNodeCoordinator {
             child.borrow_mut().get_measure_pass_delegate().borrow_mut().set_measured_by_parent(UsageByParent::NotUsed)
         });
 
-        let measure_policy = self.measure_policy;
-        let measure_result = {
+        let measure_policy = &mut self.measure_policy;
+        let _measure_result = {
             let layout_node = unsafe { self.layout_node.upgrade() }.unwrap();
 
             let children = &layout_node.borrow_mut().children;
@@ -88,5 +89,11 @@ impl NodeCoordinator for InnerNodeCoordinator {
 
     fn attach(&mut self, layout_node: Weak<RefCell<LayoutNode>>) {
         self.node_coordinator_impl.attach(layout_node);
+    }
+}
+
+impl Debug for InnerNodeCoordinator {
+    fn fmt(&self, _f: &mut Formatter<'_>) -> std::fmt::Result {
+        todo!()
     }
 }

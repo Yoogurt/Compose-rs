@@ -1,11 +1,11 @@
 use crate::foundation::bridge::root_measure_policy::root_measure_policy;
 use crate::foundation::canvas::Canvas;
 use crate::foundation::constraint::Constraint;
-use crate::foundation::layout_node::LayoutNode;
+
 use crate::foundation::measure_and_layout_delegate::MeasureAndLayoutDelegate;
-use std::cell::RefCell;
-use std::ptr::read_unaligned;
-use std::rc::Rc;
+
+
+
 use crate::foundation::composer::Composer;
 
 pub struct MacOSComposeView {
@@ -14,7 +14,7 @@ pub struct MacOSComposeView {
 
 impl Drop for MacOSComposeView {
     fn drop(&mut self) {
-        Composer::deattach_root_layout_node();
+        Composer::detach_root_layout_node();
     }
 }
 

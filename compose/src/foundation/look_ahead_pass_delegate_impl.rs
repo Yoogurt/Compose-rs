@@ -9,7 +9,7 @@ impl LookaheadPassDelegate {
 }
 
 impl Remeasurable for LookaheadPassDelegate {
-    fn remeasure(&mut self, constraint: &Constraint) -> bool {
+    fn remeasure(&mut self, _constraint: &Constraint) -> bool {
         todo!()
     }
 }

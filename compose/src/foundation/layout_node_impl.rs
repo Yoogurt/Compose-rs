@@ -1,13 +1,13 @@
 use std::cell::{Ref, RefCell, RefMut};
 use std::mem::MaybeUninit;
 
-use std::ops::{Deref, DerefMut};
-use std::rc::{Rc, Weak};
+
+use std::rc::{Rc};
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
-use crate::widgets::layout::layout;
+
 
 use super::canvas::Canvas;
-use super::constraint::{Constraint, self};
+use super::constraint::{Constraint};
 use super::geometry::IntSize;
 use super::layout_node::{LayoutNode, UsageByParent, LayoutNodeLayoutDelegate, MeasurePassDelegate};
 use super::layout_result::{PlaceableImpl, Placeable};
@@ -23,6 +23,7 @@ use super::remeasurable::{Remeasurable, StatefulRemeasurable};
 impl LayoutNode {
     pub(crate) fn new() -> Rc<RefCell<Self>> {
         let node = LayoutNode {
+            modifier: Modifier.wrap_with_rc_refcell(),
             node_chain: NodeChain::new(),
             children: vec![],
             layout_node_layout_delegate: LayoutNodeLayoutDelegate::new(),
@@ -31,13 +32,13 @@ impl LayoutNode {
 
         let node = node.wrap_with_rc_refcell();
         {
-            let layout_node_layout_delegate = node.borrow().layout_node_layout_delegate.clone();
-            let mut node_mut = node.borrow_mut();
+            let node_mut = node.borrow_mut();
 
             let node_chain = node_mut.node_chain.clone();
-            node_chain.borrow_mut().attach(Rc::downgrade(&node));
+            let modifier = node_mut.modifier.clone();
+            node_chain.borrow_mut().attach(Rc::downgrade(&node), modifier.clone());
 
-            node_mut.layout_node_layout_delegate.borrow_mut().attach(node_chain);
+            node_mut.layout_node_layout_delegate.borrow_mut().attach(node_chain, modifier);
         }
 
         node
@@ -49,20 +50,6 @@ impl LayoutNode {
 
     pub(crate) fn for_each_child<F>(&self, f: F) where F: FnMut(&Rc<RefCell<LayoutNode>>) {
         self.children.iter().for_each(f);
-    }
-
-    pub fn set_modifier(&mut self, modifier: Modifier) {
-        // if self.modifier == modifier {
-        //     return;
-        // }
-        //
-        // self.modifier = modifier;
-        //
-        // let _outer_wrapper = self.modifier.fold_out::<Rc<RefCell<dyn LayoutNodeWrapper>>>(self.inner_placeable.clone(), &mut |_modifier, to_wrap| {
-        //     let wrapper = to_wrap;
-        //
-        //     wrapper
-        // });
     }
 
     pub fn set_measure_policy(&self,
@@ -85,16 +72,20 @@ impl LayoutNode {
         self.layout_node_layout_delegate.borrow().measure_pass_delegate.clone()
     }
 
+    pub fn set_modifier(&self, modifier: Modifier) {
+        *self.modifier.borrow_mut() = modifier;
+    }
+
     fn draw(_canvas: &dyn Canvas) {}
 }
 
 impl Remeasurable for MeasurePassDelegate {
     fn remeasure(&mut self, constraint: &Constraint) -> bool {
-        let mut previous_size: IntSize = {
+        let previous_size: IntSize = {
             let outer_node_ref = unsafe {
                 self.nodes.assume_init_ref().borrow()
             };
-            let mut outer_coodinator = outer_node_ref.outer_coordinator.borrow_mut();
+            let outer_coodinator = outer_node_ref.outer_coordinator.borrow_mut();
             outer_coodinator.get_measured_size()
         };
 
@@ -104,7 +95,7 @@ impl Remeasurable for MeasurePassDelegate {
             let outer_node_ref = unsafe {
                 self.nodes.assume_init_ref().borrow()
             };
-            let mut outer_coodinator = outer_node_ref.outer_coordinator.borrow_mut();
+            let outer_coodinator = outer_node_ref.outer_coordinator.borrow_mut();
             outer_coodinator.get_measured_size()
         };
 
@@ -170,6 +161,7 @@ impl LayoutNodeLayoutDelegate {
     pub(crate) fn new() -> Rc<RefCell<Self>> {
         LayoutNodeLayoutDelegate {
             last_constraints: None,
+            modifier: Modifier.wrap_with_rc_refcell(),
             nodes: MaybeUninit::uninit(),
             measure_pass_delegate: MeasurePassDelegate::new().wrap_with_rc_refcell(),
             lookahead_pass_delegate: LookaheadPassDelegate::new().wrap_with_rc_refcell(),
@@ -179,8 +171,9 @@ impl LayoutNodeLayoutDelegate {
         }.wrap_with_rc_refcell()
     }
 
-    pub(crate) fn attach(&mut self, node_chain: Rc<RefCell<NodeChain>>) {
+    pub(crate) fn attach(&mut self, node_chain: Rc<RefCell<NodeChain>>, modifier: Rc<RefCell<Modifier>>) {
         self.nodes = MaybeUninit::new(node_chain.clone());
+        self.modifier = modifier;
         self.measure_pass_delegate.borrow_mut().attach(node_chain);
     }
 

@@ -1,7 +1,8 @@
-use std::{cell::RefCell, rc::{Rc, Weak}};
+use std::{cell::RefCell, rc::Rc};
 use std::mem::MaybeUninit;
 use auto_delegate::Delegate;
 use crate::foundation::constraint::Constraint;
+use crate::foundation::modifier::Modifier;
 
 use super::{
     layout_result::PlaceableImpl, layout_state::LayoutState,
@@ -10,6 +11,7 @@ use super::{
 
 #[derive(Debug)]
 pub(crate) struct LayoutNode {
+    pub(crate) modifier: Rc<RefCell<Modifier>>,
     pub(crate) node_chain: Rc<RefCell<NodeChain>>,
     pub(crate) children: Vec<Rc<RefCell<LayoutNode>>>,
     pub(crate) layout_node_layout_delegate: Rc<RefCell<LayoutNodeLayoutDelegate>>,
@@ -32,6 +34,7 @@ pub(crate) struct MeasurePassDelegate {
 pub(crate) struct LayoutNodeLayoutDelegate {
     pub(crate) last_constraints : Option<Constraint>,
     pub(crate) nodes: MaybeUninit<Rc<RefCell<NodeChain>>>,
+    pub(crate) modifier: Rc<RefCell<Modifier>>,
     pub(crate) measure_pass_delegate: Rc<RefCell<MeasurePassDelegate>>,
     pub(crate) lookahead_pass_delegate: Rc<RefCell<LookaheadPassDelegate>>,
     pub(crate) layout_state: LayoutState,

@@ -1,7 +1,9 @@
-
 use crate::foundation::geometry::{IntOffset, IntSize, CoerceIn};
+use crate::foundation::layout_direction::LayoutDirection;
+use crate::foundation::layout_receiver::LayoutReceiver;
+use crate::foundation::layout_result::PlacementScopeImpl;
 
-use super::{layout_result::{PlaceableImpl, Placeable, PlacementScope, MeasureAction, PlaceAction}, measured::MeasuredImpl, constraint::Constraint, measure_result::MeasureResult};
+use super::{layout_result::{PlaceableImpl, Placeable, PlacementScope}, measured::MeasuredImpl, constraint::Constraint};
 
 impl PlaceableImpl {
     pub(crate) fn new() -> Self {
@@ -39,7 +41,7 @@ impl Placeable for PlaceableImpl {
         self.measured_size = size;
     }
 
-    fn place_at(&mut self, _position: IntOffset, _z_index: f32, _place_action: PlaceAction) {}
+    fn place_at(&mut self, _position: IntOffset, _z_index: f32) {}
 
     fn set_measurement_constraint(&mut self, constraint: &Constraint) {
         self.measurement_constraint = *constraint;
@@ -54,4 +56,41 @@ impl Placeable for PlaceableImpl {
     //     self.set_measured_size(block().into());
     //     return self as &dyn Placeable;
     // }
+}
+
+impl PlacementScope for PlacementScopeImpl<'_> {
+    fn parent_width(&self) -> usize {
+        self.width
+    }
+
+    fn parent_height(&self) -> usize {
+        self.height
+    }
+
+    fn parent_layout_direction(&self) -> LayoutDirection {
+        self.scope.layout_direction
+    }
+
+    fn place_relative(&self, placeable: &mut dyn Placeable, x: i32, y: i32) {
+        self.place_relative_with_z(placeable, x, y, 0.0)
+    }
+
+    fn place_relative_with_z(&self, placeable: &mut dyn Placeable, x: i32, y: i32, z_index: f32) {
+        // mirror
+        if self.parent_layout_direction() == LayoutDirection::Ltr || self.parent_width() == 0 {
+            placeable.place_at((x, y).into(), z_index)
+        } else {
+            placeable.place_at((self.parent_width() as i32 - placeable.get_width() as i32 - x, y).into(), z_index)
+        }
+    }
+}
+
+impl<'a> PlacementScopeImpl<'a> {
+    pub(crate) fn new(width: usize, height: usize, layout_receiver: &'a LayoutReceiver) -> Self {
+        PlacementScopeImpl {
+            width,
+            height,
+            scope: layout_receiver,
+        }
+    }
 }

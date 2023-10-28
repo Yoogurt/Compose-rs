@@ -2,6 +2,7 @@ use compose_macro::Compose;
 
 use crate::foundation::{layout_receiver::LayoutReceiver, measurable::Measurable, constraint::Constraint, measure_result::MeasureResult, modifier::Modifier};
 use crate::{self as compose};
+
 use crate::widgets::layout::layout;
 
 #[macro_export]
@@ -22,10 +23,10 @@ macro_rules! Box {
 fn box_measure_policy(layout_receiver: LayoutReceiver, measurable: &mut [&mut dyn Measurable], constraint: &Constraint) -> MeasureResult {
     let children_count = measurable.len();
     match children_count {
-        0 => { layout_receiver.layout(constraint.min_width, constraint.min_height) }
+        0 => { layout_receiver.layout(constraint.min_width, constraint.min_height, |_| {}) }
         1 => {
             let placeable = measurable[0].measure(constraint);
-            placeable.place_at((0,0).into(), 0.0, Box::new(|_| {}));
+            placeable.place_at((0,0).into(), 0.0);
             todo!()
         }
         _ =>{
@@ -36,5 +37,5 @@ fn box_measure_policy(layout_receiver: LayoutReceiver, measurable: &mut [&mut dy
 
 #[Compose]
 pub fn box_internal(modifier: Modifier, content: fn()) {
-    layout(modifier, box_measure_policy, content);
+    layout(modifier, Box::new(box_measure_policy), content);
 }

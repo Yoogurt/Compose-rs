@@ -1,6 +1,6 @@
 use std::{rc::Weak, cell::RefCell, mem::MaybeUninit};
 use core::fmt::Debug;
-use auto_delegate::{Delegate, delegate};
+use auto_delegate::Delegate;
 use crate::foundation::constraint::Constraint;
 
 use super::{layout_result::{Placeable, PlaceableImpl}, measurable::Measurable, layout_node::LayoutNode, measure_result::MeasureResult};

@@ -1,9 +1,16 @@
-
+use std::fmt::{Debug, Formatter};
 use std::ops::Add;
 
 use super::modifier::Modifier;
 
 impl Modifier {
+    pub fn then(self, modifier: Modifier) -> Modifier{
+        Modifier::Combined {
+            left: Box::new(self),
+            right: Box::new(modifier),
+        }
+    }
+
     pub fn fold_in<R>(&self, initial: R, mut operation: impl FnMut(R, &Modifier) -> R) -> R {
         match self {
             Modifier::Combined { left, right } => {
@@ -52,9 +59,12 @@ impl Modifier {
 impl Add for Modifier {
     type Output = Modifier;
     fn add(self, rhs: Self) -> Self::Output {
-        Modifier::Combined {
-            left: Box::new(self),
-            right: Box::new(rhs),
-        }
+       self.then(rhs)
+    }
+}
+
+impl Debug for Modifier {
+    fn fmt(&self, _f: &mut Formatter<'_>) -> std::fmt::Result {
+        todo!()
     }
 }

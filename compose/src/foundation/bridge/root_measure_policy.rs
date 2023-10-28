@@ -1,8 +1,11 @@
-use crate::foundation::measurable::MultiChildrenMeasurePolicy;
+use crate::foundation::constraint::Constraint;
+use crate::foundation::layout_receiver::LayoutReceiver;
+use crate::foundation::measurable::{Measurable, MultiChildrenMeasurePolicy};
+use crate::foundation::measure_result::MeasureResult;
 
 #[inline]
 pub(crate) fn root_measure_policy() -> MultiChildrenMeasurePolicy {
-    |_layout_receiver, measurables, constraint| {
+    Box::new(|_layout_receiver: LayoutReceiver, measurables:&mut [&mut dyn Measurable], constraint: &Constraint| -> MeasureResult {
         match measurables.len() {
             0 => {
                 (constraint.min_width, constraint.min_height).into()
@@ -25,5 +28,5 @@ pub(crate) fn root_measure_policy() -> MultiChildrenMeasurePolicy {
                 (max_width, max_height).into()
             }
         }
-    }
+    })
 }

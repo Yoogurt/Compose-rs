@@ -1,6 +1,6 @@
 
 use std::{rc::Rc, cell::RefCell};
-use std::cell::Ref;
+
 
 use crate::foundation::composer::Composer;
 
@@ -103,7 +103,7 @@ impl Composer {
         })
     }
 
-    pub(crate) fn deattach_root_layout_node() {
+    pub(crate) fn detach_root_layout_node() {
         COMPOSER.with(|local_composer| {
             local_composer.inner.borrow_mut().deattach_root_layout_node();
         })
