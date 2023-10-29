@@ -41,14 +41,14 @@ impl NodeChain {
             inner_coordinator: inner_node_coordinator.clone(),
             outer_coordinator: inner_node_coordinator,
 
-            layout_node: MaybeUninit::uninit(),
+            layout_node: Weak::new(),
         };
 
         result.wrap_with_rc_refcell()
     }
 
     pub(crate) fn attach(&mut self, layout_node: Weak<RefCell<LayoutNode>>, modifier_container: Rc<RefCell<ModifierContainer>>) {
-        self.layout_node = MaybeUninit::new(layout_node.clone());
+        self.layout_node = layout_node.clone();
         self.modifier_container = modifier_container;
         self.inner_coordinator.borrow_mut().attach(layout_node);
     }
@@ -60,7 +60,7 @@ impl NodeChain {
         return self.sentine_head.clone();
     }
 
-    fn insert_child(node: Rc<RefCell<dyn Node>>, parent:  Rc<RefCell<dyn Node>>) -> Rc<RefCell<dyn Node>>{
+    fn insert_child(node: Rc<RefCell<dyn Node>>, parent: Rc<RefCell<dyn Node>>) -> Rc<RefCell<dyn Node>> {
         {
             let mut parent_mut = parent.borrow_mut();
             let the_child = parent_mut.get_child();
@@ -75,9 +75,9 @@ impl NodeChain {
     }
 
     fn create_and_insert_node_as_child(element: &mut Modifier, parent: Rc<RefCell<dyn Node>>) -> Rc<RefCell<dyn Node>> {
-        let node =match element {
+        let node = match element {
             Modifier::ModifierNodeElement { create, update } => {
-                 create()
+                create()
             }
 
             _ => {
@@ -88,37 +88,58 @@ impl NodeChain {
         Self::insert_child(node, parent)
     }
 
-    pub(crate) fn update_from(&mut self, modifier: &mut Modifier) {
+    fn trim_chain(&mut self, padded_head: Rc<RefCell<dyn Node>>) -> Rc<RefCell<dyn Node>>{
+        if padded_head.as_ptr() != self.sentine_head.as_ptr() {
+            panic!("trim_chain called on already trimmed chain")
+        }
+
+        todo!()
+    }
+
+    fn sync_coordinators(&mut self) {
+
+    }
+
+    pub(crate) fn update_from(&mut self, mut modifier: Modifier) {
         // perform expensive reinit for modifier
         // todo structure update modifier
         let mut coordinator_sync_needed = false;
-
         let padded_head = self.pad_chain();
 
-        let modifier_container = self.modifier_container.borrow_mut();
-        let mut before = &modifier_container.current;
-        let before_size = before.len();
+        {
+            let mut modifier_container = self.modifier_container.borrow_mut();
+            let mut before = &modifier_container.current;
+            let before_size = before.len();
 
-        let mut after = modifier.flatten_mut();
-        let after_size = after.len();
+            let mut after = modifier.flatten();
+            let after_size = after.len();
 
-        let mut index = 0usize;
+            let mut index = 0usize;
 
-        if before_size == after_size {
-            todo!()
-        } else if before_size == 0 {
-            coordinator_sync_needed = true;
+            if before_size == after_size {
+                todo!()
+            } else if before_size == 0 {
+                coordinator_sync_needed = true;
 
-            let mut node = padded_head;
-            while index < after_size {
-                let parent = node.clone();
-                node = Self::create_and_insert_node_as_child(after[index], parent);
-                index += 1;
+                let mut node = padded_head.clone();
+                while index < after_size {
+                    let parent = node.clone();
+                    node = Self::create_and_insert_node_as_child(&mut after[index], parent);
+                    index += 1;
+                }
+            } else if after_size == 0 {
+                todo!()
+            } else {
+                todo!()
             }
-        } else if after_size == 0 {
-            todo!()
-        } else {
-            todo!()
+
+            dbg!(&after);
+            modifier_container.current = after;
+        }
+        self.head = self.trim_chain(padded_head);
+
+        if coordinator_sync_needed {
+            self.sync_coordinators();
         }
     }
 }

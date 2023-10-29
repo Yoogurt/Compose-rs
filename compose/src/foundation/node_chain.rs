@@ -18,5 +18,5 @@ pub(crate) struct NodeChain {
     pub(crate) inner_coordinator: Rc<RefCell<InnerNodeCoordinator>>,
     pub(crate) outer_coordinator: Rc<RefCell<dyn NodeCoordinator>>,
 
-    pub(crate) layout_node: MaybeUninit<Weak<RefCell<LayoutNode>>>,
+    pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
 }

@@ -74,8 +74,7 @@ impl LayoutNode {
     }
 
     pub fn set_modifier(&self, mut modifier: Modifier) {
-        self.node_chain.borrow_mut().update_from(&mut modifier);
-        self.modifier_container.borrow_mut().set_modifier(modifier);
+        self.node_chain.borrow_mut().update_from(modifier);
         self.layout_node_layout_delegate.borrow_mut().update_parent_data();
     }
 

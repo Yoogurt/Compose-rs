@@ -1,6 +1,6 @@
 use std::cell::RefCell;
-use std::fmt::{Debug, Formatter};
-use std::ops::Add;
+use std::fmt::{Debug, Formatter, Write};
+use std::ops::{Add, Deref};
 use std::rc::Rc;
 use crate::foundation::modifier::{Node, NodeImpl};
 
@@ -66,33 +66,15 @@ impl Modifier {
         }
     }
 
-    pub(crate) fn flatten(&self) -> Vec<&Modifier> {
-        let mut result = Vec::<&Modifier>::with_capacity(16);
-        let mut stack: Vec<&Modifier> = vec![self];
+    pub(crate) fn flatten(self) -> Vec<Modifier> {
+        let mut result = Vec::<Modifier>::with_capacity(16);
+        let mut stack: Vec<Modifier> = vec![self];
 
         while let Some(next) = stack.pop() {
             match next {
                 Modifier::Combined { left, right } => {
-                    stack.push(right);
-                    stack.push(left);
-                }
-
-                _ => {}
-            }
-        }
-
-        result
-    }
-
-    pub(crate) fn flatten_mut(&mut self) -> Vec<&mut Modifier> {
-        let mut result = Vec::<&mut Modifier>::with_capacity(16);
-        let mut stack: Vec<&mut Modifier> = vec![self];
-
-        while let Some(next) = stack.pop() {
-            match next {
-                Modifier::Combined { left, right } => {
-                    stack.push(right);
-                    stack.push(left);
+                    stack.push(*right);
+                    stack.push(*left);
                 }
 
                 _ => {
@@ -122,7 +104,26 @@ impl Add for Modifier {
 }
 
 impl Debug for Modifier {
-    fn fmt(&self, _f: &mut Formatter<'_>) -> std::fmt::Result {
-        todo!()
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Modifier::Unit => {
+                f.write_str("<modifier:unit>")
+            }
+            Modifier::Combined {
+                left, right
+            } => {
+                f.write_str("<modifier:combined>")?;
+                left.fmt(f)?;
+                right.fmt(f)
+            }
+            Modifier::ModifierNodeElement {create, update} => {
+                f.write_str("<modifier:element[")?;
+                f.write_str(&format!("create:{:p}", create.deref()))?;
+                f.write_str(&format!(",update:{:p}]>", update.deref()))
+            }
+            _ => {
+                f.write_str("<unknown modifier>")
+            }
+        }
     }
 }

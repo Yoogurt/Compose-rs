@@ -1,3 +1,4 @@
+use std::hash::{Hash, Hasher};
 use std::ops::{Add, Sub};
 use crate::foundation::geometry::{Dp, IntoDp};
 
@@ -76,5 +77,11 @@ impl Dp {
 impl Default for Dp {
     fn default() -> Self {
         Self::ZERO
+    }
+}
+
+impl Hash for Dp {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        state.write_i64(self.value as i64)
     }
 }

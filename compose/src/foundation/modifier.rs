@@ -1,4 +1,4 @@
-use std::any::Any;
+use std::any::{Any, TypeId};
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::rc::Rc;
@@ -14,30 +14,9 @@ pub trait Node: Debug + Any {
     fn set_child(&mut self, parent: Option<Rc<RefCell<dyn Node>>>);
     fn get_child(&self) -> Option<Rc<RefCell<dyn Node>>>;
 
-    fn as_any(&self) -> &dyn Any where Self: Sized {
-        self
-    }
-
-    fn as_any_mut(&mut self) -> &dyn Any where Self: Sized {
-        self
-    }
+    fn as_any(&self) -> &dyn Any;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
 }
-
-// impl dyn Node {
-//     pub fn downcast_ref<T>(&self) -> Option<& T> where Self: 'static, T: Any + 'static {
-//         self as &dyn Any;
-//
-//         // let a: Option<&T> = (&self as &dyn Any).downcast_ref::<T>();
-//         // a
-//         todo!()
-//     }
-//
-//     pub fn test(&self) {}
-//
-//     // pub fn downcast_mut<T>(&mut self) -> Option<&mut T> where T: Sized {
-//     //     (&mut self as &mut dyn Any).downcast_mut::<T>()
-//     // }
-// }
 
 #[derive(Debug, Default)]
 pub(crate) struct NodeImpl {
@@ -60,6 +39,14 @@ impl Node for NodeImpl {
 
     fn get_child(&self) -> Option<Rc<RefCell<dyn Node>>> {
         self.child.clone()
+    }
+
+    fn as_any(&self) -> &dyn Any where Self: Sized {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any where Self: Sized {
+        self
     }
 }
 
