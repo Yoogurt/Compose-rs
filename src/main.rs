@@ -13,11 +13,14 @@ use compose::foundation::bridge::platform_compose_view::MacOSComposeView;
 use compose::foundation::drawing::canvas_impl::new_canvas;
 use compose::foundation::geometry::IntSize;
 use compose_macro::Compose;
+use compose::foundation::modifier::Modifier;
+use compose::foundation::layout::size_modifier::SizeModifier;
+use compose::foundation::geometry::IntoDp;
 
 #[Compose]
 fn test() {
-    Box! {
-    }
+    Box!(Modifier.width(10.dp()), {
+    })
 }
 
 fn run_skia() {

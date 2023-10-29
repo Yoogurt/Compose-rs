@@ -8,9 +8,10 @@ pub trait IntrinsicSizeModifier {
 
 impl IntrinsicSizeModifier for Modifier {
     fn width(self) -> Modifier {
-        self + Modifier::LayoutModifier {
-            measure_policy: instrinsic_size_measure_policy()
-        }
+        todo!()
+        // self + Modifier::LayoutElement {
+        //     measure_policy: instrinsic_size_measure_policy()
+        // }
     }
 
     fn height(self) -> Modifier {

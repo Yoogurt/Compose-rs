@@ -1,4 +1,4 @@
 pub struct Density {
-    density: f32,
-    font_scale: f32
+    density: f64,
+    font_scale: f64
 }

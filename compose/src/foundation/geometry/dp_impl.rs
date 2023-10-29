@@ -3,13 +3,31 @@ use crate::foundation::geometry::{Dp, IntoDp};
 
 impl IntoDp for f32 {
     fn dp(self) -> Dp {
+        Dp::new(self as f64)
+    }
+}
+
+impl IntoDp for f64 {
+    fn dp(self) -> Dp {
         Dp::new(self)
+    }
+}
+
+impl IntoDp for i32 {
+    fn dp(self) -> Dp {
+        Dp::new(self as f64)
+    }
+}
+
+impl IntoDp for usize {
+    fn dp(self) -> Dp {
+        Dp::new(self as f64)
     }
 }
 
 impl From<Dp> for f32 {
     fn from(value: Dp) -> Self {
-        value.value
+        value.value as f32
     }
 }
 
@@ -36,21 +54,27 @@ impl Sub for Dp {
 }
 
 impl Dp {
-    pub const INFINITE: Dp = Self::new(f32::INFINITY);
+    pub const INFINITE: Dp = Self::new(f64::INFINITY);
     pub const ZERO: Dp = Self::new(0.0);
-    pub const UNSPECIFIC: Dp = Self::new(f32::NAN);
+    pub const UNSPECIFIC: Dp = Self::new(f64::NAN);
 
-    const fn new(value: f32) -> Self {
+    const fn new(value: f64) -> Self {
         Self {
             value
         }
     }
 
     pub fn is_infinite(&self) -> bool {
-        self.value == f32::MAX
+        self.value == f64::MAX
     }
 
     pub fn is_unspecific(&self) -> bool {
         self.value.is_nan()
+    }
+}
+
+impl Default for Dp {
+    fn default() -> Self {
+        Self::ZERO
     }
 }

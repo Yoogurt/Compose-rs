@@ -1,6 +1,6 @@
 #[derive(Debug, Copy, Clone)]
 pub struct Dp {
-    value: f32
+    value: f64
 }
 
 pub trait IntoDp {

@@ -1,14 +1,14 @@
 use super::{Density, Dp};
 
 impl Density {
-    pub fn new(density: f32, font_scale: f32) -> Self {
+    pub fn new(density: f64, font_scale: f64) -> Self {
         Self {
             density,
             font_scale
         }
     }
 
-    pub fn dp_to_px(&self, dp: Dp) -> f32 {
+    pub fn dp_to_px(&self, dp: Dp) -> f64 {
         dp.value * self.density
     }
 

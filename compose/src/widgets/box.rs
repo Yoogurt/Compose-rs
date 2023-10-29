@@ -7,7 +7,7 @@ use crate::widgets::layout::layout;
 
 #[macro_export]
 macro_rules! Box {
-    ( $modifier_expr:tt, $($fn_body:tt)* ) => {
+    ( $modifier_expr:expr, $($fn_body:tt)* ) => {
         compose::widgets::r#box::box_internal($modifier_expr, || {
              $($fn_body)*
         });
