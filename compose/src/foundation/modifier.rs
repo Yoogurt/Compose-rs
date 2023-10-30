@@ -2,26 +2,71 @@ use std::any::{Any, TypeId};
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::rc::Rc;
+use compose_macro::Leak;
 use auto_delegate::delegate;
+use crate::foundation::delegatable_node::DelegatableNode;
+use crate::foundation::layout_modifier_node::LayoutModifierNode;
+use crate::foundation::look_ahead_capable_placeable::NodeCoordinator;
+use crate::foundation::memory::leak_token::{LeakToken, LeakableObject};
 
 pub const Modifier: Modifier = Modifier::Unit;
 
+#[derive(Debug)]
+pub enum NodeKind<'a> {
+    Any(&'a mut dyn Node),
+    // DelegatingNode(&'a mut dyn DelegatableNode),
+    LayoutMidifierNode(&'a mut dyn LayoutModifierNode),
+}
+
+#[macro_export]
+macro_rules! impl_node_kind_any {
+    ($tt:tt) => {
+        impl NodeKindPatch for $tt {
+            fn get_node_kind(&mut self) -> NodeKind {
+                NodeKind::Any(self)
+            }
+        }
+    };
+}
+
+pub trait NodeKindPatch {
+    fn get_node_kind(&mut self) -> NodeKind;
+}
+
 #[delegate]
-pub trait Node: Debug + Any {
+pub trait Node: NodeKindPatch + Debug + Any {
     fn set_parent(&mut self, parent: Option<Rc<RefCell<dyn Node>>>);
     fn get_parent(&self) -> Option<Rc<RefCell<dyn Node>>>;
 
     fn set_child(&mut self, parent: Option<Rc<RefCell<dyn Node>>>);
     fn get_child(&self) -> Option<Rc<RefCell<dyn Node>>>;
 
+    fn update_coordinator(&mut self, coordinator: Option<Rc<RefCell<dyn NodeCoordinator>>>);
+    fn get_coordinator(&self) -> Option<Rc<RefCell<dyn NodeCoordinator>>>;
+
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
 #[derive(Debug, Default)]
+#[Leak]
 pub(crate) struct NodeImpl {
     parent: Option<Rc<RefCell<dyn Node>>>,
     child: Option<Rc<RefCell<dyn Node>>>,
+    coordinator: Option<Rc<RefCell<dyn NodeCoordinator>>>,
+    // leak_token: LeakToken<NodeImpl>,
+}
+
+// impl LeakableObject for NodeImpl {
+//     fn tag() -> &'static str {
+//         "NodeImpl"
+//     }
+// }
+
+impl NodeKindPatch for NodeImpl {
+    fn get_node_kind(&mut self) -> NodeKind {
+        todo!("implement get node kind by yourself")
+    }
 }
 
 impl Node for NodeImpl {
@@ -47,6 +92,14 @@ impl Node for NodeImpl {
 
     fn as_any_mut(&mut self) -> &mut dyn Any where Self: Sized {
         self
+    }
+
+    fn get_coordinator(&self) -> Option<Rc<RefCell<dyn NodeCoordinator>>> {
+        self.coordinator.clone()
+    }
+
+    fn update_coordinator(&mut self, coordinator: Option<Rc<RefCell<dyn NodeCoordinator>>>) {
+        self.coordinator = coordinator;
     }
 }
 

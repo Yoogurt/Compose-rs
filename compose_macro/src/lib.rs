@@ -14,7 +14,10 @@ use quote::{quote, ToTokens};
 use rand::random;
 use syn::*;
 use std::sync::RwLock;
+use syn::Meta::Path;
+use syn::Pat::Type;
 use syn::spanned::Spanned;
+use syn::token::Colon;
 use crate::attribute_parser::parse_attribute;
 use crate::signature_checker::verify_signature;
 use crate::function_params_collector::collect_function_params;
@@ -96,4 +99,45 @@ pub fn Compose(attribute: TokenStream, funtion: TokenStream) -> TokenStream {
     };
 
     result.into()
+}
+
+#[proc_macro_attribute]
+pub fn Leak(attribute: TokenStream, struct_token_stream: TokenStream) -> TokenStream {
+    let struct_token = struct_token_stream.clone();
+    let mut struct_tokens = parse_macro_input!(struct_token as ItemStruct);
+
+    let struct_ident = &struct_tokens.ident;
+    let fields = &mut struct_tokens.fields;
+    let caller_site = Span::call_site();
+
+    match fields {
+        Fields::Named(field_named) => {
+            dbg!(&field_named);
+
+            let named = &mut field_named.named;
+
+            let token_stream : TokenStream= (quote! {
+                leak_object: LeakToken<#struct_ident>
+            }).into();
+
+            let new_leak_object_field = Field {
+              ident: Some(Ident::new("leak_object", caller_site.clone())),
+                vis: Visibility::Inherited,
+                attrs: vec![],
+                colon_token: Colon,
+                mutability: FieldMutability::None,
+                ty: Meta::Path(syn::Path {
+                    leading_colon: None,
+                    segments: PathSegment::,
+                }),
+            };
+
+            named.insert(named.len(), token_stream);
+        }
+        _ => {}
+    }
+
+    (quote! {
+        #struct_tokens
+    }).into()
 }

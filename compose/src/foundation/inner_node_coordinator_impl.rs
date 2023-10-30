@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::cell::RefCell;
 use std::fmt::{Debug, Formatter};
 
@@ -30,7 +31,8 @@ impl InnerNodeCoordinator {
     }
 
     pub(crate) fn attach(&mut self, layout_node: Weak<RefCell<LayoutNode>>) {
-        self.layout_node = layout_node;
+        self.layout_node = layout_node.clone();
+        self.node_coordinator_impl.attach(layout_node);
     }
 
     pub(crate) fn set_measure_policy(&mut self, measure_policy: MultiChildrenMeasurePolicy) {
@@ -83,12 +85,12 @@ impl Measurable for InnerNodeCoordinator {
 }
 
 impl NodeCoordinator for InnerNodeCoordinator {
-    fn layout_node(&self) -> Weak<RefCell<LayoutNode>> {
-        self.node_coordinator_impl.layout_node()
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 
-    fn attach(&mut self, layout_node: Weak<RefCell<LayoutNode>>) {
-        self.node_coordinator_impl.attach(layout_node);
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 }
 

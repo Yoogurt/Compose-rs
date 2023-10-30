@@ -30,7 +30,7 @@ impl LayoutNode {
             layout_node_layout_delegate: LayoutNodeLayoutDelegate::new(),
             usage_by_parent: UsageByParent::NotUsed,
         };
-
+        
         let node = node.wrap_with_rc_refcell();
         {
             let node_mut = node.borrow_mut();

@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::cell::RefCell;
 use std::mem::MaybeUninit;
 use std::rc::Weak;
@@ -15,13 +16,23 @@ impl Measurable for NodeCoordinatorImpl {
     }
 }
 
-impl NodeCoordinator for NodeCoordinatorImpl {
-    fn attach(&mut self, layout_node: Weak<RefCell<LayoutNode>>) {
-        self.layout_node = MaybeUninit::new(layout_node);
+impl NodeCoordinatorImpl {
+    pub(crate) fn attach(&mut self, layout_node: Weak<RefCell<LayoutNode>>) {
+        self.layout_node = Weak::new();
     }
 
-    fn layout_node(&self) -> Weak<RefCell<LayoutNode>> {
-        unsafe { self.layout_node.assume_init_read() }
+    pub(crate)  fn layout_node(&self) -> Weak<RefCell<LayoutNode>> {
+        self.layout_node.clone()
+    }
+}
+
+impl NodeCoordinator for NodeCoordinatorImpl {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 }
 
@@ -30,7 +41,7 @@ impl NodeCoordinatorImpl {
         NodeCoordinatorImpl {
             placeable_impl: PlaceableImpl::new(),
             wrapped_by: None,
-            layout_node: MaybeUninit::uninit(),
+            layout_node: Weak::new(),
             measure_result: MeasureResult::default(),
         }
     }

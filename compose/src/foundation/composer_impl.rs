@@ -11,6 +11,12 @@ thread_local! {
 }
 
 impl ComposerInner {
+    pub fn destroy(&mut self) {
+        self.slot_table.data.clear();
+        self.slot_table.index = 0;
+        self.root = None;
+    }
+
     pub fn dispatch_layout_to_first_layout_node(&self, _constraint: &Constraint) {
         for slot_table_type in &self.slot_table.data {
             match slot_table_type {
@@ -82,7 +88,7 @@ impl ComposerInner {
                     }
                     None => {
                         // attach to root node
-                        self.root.clone().unwrap().borrow_mut().adopt_child(current);
+                        // self.root.clone().unwrap().borrow_mut().adopt_child(current);
                     }
                 }
             }
@@ -100,6 +106,12 @@ impl Composer {
     pub(crate) fn attach_root_layout_node( root : Rc<RefCell<LayoutNode>>) -> bool {
         COMPOSER.with(|local_composer| {
             local_composer.inner.borrow_mut().attach_root_layout_node(root)
+        })
+    }
+
+    pub fn destroy() {
+        COMPOSER.with(|local_composer| {
+            local_composer.inner.borrow_mut().destroy()
         })
     }
 

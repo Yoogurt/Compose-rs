@@ -6,9 +6,11 @@ use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
 use auto_delegate::Delegate;
 use crate::foundation::constraint::Constraint;
+use crate::foundation::delegatable_node::DelegatableNode;
 use crate::foundation::measurable::{Measurable, SingleChildMeasurePolicy};
-use crate::foundation::modifier::{Modifier, Node, NodeImpl};
+use crate::foundation::modifier::{Modifier, Node, NodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::geometry::{CoerceAtLeast, CoerceIn, Dp};
+use crate::foundation::layout_modifier_node::LayoutModifierNode;
 use crate::foundation::layout_receiver::LayoutReceiver;
 use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
@@ -71,6 +73,20 @@ struct SizeNode {
 
     #[to(Node)]
     node_impl: NodeImpl,
+}
+
+impl DelegatableNode for SizeNode {}
+
+impl LayoutModifierNode for SizeNode {
+    fn measure(&mut self, layout_receiver: LayoutReceiver, measurable: &dyn Measurable, constraint: &Constraint) {
+        todo!()
+    }
+}
+
+impl NodeKindPatch for SizeNode {
+    fn get_node_kind(&mut self) -> NodeKind {
+        NodeKind::LayoutMidifierNode(self)
+    }
 }
 
 impl PartialEq for SizeNode {

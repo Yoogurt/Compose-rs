@@ -39,7 +39,6 @@ impl OuterCoordinator {
 impl Measurable for OuterCoordinator {
     fn measure(&mut self, constraint: &Constraint) -> &mut dyn Placeable {
         self.node_coordinator_impl.perform_measure(constraint,| self_|{
-
             self_
         })
     }

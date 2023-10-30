@@ -2,10 +2,14 @@ use std::rc::{Rc, Weak};
 use std::cell::{Ref, RefCell};
 use std::mem::MaybeUninit;
 use auto_delegate::Delegate;
+use crate::foundation::layout_modifier_node::LayoutModifierNode;
+use crate::foundation::layout_modifier_node_coordinator::LayoutModifierNodeCoordinator;
 use crate::foundation::layout_node::LayoutNode;
-use crate::foundation::modifier::{Node, NodeImpl};
+use crate::foundation::modifier::{Node, NodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::modifier_container::ModifierContainer;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
+use crate::impl_node_kind_any;
+use core::any::Any;
 
 use super::inner_node_coordinator::InnerNodeCoordinator;
 
@@ -17,12 +21,14 @@ struct TailModifierNode {
     #[to(Node)]
     node_impl: NodeImpl,
 }
+impl_node_kind_any!(TailModifierNode);
 
-#[derive(Debug, Delegate, Default)]
+#[derive(Debug,Default, Delegate)]
 struct SentineHeadNode {
     #[to(Node)]
     node_impl: NodeImpl,
 }
+impl_node_kind_any!(SentineHeadNode);
 
 impl NodeChain {
     pub(crate) fn new() -> Rc<RefCell<Self>> {
@@ -88,16 +94,62 @@ impl NodeChain {
         Self::insert_child(node, parent)
     }
 
-    fn trim_chain(&mut self, padded_head: Rc<RefCell<dyn Node>>) -> Rc<RefCell<dyn Node>>{
+    fn trim_chain(&mut self, padded_head: Rc<RefCell<dyn Node>>) -> Rc<RefCell<dyn Node>> {
         if padded_head.as_ptr() != self.sentine_head.as_ptr() {
             panic!("trim_chain called on already trimmed chain")
         }
+        let result = self.sentine_head.borrow().get_child().unwrap_or(self.tail.clone());
+        result.borrow_mut().set_parent(None);
+        {
+            let mut sentine_head_mut = self.sentine_head.borrow_mut();
+            sentine_head_mut.set_child(None);
+            sentine_head_mut.update_coordinator(None)
+        }
 
-        todo!()
+        if result.as_ptr() == self.sentine_head.as_ptr() {
+            panic!("trim_chain did not update the head")
+        }
+
+        result
+    }
+
+    fn node_as_layout_modifier_node<'a>(mut node_kind: NodeKind<'a>) -> Option<&'a mut dyn LayoutModifierNode> {
+        match node_kind {
+            NodeKind::LayoutMidifierNode(result) => {
+                Some(result)
+            }
+            _ => {
+                None
+            }
+        }
     }
 
     fn sync_coordinators(&mut self) {
+        let mut coordinator = self.inner_coordinator.clone();
+        let mut node = self.tail.clone().borrow().get_parent();
 
+        while let Some(node_rc) = node {
+            let mut node_mut = node_rc.borrow_mut();
+
+            let coordinator = node_mut.get_coordinator();
+            let layout_node = Self::node_as_layout_modifier_node(node_mut.get_node_kind());
+
+            if let Some(layout_mod) = layout_node {
+                let next = if let Some(node_coordinator) = coordinator {
+                    let mut node_coordinator_mut = node_coordinator.borrow_mut();
+                    let c = node_coordinator_mut.as_any_mut().downcast_mut::<LayoutModifierNodeCoordinator>().expect("coordinator with wrong type");
+                    if node_rc.as_ptr() != c.set_layout_modifier_node(node_rc.clone()).as_ptr() {
+
+                    }
+
+                } else {
+                    // let c = LayoutModifierNodeCoordinator::new(self.layout_node.clone(), layout_mod);
+                    // node_mut.update_coordinator(Some(c.wrap_with_rc_refcell()));
+                };
+            }
+
+            node = node_mut.get_parent();
+        }
     }
 
     pub(crate) fn update_from(&mut self, mut modifier: Modifier) {

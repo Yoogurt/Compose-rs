@@ -24,13 +24,13 @@ impl MacOSComposeView {
             measure_and_layout_delegate: MeasureAndLayoutDelegate::new(),
         };
 
-        result
-            .measure_and_layout_delegate
-            .update_root_measure_policy(root_measure_policy());
+        // result
+        //     .measure_and_layout_delegate
+        //     .update_root_measure_policy(root_measure_policy());
 
-        if !Composer::attach_root_layout_node(result.measure_and_layout_delegate.root.clone()) {
-            panic!("unable to create multiple compose view in single thread");
-        }
+        // if !Composer::attach_root_layout_node(result.measure_and_layout_delegate.root.clone()) {
+        //     panic!("unable to create multiple compose view in single thread");
+        // }
 
         result
     }

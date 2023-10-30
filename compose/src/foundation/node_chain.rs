@@ -20,3 +20,9 @@ pub(crate) struct NodeChain {
 
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
 }
+
+impl Drop for NodeChain {
+    fn drop(&mut self) {
+        println!("node chain drop")
+    }
+}

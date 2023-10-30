@@ -10,6 +10,7 @@ use std::time::Duration;
 use skia_safe::canvas::lattice::RectType::Default;
 use compose::Box;
 use compose::foundation::bridge::platform_compose_view::MacOSComposeView;
+use compose::foundation::composer::Composer;
 use compose::foundation::drawing::canvas_impl::new_canvas;
 use compose::foundation::geometry::IntSize;
 use compose_macro::Compose;
@@ -77,5 +78,9 @@ fn main() {
     // run_skia()
     test();
 
-    compose_view.dispatch_measure(800, 500);
+    // compose_view.dispatch_measure(800, 500);
+    Composer::destroy();
+    drop(compose_view);
+
+    compose::foundation::memory::leak_token::validate_leak();
 }
