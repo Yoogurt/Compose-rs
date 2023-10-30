@@ -1,7 +1,7 @@
 use std::any::{Any, TypeId};
 use std::cell::RefCell;
 use std::fmt::Debug;
-use std::rc::Rc;
+use std::rc::{Rc, Weak};
 use compose_macro::Leak;
 use auto_delegate::delegate;
 use crate::foundation::delegatable_node::DelegatableNode;
@@ -38,7 +38,7 @@ pub trait Node: NodeKindPatch + Debug + Any {
     fn set_parent(&mut self, parent: Option<Rc<RefCell<dyn Node>>>);
     fn get_parent(&self) -> Option<Rc<RefCell<dyn Node>>>;
 
-    fn set_child(&mut self, parent: Option<Rc<RefCell<dyn Node>>>);
+    fn set_child(&mut self, parent: Option<Weak<RefCell<dyn Node>>>);
     fn get_child(&self) -> Option<Rc<RefCell<dyn Node>>>;
 
     fn update_coordinator(&mut self, coordinator: Option<Rc<RefCell<dyn NodeCoordinator>>>);
@@ -48,20 +48,14 @@ pub trait Node: NodeKindPatch + Debug + Any {
     fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
-#[derive(Debug, Default)]
 #[Leak]
+#[derive(Debug, Default)]
 pub(crate) struct NodeImpl {
     parent: Option<Rc<RefCell<dyn Node>>>,
-    child: Option<Rc<RefCell<dyn Node>>>,
+    child: Option<Weak<RefCell<dyn Node>>>,
     coordinator: Option<Rc<RefCell<dyn NodeCoordinator>>>,
     // leak_token: LeakToken<NodeImpl>,
 }
-
-// impl LeakableObject for NodeImpl {
-//     fn tag() -> &'static str {
-//         "NodeImpl"
-//     }
-// }
 
 impl NodeKindPatch for NodeImpl {
     fn get_node_kind(&mut self) -> NodeKind {
@@ -78,12 +72,19 @@ impl Node for NodeImpl {
         self.parent.clone()
     }
 
-    fn set_child(&mut self, child: Option<Rc<RefCell<dyn Node>>>) {
-        self.child = child;
+    fn set_child(&mut self, child: Option<Weak<RefCell<dyn Node>>>) {
+        self.child = child
     }
 
     fn get_child(&self) -> Option<Rc<RefCell<dyn Node>>> {
-        self.child.clone()
+        match &self.child {
+            Some(child) => {
+                child.upgrade()
+            }
+            None => {
+                None
+            }
+        }
     }
 
     fn as_any(&self) -> &dyn Any where Self: Sized {

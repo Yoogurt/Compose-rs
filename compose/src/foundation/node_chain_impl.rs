@@ -1,6 +1,5 @@
 use std::rc::{Rc, Weak};
-use std::cell::{Ref, RefCell};
-use std::mem::MaybeUninit;
+use std::cell::RefCell;
 use auto_delegate::Delegate;
 use crate::foundation::layout_modifier_node::LayoutModifierNode;
 use crate::foundation::layout_modifier_node_coordinator::LayoutModifierNodeCoordinator;
@@ -9,7 +8,6 @@ use crate::foundation::modifier::{Node, NodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::modifier_container::ModifierContainer;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::impl_node_kind_any;
-use core::any::Any;
 
 use super::inner_node_coordinator::InnerNodeCoordinator;
 
@@ -62,7 +60,7 @@ impl NodeChain {
     fn pad_chain(&mut self) -> Rc<RefCell<dyn Node>> {
         let current_head = self.head.clone();
         current_head.borrow_mut().set_parent(Some(self.sentine_head.clone()));
-        self.sentine_head.borrow_mut().set_child(Some(current_head.clone()));
+        self.sentine_head.borrow_mut().set_child(Some(Rc::downgrade(&current_head)));
         return self.sentine_head.clone();
     }
 
@@ -72,9 +70,9 @@ impl NodeChain {
             let the_child = parent_mut.get_child();
             if let Some(the_child) = the_child {
                 the_child.borrow_mut().set_parent(Some(node.clone()));
-                node.borrow_mut().set_child(Some(the_child));
+                node.borrow_mut().set_child(Some(Rc::downgrade(&the_child)));
             }
-            parent_mut.set_child(Some(node.clone()));
+            parent_mut.set_child(Some(Rc::downgrade(&node.clone())));
         }
         node.borrow_mut().set_parent(Some(parent));
         node

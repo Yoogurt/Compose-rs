@@ -1,6 +1,7 @@
 use std::{cell::RefCell, rc::Rc};
 use std::mem::MaybeUninit;
 use std::rc::Weak;
+use compose_macro::Leak;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::modifier::Node;
 use crate::foundation::modifier_container::ModifierContainer;
@@ -19,10 +20,4 @@ pub(crate) struct NodeChain {
     pub(crate) outer_coordinator: Rc<RefCell<dyn NodeCoordinator>>,
 
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
-}
-
-impl Drop for NodeChain {
-    fn drop(&mut self) {
-        println!("node chain drop")
-    }
 }

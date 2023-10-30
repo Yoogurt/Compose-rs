@@ -5,18 +5,14 @@ mod signature_checker;
 mod function_params_collector;
 mod hash_code_generator;
 
-use proc_macro::{Span, TokenStream, TokenTree};
-use std::collections::HashSet;
-use std::fmt::format;
-use std::process::id;
-use lazy_static::lazy_static;
-use quote::{quote, ToTokens};
-use rand::random;
-use syn::*;
-use std::sync::RwLock;
-use syn::Meta::Path;
-use syn::Pat::Type;
+use proc_macro2::Ident;
+use proc_macro::{Span, TokenStream};
+use quote::{quote};
+use syn::{AngleBracketedGenericArguments, FieldMutability, Fields, GenericArgument, parse_macro_input, Path, PathArguments, PathSegment, Token, TypePath, Visibility};
+use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
+use syn::{ItemFn, ItemStruct};
+use syn::parse::ParseStream;
 use syn::token::Colon;
 use crate::attribute_parser::parse_attribute;
 use crate::signature_checker::verify_signature;
@@ -108,36 +104,55 @@ pub fn Leak(attribute: TokenStream, struct_token_stream: TokenStream) -> TokenSt
 
     let struct_ident = &struct_tokens.ident;
     let fields = &mut struct_tokens.fields;
-    let caller_site = Span::call_site();
 
     match fields {
         Fields::Named(field_named) => {
-            dbg!(&field_named);
-
             let named = &mut field_named.named;
 
-            let token_stream : TokenStream= (quote! {
-                leak_object: LeakToken<#struct_ident>
-            }).into();
+            let mut punctuated = Punctuated::<PathSegment, Token![::]>::new();
+            punctuated.push(PathSegment { ident: Ident::new("crate", Span::call_site().into()), arguments: Default::default() });
+            punctuated.push(PathSegment { ident: Ident::new("foundation", Span::call_site().into()), arguments: Default::default() });
+            punctuated.push(PathSegment { ident: Ident::new("memory", Span::call_site().into()), arguments: Default::default() });
+            punctuated.push(PathSegment { ident: Ident::new("leak_token", Span::call_site().into()), arguments: Default::default() });
 
-            let new_leak_object_field = Field {
-              ident: Some(Ident::new("leak_object", caller_site.clone())),
+            let mut generic_argument_for_leak_object = Punctuated::<GenericArgument, Token![,]>::new();
+            generic_argument_for_leak_object.push(GenericArgument::Type(syn::Type::Verbatim(quote! {
+                #struct_ident
+            })));
+            punctuated.push(PathSegment { ident: Ident::new("LeakToken", Span::call_site().into()), arguments: PathArguments::AngleBracketed(AngleBracketedGenericArguments {
+                colon2_token: None,
+                lt_token: Default::default(),
+                args: generic_argument_for_leak_object,
+                gt_token: Default::default(),
+            }) });
+
+            let new_leak_object_field = syn::Field {
+                ident: Some(Ident::new("leak_object", Span::call_site().into())),
                 vis: Visibility::Inherited,
                 attrs: vec![],
-                colon_token: Colon,
+                colon_token: Some(Colon { spans: [Span::call_site().into()] }),
                 mutability: FieldMutability::None,
-                ty: Meta::Path(syn::Path {
+                ty: syn::Type::Path(TypePath { qself: None, path: Path {
                     leading_colon: None,
-                    segments: PathSegment::,
-                }),
+                    segments: punctuated,
+                } }),
             };
 
-            named.insert(named.len(), token_stream);
+            dbg!(&new_leak_object_field);
+            named.insert(named.len(), new_leak_object_field);
         }
         _ => {}
     }
 
+    let struct_name = struct_ident.to_string();
+
     (quote! {
         #struct_tokens
+
+        impl crate::foundation::memory::leak_token::LeakableObject for #struct_ident {
+            fn tag() -> &'static str{
+                #struct_name
+            }
+        }
     }).into()
 }
