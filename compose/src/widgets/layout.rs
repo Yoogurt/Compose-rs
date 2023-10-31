@@ -25,7 +25,7 @@ impl Modifier {
 }
 
 #[Compose]
-pub fn layout(modifier: Modifier, measure_policy: MultiChildrenMeasurePolicy, content: fn()) {
+pub fn Layout(modifier: Modifier, measure_policy: MultiChildrenMeasurePolicy, content: fn()) {
      ComposeNode(move |node| {
          node.set_measure_policy(measure_policy);
          node.set_modifier(modifier);

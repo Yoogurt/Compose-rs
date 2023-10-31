@@ -13,7 +13,8 @@ pub(crate) fn generate_hash_code() -> i64 {
     {
         let mut composer_hash = COMPOSER_HASH.write().unwrap();
 
-        while composer_hash.contains(&hash) {
+        // hash < 1000 reserve for Composer
+        while hash < 1000 && composer_hash.contains(&hash) {
             hash = random();
         };
         composer_hash.insert(hash.clone());

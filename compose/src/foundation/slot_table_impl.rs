@@ -1,7 +1,7 @@
-use super::{slot_table_type::SlotTableType, slot_table::SlotTable};
+use super::{slot_table_type::GroupKind, slot_table::SlotTable};
 
 impl SlotTable {
-    pub(crate) fn push(&mut self, data: SlotTableType) -> &SlotTableType{
+    pub(crate) fn push(&mut self, data: GroupKind) -> &GroupKind {
         self.data.insert(self.index, data);
             let result = &self.data[self.index ];
         self.index += 1;
@@ -13,7 +13,9 @@ impl Default for SlotTable {
     fn default() -> Self {
         SlotTable {
             index: 0,
-            data: Default::default()
+            data: Default::default(),
+            readers: 0,
+            writer: 0
         }
     }
 }

@@ -3,7 +3,7 @@ use compose_macro::Compose;
 use crate::foundation::{layout_receiver::LayoutReceiver, measurable::Measurable, constraint::Constraint, measure_result::MeasureResult, modifier::Modifier};
 use crate::{self as compose};
 
-use crate::widgets::layout::layout;
+use crate::widgets::layout::Layout;
 
 #[macro_export]
 macro_rules! Box {
@@ -37,5 +37,5 @@ fn box_measure_policy(layout_receiver: LayoutReceiver, measurable: &mut [&mut dy
 
 #[Compose]
 pub fn box_internal(modifier: Modifier, content: fn()) {
-    layout(modifier, Box::new(box_measure_policy), content);
+    Layout(modifier, Box::new(box_measure_policy), content);
 }
