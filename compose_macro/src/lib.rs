@@ -54,7 +54,7 @@ pub fn Compose(attribute: TokenStream, funtion: TokenStream) -> TokenStream {
         (quote! {
          #[inline]
             #function_visibility fn #function_name(#function_inputs_with_type) {
-                compose::foundation::composer::Composer::begin_group(#hash);
+                compose::foundation::composer::Composer::start_group(#hash);
                 {
                     #function_body
                 }
@@ -65,7 +65,7 @@ pub fn Compose(attribute: TokenStream, funtion: TokenStream) -> TokenStream {
         (quote! {
          #[inline]
             #function_visibility fn #function_name() {
-                compose::foundation::composer::Composer::begin_group(#hash);
+                compose::foundation::composer::Composer::start_group(#hash);
                 {
                     #function_body
                 }

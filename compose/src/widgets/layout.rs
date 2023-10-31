@@ -3,6 +3,7 @@ use compose_macro::Compose;
 use crate::foundation::composer::Composer;
 use crate::foundation::measurable::{MultiChildrenMeasurePolicy, SingleChildMeasurePolicy};
 use crate as compose;
+use crate::foundation::compose_node::ComposeNode;
 use crate::foundation::modifier::Modifier;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
 
@@ -25,12 +26,8 @@ impl Modifier {
 
 #[Compose]
 pub fn layout(modifier: Modifier, measure_policy: MultiChildrenMeasurePolicy, content: fn()) {
-    let node = Composer::begin_node();
-    {
-        let node_mut = node.borrow_mut();
-        node_mut.set_measure_policy(measure_policy);
-        node_mut.set_modifier(modifier);
-    }
-    content();
-    Composer::end_node(node);
+     ComposeNode(move |node| {
+         node.set_measure_policy(measure_policy);
+         node.set_modifier(modifier);
+    });
 }

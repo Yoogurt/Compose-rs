@@ -10,7 +10,7 @@ use crate::foundation::modifier::Node;
 pub(crate) struct LayoutModifierNodeCoordinator {
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
     // pub(crate) measure_node: &'a mut dyn LayoutModifierNode,
-    #[to(Placeable, Measured)]
+    #[to(Placeable, Measured, NodeWrapper)]
     pub(crate) node_coordinator_impl: NodeCoordinatorImpl,
     pub(crate) layout_modifier_node: Rc<RefCell<dyn Node>>,
 }

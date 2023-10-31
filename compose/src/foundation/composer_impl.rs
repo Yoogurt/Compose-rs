@@ -1,8 +1,8 @@
-
 use std::{rc::Rc, cell::RefCell};
 
 
 use crate::foundation::composer::Composer;
+use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
 use super::{constraint::Constraint, slot_table_type::SlotTableType, layout_node::LayoutNode, composer::ComposerInner, layout_node_guard::LayoutNodeGuard};
 
@@ -11,26 +11,30 @@ thread_local! {
 }
 
 impl ComposerInner {
-    pub fn destroy(&mut self) {
+    fn destroy(&mut self) {
         self.slot_table.data.clear();
         self.slot_table.index = 0;
         self.root = None;
+        self.fix_up.clear();
+        self.insert_up_fix_up.clear();
+self.deferred_changes.clear();
     }
 
-    pub fn dispatch_layout_to_first_layout_node(&self, _constraint: &Constraint) {
+
+    fn dispatch_layout_to_first_layout_node(&self, _constraint: &Constraint) {
         for slot_table_type in &self.slot_table.data {
             match slot_table_type {
                 SlotTableType::LayoutNodeType(_layout_node) => {
                     // let measure_result = layout_node.borrow_mut().measure(constraint);
                     // layout_node.borrow_mut().handle_measured_result(measure_result);
-                    return
+                    return;
                 }
-                _=> {}
+                _ => {}
             }
         }
     }
 
-    pub fn attach_root_layout_node(&mut self, root : Rc<RefCell<LayoutNode>>) -> bool {
+    fn attach_root_layout_node(&mut self, root: Rc<RefCell<LayoutNode>>) -> bool {
         if self.root.is_some() {
             return false;
         }
@@ -39,26 +43,34 @@ impl ComposerInner {
         true
     }
 
-    pub fn deattach_root_layout_node(&mut self) {
+    fn inserting(&self) -> bool {
+        self.inserting
+    }
+
+    fn deattach_root_layout_node(&mut self) {
         self.root = None;
     }
 
-    pub fn begin_group(&mut self, hash: i64) {
+    fn start_group(&mut self, hash: i64) {
         self.hash ^= hash;
         self.depth += 1;
 
         self.slot_table.push(SlotTableType::Group {
             hash: self.hash,
-            depth: self.depth
+            depth: self.depth,
         });
     }
 
-    pub fn end_group(&mut self, hash: i64) {
+    fn end_group(&mut self, hash: i64) {
         self.depth -= 1;
         self.hash ^= hash;
     }
 
-    pub fn begin_node(&mut self) -> Rc<RefCell<LayoutNode>> {
+    fn start_node(&mut self) {
+
+    }
+
+    fn create_node(&mut self) -> Rc<RefCell<LayoutNode>> {
         let node = LayoutNode::new();
         let node = self.slot_table.push(SlotTableType::LayoutNodeType(node));
 
@@ -73,7 +85,41 @@ impl ComposerInner {
         }
     }
 
-    pub fn end_node(&mut self) {
+    fn record_fix_up(&mut self, fix_up: Box<dyn FnOnce()>) {
+        self.fix_up.push(fix_up)
+    }
+
+    fn record_insert_up_fix_up(&mut self, fix_up: Box<dyn FnOnce()>) {
+        self.insert_up_fix_up.push(fix_up)
+    }
+
+    fn record_deferred_change(&mut self, derred_change: Box<dyn FnOnce()>) {
+        self.deferred_changes.push(derred_change)
+    }
+
+    fn apply_changes(&mut self) {
+        let mut fix_up_insert = Vec::<Box<dyn FnOnce()>>::new();
+        std::mem::swap(&mut self.insert_up_fix_up, &mut fix_up_insert);
+        fix_up_insert.into_iter().for_each(|change| {
+            change();
+        });
+
+        let mut fix_up = Vec::<Box<dyn FnOnce()>>::new();
+        std::mem::swap(&mut self.fix_up, &mut fix_up);
+        fix_up.into_iter().rev().for_each(|change| {
+            change();
+        });
+    }
+
+    fn apply_deferred_changes(&mut self) {
+        let mut deferred_changes = Vec::<Box<dyn FnOnce()>>::new();
+        std::mem::swap(&mut self.deferred_changes, &mut deferred_changes);
+        deferred_changes.into_iter().for_each(|change| {
+            change();
+        });
+    }
+
+    fn end_node(&mut self) {
         let current = self.layout_node_stack.pop();
 
         match current {
@@ -82,13 +128,18 @@ impl ComposerInner {
             }
 
             Some(current) => {
-                match self.layout_node_stack.last() {
+                match self.layout_node_stack.last().cloned() {
                     Some(parent) => {
-                        parent.borrow_mut().adopt_child(current);
+                        self.record_insert_up_fix_up(Box::new(move || {
+                            LayoutNode::adopt_child(&parent, &current);
+                        }));
                     }
                     None => {
                         // attach to root node
-                        // self.root.clone().unwrap().borrow_mut().adopt_child(current);
+                        let root = self.root.clone().unwrap();
+                        self.record_insert_up_fix_up(Box::new(move || {
+                            LayoutNode::adopt_child(&root, &current);
+                        }));
                     }
                 }
             }
@@ -103,7 +154,7 @@ impl Composer {
         })
     }
 
-    pub(crate) fn attach_root_layout_node( root : Rc<RefCell<LayoutNode>>) -> bool {
+    pub(crate) fn attach_root_layout_node(root: Rc<RefCell<LayoutNode>>) -> bool {
         COMPOSER.with(|local_composer| {
             local_composer.inner.borrow_mut().attach_root_layout_node(root)
         })
@@ -121,21 +172,63 @@ impl Composer {
         })
     }
 
-    pub fn begin_group(hash: i64) {
+    pub fn start_group(hash: i64) {
         COMPOSER.with(|local_composer| {
-            local_composer.inner.borrow_mut().begin_group(hash);
+            local_composer.inner.borrow_mut().start_group(hash);
         })
     }
 
-    pub fn begin_node() -> LayoutNodeGuard {
+    pub(crate) fn start_node()  {
         COMPOSER.with(|local_composer| {
-            LayoutNodeGuard::new(local_composer.inner.borrow_mut().begin_node())
+            local_composer.inner.borrow_mut().start_node()
         })
     }
 
-    pub fn end_node(_guard: LayoutNodeGuard) {
+    pub(crate) fn create_node() -> Rc<RefCell<LayoutNode>> {
+        COMPOSER.with(|local_composer| {
+            local_composer.inner.borrow_mut().create_node()
+        })
+    }
+
+    pub(crate) fn record_fix_up(fix_up: Box<dyn FnOnce()>) {
+        COMPOSER.with(move |local_composer| {
+            local_composer.inner.borrow_mut().record_fix_up(fix_up)
+        })
+    }
+
+    pub(crate) fn record_insert_up_fix_up(insert_up: Box<dyn FnOnce()>) {
+        COMPOSER.with(move |local_composer| {
+            local_composer.inner.borrow_mut().record_insert_up_fix_up(insert_up)
+        })
+    }
+
+    pub(crate) fn record_deferred_change(&mut self, derred_change: Box<dyn FnOnce()>) {
+        COMPOSER.with(move |local_composer| {
+            local_composer.inner.borrow_mut().record_deferred_change(derred_change)
+        })
+    }
+
+    pub fn apply_changes() {
+        COMPOSER.with(move |local_composer| {
+            local_composer.inner.borrow_mut().apply_changes()
+        })
+    }
+
+    pub fn apply_deferred_changes() {
+        COMPOSER.with(move |local_composer| {
+            local_composer.inner.borrow_mut().apply_deferred_changes()
+        })
+    }
+
+    pub(crate) fn end_node() {
         COMPOSER.with(|local_composer| {
             local_composer.inner.borrow_mut().end_node();
+        })
+    }
+
+    pub(crate) fn inserting()-> bool{
+        COMPOSER.with(|local_composer| {
+            local_composer.inner.borrow().inserting()
         })
     }
 
@@ -159,19 +252,6 @@ impl Default for Composer {
     fn default() -> Self {
         Composer {
             inner: RefCell::new(Default::default()),
-        }
-    }
-}
-
-impl Default for ComposerInner {
-    fn default() -> Self {
-        ComposerInner {
-            hash: 0,
-            depth: 0,
-            insertion: false,
-            layout_node_stack: Default::default(),
-            slot_table: Default::default(),
-            root: None,
         }
     }
 }

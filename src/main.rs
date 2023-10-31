@@ -79,6 +79,8 @@ fn main() {
     test();
 
     // compose_view.dispatch_measure(800, 500);
+    Composer::apply_changes();
+    Composer::apply_deferred_changes();
     Composer::destroy();
     drop(compose_view);
 

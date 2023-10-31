@@ -65,8 +65,9 @@ impl LayoutNode {
         }
     }
 
-    pub(crate) fn adopt_child(&mut self, child: Rc<RefCell<LayoutNode>>) {
-        self.children.push(child);
+    pub(crate) fn adopt_child(self_: &Rc<RefCell<LayoutNode>>, child: &Rc<RefCell<LayoutNode>>) {
+        child.borrow().node_chain.borrow_mut().set_parent(Some(Rc::downgrade(self_)));
+            self_.borrow_mut().children.push(child.clone());
     }
 
     pub fn as_remeasurable(&self) -> Rc<RefCell<dyn StatefulRemeasurable>> {

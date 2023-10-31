@@ -30,6 +30,7 @@ pub(crate) mod layout_modifier_node;
 pub(crate) mod delegatable_node;
 pub(crate) mod layout_modifier_node_coordinator;
 pub mod memory;
+pub(crate) mod compose_node;
 
 pub mod geometry;
 pub mod bridge;

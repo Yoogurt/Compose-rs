@@ -17,7 +17,6 @@ impl LayoutModifierNodeCoordinator {
     pub(crate) fn new(layout_node: Weak<RefCell<LayoutNode>>, measure_node: Rc<RefCell<dyn Node>>) -> Self {
         Self {
             layout_node,
-            // measure_node,
             node_coordinator_impl: NodeCoordinatorImpl::new(),
             layout_modifier_node:measure_node,
         }
@@ -26,6 +25,10 @@ impl LayoutModifierNodeCoordinator {
     pub(crate) fn set_layout_modifier_node(&mut self, mut layout_mod: Rc<RefCell<dyn Node>>) -> Rc<RefCell<dyn Node>>{
         std::mem::swap(&mut self.layout_modifier_node, &mut layout_mod);
         layout_mod
+    }
+
+    pub(crate) fn on_layout_modifier_node_changed(&self) {
+        self.node_coordinator_impl.on_layout_modifier_node_changed()
     }
 }
 

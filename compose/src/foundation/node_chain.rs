@@ -5,6 +5,7 @@ use compose_macro::Leak;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::modifier::Node;
 use crate::foundation::modifier_container::ModifierContainer;
+use crate::foundation::utils::optional_weak::OptionalWeak;
 use super::{modifier::Modifier, parent_data::ParentData, measure_result::MeasureResult, inner_node_coordinator::InnerNodeCoordinator, look_ahead_capable_placeable::NodeCoordinator};
 
 #[derive(Debug)]
@@ -18,6 +19,8 @@ pub(crate) struct NodeChain {
     pub(crate) measure_result: MeasureResult,
     pub(crate) inner_coordinator: Rc<RefCell<InnerNodeCoordinator>>,
     pub(crate) outer_coordinator: Rc<RefCell<dyn NodeCoordinator>>,
+
+    pub(crate) parent: OptionalWeak<LayoutNode>,
 
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
 }

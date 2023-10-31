@@ -1,8 +1,10 @@
 use std::any::Any;
 use std::cell::RefCell;
 use std::mem::MaybeUninit;
-use std::rc::Weak;
+use std::rc::{Rc, Weak};
 use crate::foundation::geometry::IntSize;
+use crate::foundation::look_ahead_capable_placeable::NodeWrapper;
+use crate::foundation::utils::weak_upgrade::WeakUpdater;
 use super::constraint::Constraint;
 use super::layout_node::LayoutNode;
 use super::layout_result::{Placeable, PlaceableImpl};
@@ -26,6 +28,24 @@ impl NodeCoordinatorImpl {
     }
 }
 
+impl NodeWrapper for NodeCoordinatorImpl {
+    fn set_wrapped(&mut self, wrapped: Option<Rc<RefCell<dyn NodeCoordinator>>>) {
+        self.wrapped = wrapped
+    }
+
+    fn get_wrapped(&self) -> Option<Rc<RefCell<dyn NodeCoordinator>>> {
+        self.wrapped.clone()
+    }
+
+    fn set_wrapped_by(&mut self, wrapped_by: Option<Weak<RefCell<dyn NodeCoordinator>>>) {
+        self.wrapped_by = wrapped_by;
+    }
+
+    fn get_wrapped_by(&self) -> Option<Rc<RefCell<dyn NodeCoordinator>>> {
+        self.wrapped_by.try_upgrade()
+    }
+}
+
 impl NodeCoordinator for NodeCoordinatorImpl {
     fn as_any(&self) -> &dyn Any {
         self
@@ -40,6 +60,7 @@ impl NodeCoordinatorImpl {
     pub(crate) fn new() -> Self {
         NodeCoordinatorImpl {
             placeable_impl: PlaceableImpl::new(),
+            wrapped: None,
             wrapped_by: None,
             layout_node: Weak::new(),
             measure_result: MeasureResult::default(),
@@ -55,5 +76,9 @@ impl NodeCoordinatorImpl {
             let measure_size: (usize, usize) = measure_result.into();
             self.on_measure_result_changed(measure_size.into());
         }
+    }
+
+    pub(crate) fn on_layout_modifier_node_changed(&self) {
+
     }
 }

@@ -4,8 +4,10 @@ use auto_delegate::Delegate;
 use crate::foundation::layout_modifier_node::LayoutModifierNode;
 use crate::foundation::layout_modifier_node_coordinator::LayoutModifierNodeCoordinator;
 use crate::foundation::layout_node::LayoutNode;
+use crate::foundation::look_ahead_capable_placeable::NodeCoordinator;
 use crate::foundation::modifier::{Node, NodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::modifier_container::ModifierContainer;
+use crate::foundation::utils::optional_weak::OptionalWeak;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::impl_node_kind_any;
 
@@ -21,7 +23,7 @@ struct TailModifierNode {
 }
 impl_node_kind_any!(TailModifierNode);
 
-#[derive(Debug,Default, Delegate)]
+#[derive(Debug, Default, Delegate)]
 struct SentineHeadNode {
     #[to(Node)]
     node_impl: NodeImpl,
@@ -45,10 +47,16 @@ impl NodeChain {
             inner_coordinator: inner_node_coordinator.clone(),
             outer_coordinator: inner_node_coordinator,
 
+            parent: Default::default(),
+
             layout_node: Weak::new(),
         };
 
         result.wrap_with_rc_refcell()
+    }
+
+    pub(crate) fn set_parent<T: Into<OptionalWeak<LayoutNode>>>(&mut self, parent: T) {
+        self.parent = parent.into();
     }
 
     pub(crate) fn attach(&mut self, layout_node: Weak<RefCell<LayoutNode>>, modifier_container: Rc<RefCell<ModifierContainer>>) {
@@ -59,8 +67,8 @@ impl NodeChain {
 
     fn pad_chain(&mut self) -> Rc<RefCell<dyn Node>> {
         let current_head = self.head.clone();
-        current_head.borrow_mut().set_parent(Some(self.sentine_head.clone()));
-        self.sentine_head.borrow_mut().set_child(Some(Rc::downgrade(&current_head)));
+        current_head.borrow_mut().set_parent(Some(Rc::downgrade(&self.sentine_head)));
+        self.sentine_head.borrow_mut().set_child(Some(current_head.clone()));
         return self.sentine_head.clone();
     }
 
@@ -69,12 +77,12 @@ impl NodeChain {
             let mut parent_mut = parent.borrow_mut();
             let the_child = parent_mut.get_child();
             if let Some(the_child) = the_child {
-                the_child.borrow_mut().set_parent(Some(node.clone()));
-                node.borrow_mut().set_child(Some(Rc::downgrade(&the_child)));
+                the_child.borrow_mut().set_parent(Some(Rc::downgrade(&node)));
+                node.borrow_mut().set_child(Some(the_child.clone()));
             }
-            parent_mut.set_child(Some(Rc::downgrade(&node.clone())));
+            parent_mut.set_child(Some(node.clone()));
         }
-        node.borrow_mut().set_parent(Some(parent));
+        node.borrow_mut().set_parent(Some(Rc::downgrade(&parent)));
         node
     }
 
@@ -123,31 +131,53 @@ impl NodeChain {
     }
 
     fn sync_coordinators(&mut self) {
-        let mut coordinator = self.inner_coordinator.clone();
+        let mut coordinator: Rc<RefCell<dyn NodeCoordinator>> = self.inner_coordinator.clone();
         let mut node = self.tail.clone().borrow().get_parent();
 
         while let Some(node_rc) = node {
             let mut node_mut = node_rc.borrow_mut();
+            let node_coordinator = node_mut.get_coordinator();
 
-            let coordinator = node_mut.get_coordinator();
             let layout_node = Self::node_as_layout_modifier_node(node_mut.get_node_kind());
 
             if let Some(layout_mod) = layout_node {
-                let next = if let Some(node_coordinator) = coordinator {
+                let next = if let Some(node_coordinator) = node_coordinator {
+                    let node_coordinator = node_coordinator.upgrade().expect("upgrade fail from node coordinator");
                     let mut node_coordinator_mut = node_coordinator.borrow_mut();
                     let c = node_coordinator_mut.as_any_mut().downcast_mut::<LayoutModifierNodeCoordinator>().expect("coordinator with wrong type");
                     if node_rc.as_ptr() != c.set_layout_modifier_node(node_rc.clone()).as_ptr() {
-
+                        c.on_layout_modifier_node_changed();
                     }
-
+                    node_coordinator.clone()
                 } else {
-                    // let c = LayoutModifierNodeCoordinator::new(self.layout_node.clone(), layout_mod);
-                    // node_mut.update_coordinator(Some(c.wrap_with_rc_refcell()));
+                    let c = LayoutModifierNodeCoordinator::new(self.layout_node.clone(), node_rc.clone()).wrap_with_rc_refcell();
+                    let weak_layout_modifier_node_coordinator = Rc::downgrade(&c);
+                    let weak_dyn_node_coordinator: Weak<RefCell<dyn NodeCoordinator>> = weak_layout_modifier_node_coordinator;
+                    node_mut.update_coordinator(Some(weak_dyn_node_coordinator));
+                    c
                 };
+
+                {
+                    let mut coordinator_mut = coordinator.borrow_mut();
+                    coordinator_mut.set_wrapped_by(Some(Rc::downgrade(&next)));
+                    next.borrow_mut().set_wrapped(Some(coordinator.clone()));
+                }
+                coordinator = next;
+            } else {
+                let weak_dyn_node_coordinator = Rc::downgrade(&coordinator);
+                node_mut.update_coordinator(Some(weak_dyn_node_coordinator))
             }
 
             node = node_mut.get_parent();
         }
+
+        coordinator.borrow_mut().set_wrapped_by(self.parent.clone().and_then(|parent_layout_node| {
+            let parent_inner_coordinator = Rc::downgrade(&parent_layout_node.upgrade().expect("unable to upgrade, parent drop ?").borrow().node_chain.borrow().inner_coordinator);
+            let parent_dyn_node_coordinator: Weak<RefCell<dyn NodeCoordinator>> = parent_inner_coordinator;
+            Some(parent_dyn_node_coordinator)
+        }));
+
+        self.outer_coordinator = coordinator;
     }
 
     pub(crate) fn update_from(&mut self, mut modifier: Modifier) {

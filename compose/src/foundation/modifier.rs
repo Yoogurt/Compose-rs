@@ -8,6 +8,7 @@ use crate::foundation::delegatable_node::DelegatableNode;
 use crate::foundation::layout_modifier_node::LayoutModifierNode;
 use crate::foundation::look_ahead_capable_placeable::NodeCoordinator;
 use crate::foundation::memory::leak_token::{LeakToken, LeakableObject};
+use crate::foundation::utils::weak_upgrade::WeakUpdater;
 
 pub const Modifier: Modifier = Modifier::Unit;
 
@@ -35,14 +36,14 @@ pub trait NodeKindPatch {
 
 #[delegate]
 pub trait Node: NodeKindPatch + Debug + Any {
-    fn set_parent(&mut self, parent: Option<Rc<RefCell<dyn Node>>>);
+    fn set_parent(&mut self, parent: Option<Weak<RefCell<dyn Node>>>);
     fn get_parent(&self) -> Option<Rc<RefCell<dyn Node>>>;
 
-    fn set_child(&mut self, parent: Option<Weak<RefCell<dyn Node>>>);
+    fn set_child(&mut self, parent: Option<Rc<RefCell<dyn Node>>>);
     fn get_child(&self) -> Option<Rc<RefCell<dyn Node>>>;
 
-    fn update_coordinator(&mut self, coordinator: Option<Rc<RefCell<dyn NodeCoordinator>>>);
-    fn get_coordinator(&self) -> Option<Rc<RefCell<dyn NodeCoordinator>>>;
+    fn update_coordinator(&mut self, coordinator: Option<Weak<RefCell<dyn NodeCoordinator>>>);
+    fn get_coordinator(&self) -> Option<Weak<RefCell<dyn NodeCoordinator>>>;
 
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;
@@ -51,10 +52,9 @@ pub trait Node: NodeKindPatch + Debug + Any {
 #[Leak]
 #[derive(Debug, Default)]
 pub(crate) struct NodeImpl {
-    parent: Option<Rc<RefCell<dyn Node>>>,
-    child: Option<Weak<RefCell<dyn Node>>>,
-    coordinator: Option<Rc<RefCell<dyn NodeCoordinator>>>,
-    // leak_token: LeakToken<NodeImpl>,
+    parent: Option<Weak<RefCell<dyn Node>>>,
+    child: Option<Rc<RefCell<dyn Node>>>,
+    coordinator: Option<Weak<RefCell<dyn NodeCoordinator>>>,
 }
 
 impl NodeKindPatch for NodeImpl {
@@ -64,27 +64,20 @@ impl NodeKindPatch for NodeImpl {
 }
 
 impl Node for NodeImpl {
-    fn set_parent(&mut self, parent: Option<Rc<RefCell<dyn Node>>>) {
+    fn set_parent(&mut self, parent: Option<Weak<RefCell<dyn Node>>>) {
         self.parent = parent;
     }
 
     fn get_parent(&self) -> Option<Rc<RefCell<dyn Node>>> {
-        self.parent.clone()
+        self.parent.try_upgrade()
     }
 
-    fn set_child(&mut self, child: Option<Weak<RefCell<dyn Node>>>) {
+    fn set_child(&mut self, child: Option<Rc<RefCell<dyn Node>>>) {
         self.child = child
     }
 
     fn get_child(&self) -> Option<Rc<RefCell<dyn Node>>> {
-        match &self.child {
-            Some(child) => {
-                child.upgrade()
-            }
-            None => {
-                None
-            }
-        }
+       self.child.clone()
     }
 
     fn as_any(&self) -> &dyn Any where Self: Sized {
@@ -95,11 +88,11 @@ impl Node for NodeImpl {
         self
     }
 
-    fn get_coordinator(&self) -> Option<Rc<RefCell<dyn NodeCoordinator>>> {
+    fn get_coordinator(&self) -> Option<Weak<RefCell<dyn NodeCoordinator>>> {
         self.coordinator.clone()
     }
 
-    fn update_coordinator(&mut self, coordinator: Option<Rc<RefCell<dyn NodeCoordinator>>>) {
+    fn update_coordinator(&mut self, coordinator: Option<Weak<RefCell<dyn NodeCoordinator>>>) {
         self.coordinator = coordinator;
     }
 }

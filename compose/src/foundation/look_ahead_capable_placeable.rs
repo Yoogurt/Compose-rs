@@ -1,11 +1,20 @@
-use std::{rc::Weak, cell::RefCell, mem::MaybeUninit};
+use std::{rc::Rc, rc::Weak, cell::RefCell, mem::MaybeUninit};
 use core::fmt::Debug;
 use auto_delegate::Delegate;
 use crate::foundation::constraint::Constraint;
 use super::{layout_result::{Placeable, PlaceableImpl}, measurable::Measurable, layout_node::LayoutNode, measure_result::MeasureResult};
 use core::any::Any;
+use auto_delegate::delegate;
 
-pub trait NodeCoordinator: Placeable + Debug + Measurable {
+#[delegate]
+pub trait NodeWrapper {
+    fn set_wrapped(&mut self, wrapped: Option<Rc<RefCell<dyn NodeCoordinator>>>);
+    fn get_wrapped(&self) -> Option<Rc<RefCell<dyn NodeCoordinator>>>;
+    fn set_wrapped_by(&mut self, wrapped_by: Option<Weak<RefCell<dyn NodeCoordinator>>>);
+    fn get_wrapped_by(&self) -> Option<Rc<RefCell<dyn NodeCoordinator>>>;
+}
+
+pub trait NodeCoordinator: NodeWrapper + Placeable + Debug + Measurable {
     fn on_initialize(&self) {}
     fn on_place(&self) {}
 
@@ -23,6 +32,7 @@ pub(crate) struct NodeCoordinatorImpl {
     #[to(Placeable, Measured)]
     pub(crate) placeable_impl: PlaceableImpl,
     pub(crate) measure_result: MeasureResult,
-    pub(crate) wrapped_by: Option<Box<dyn NodeCoordinator>>,
+    pub(crate) wrapped: Option<Rc<RefCell<dyn NodeCoordinator>>>,
+    pub(crate) wrapped_by: Option<Weak<RefCell<dyn NodeCoordinator>>>,
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
 }
