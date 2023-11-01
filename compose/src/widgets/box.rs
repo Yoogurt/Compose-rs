@@ -37,5 +37,5 @@ fn box_measure_policy(layout_receiver: LayoutReceiver, measurable: &mut [&mut dy
 
 #[Composable]
 pub fn box_internal(modifier: Modifier, content: fn()) {
-    Layout(modifier, Box::new(box_measure_policy), content);
+    Layout(modifier, box_measure_policy, content);
 }

@@ -1,7 +1,7 @@
 use compose_macro::Composable;
 
 use crate::foundation::composer::Composer;
-use crate::foundation::measurable::{MultiChildrenMeasurePolicy, SingleChildMeasurePolicy};
+use crate::foundation::measurable::{MultiChildrenMeasurePolicy, MultiChildrenMeasurePolicyUnBox, SingleChildMeasurePolicy};
 use crate as compose;
 use crate::foundation::compose_node::ComposeNode;
 use crate::foundation::modifier::Modifier;
@@ -17,17 +17,17 @@ impl Modifier {
             create: Box::new(|| {
                 todo!()
             }),
-            update: Box::new(|_| {
-
-            })
+            update: Box::new(|_| {}),
         }
     }
 }
 
 #[Composable]
-pub fn Layout(modifier: Modifier, measure_policy: MultiChildrenMeasurePolicy, content: impl FnMut()) {
-     ComposeNode(move |node| {
-         node.set_measure_policy(measure_policy);
-         node.set_modifier(modifier);
+pub fn Layout(modifier: Modifier,
+              measure_policy: MultiChildrenMeasurePolicyUnBox,
+              content: impl FnMut()) {
+    ComposeNode(move |node| {
+        node.set_measure_policy(measure_policy.wrap_with_box());
+        node.set_modifier(modifier);
     }, content);
 }

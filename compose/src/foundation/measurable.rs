@@ -8,5 +8,11 @@ pub trait Measurable {
 pub type SingleChildMeasurePolicy = Box<dyn FnMut(LayoutReceiver, &mut dyn Measurable, &Constraint)
                                        -> MeasureResult>;
 
+pub type SingleChildMeasurePolicyUnBox = fn(LayoutReceiver, &mut dyn Measurable, &Constraint)
+                                            -> MeasureResult;
+
 pub type MultiChildrenMeasurePolicy = Box<dyn FnMut(LayoutReceiver, &mut [&mut dyn Measurable], &Constraint)
                                          -> MeasureResult>;
+
+pub type MultiChildrenMeasurePolicyUnBox = fn(LayoutReceiver, &mut [&mut dyn Measurable], &Constraint)
+    -> MeasureResult;
