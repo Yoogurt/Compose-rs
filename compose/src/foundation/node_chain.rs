@@ -20,7 +20,7 @@ pub(crate) struct NodeChain {
     pub(crate) inner_coordinator: Rc<RefCell<InnerNodeCoordinator>>,
     pub(crate) outer_coordinator: Rc<RefCell<dyn NodeCoordinator>>,
 
-    pub(crate) parent: OptionalWeak<LayoutNode>,
+    pub(crate) parent: Weak<RefCell<LayoutNode>>,
 
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
 }

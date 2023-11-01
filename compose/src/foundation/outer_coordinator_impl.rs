@@ -9,20 +9,6 @@ use super::look_ahead_capable_placeable::{NodeCoordinator, NodeCoordinatorImpl};
 use super::measurable::Measurable;
 use super::outer_coordinator::OuterCoordinator;
 
-impl Deref for OuterCoordinator {
-    type Target = dyn NodeCoordinator;
-
-    fn deref(&self) -> &Self::Target {
-        &self.node_coordinator_impl
-    }
-}
-
-impl DerefMut for OuterCoordinator {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.node_coordinator_impl
-    }
-}
-
 impl OuterCoordinator {
     pub(crate) fn new() -> OuterCoordinator {
         OuterCoordinator {

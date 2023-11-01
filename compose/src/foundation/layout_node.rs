@@ -14,9 +14,10 @@ use super::{
 pub(crate) struct LayoutNode {
     pub(crate) modifier_container: Rc<RefCell<ModifierContainer>>,
     pub(crate) node_chain: Rc<RefCell<NodeChain>>,
-    pub(crate) children: Vec<Rc<RefCell<LayoutNode>>>,
+    pub(crate) children: Rc<RefCell<Vec<Rc<RefCell<LayoutNode>>>>>,
     pub(crate) layout_node_layout_delegate: Rc<RefCell<LayoutNodeLayoutDelegate>>,
     pub(crate) usage_by_parent: UsageByParent,
+    pub(crate) layout_state: LayoutState,
 }
 
 #[derive(Debug, Delegate)]
@@ -38,7 +39,6 @@ pub(crate) struct LayoutNodeLayoutDelegate {
     pub(crate) modifier_container: Rc<RefCell<ModifierContainer>>,
     pub(crate) measure_pass_delegate: Rc<RefCell<MeasurePassDelegate>>,
     pub(crate) lookahead_pass_delegate: Rc<RefCell<LookaheadPassDelegate>>,
-    pub(crate) layout_state: LayoutState,
     pub(crate) measure_pending: bool,
     pub(crate) layout_pending: bool,
 }

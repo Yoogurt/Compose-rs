@@ -55,8 +55,12 @@ impl NodeChain {
         result.wrap_with_rc_refcell()
     }
 
-    pub(crate) fn set_parent<T: Into<OptionalWeak<LayoutNode>>>(&mut self, parent: T) {
+    pub(crate) fn set_parent<T: Into<Weak<RefCell<LayoutNode>>>>(&mut self, parent: T) {
         self.parent = parent.into();
+    }
+
+    pub(crate) fn get_parent(&self) -> Weak<RefCell<LayoutNode>> {
+        self.parent.clone()
     }
 
     pub(crate) fn attach(&mut self, layout_node: Weak<RefCell<LayoutNode>>, modifier_container: Rc<RefCell<ModifierContainer>>) {
@@ -171,8 +175,8 @@ impl NodeChain {
             node = node_mut.get_parent();
         }
 
-        coordinator.borrow_mut().set_wrapped_by(self.parent.clone().and_then(|parent_layout_node| {
-            let parent_inner_coordinator = Rc::downgrade(&parent_layout_node.upgrade().expect("unable to upgrade, parent drop ?").borrow().node_chain.borrow().inner_coordinator);
+        coordinator.borrow_mut().set_wrapped_by(self.parent.upgrade().and_then(|parent_layout_node| {
+            let parent_inner_coordinator = Rc::downgrade(&parent_layout_node.borrow().node_chain.borrow().inner_coordinator);
             let parent_dyn_node_coordinator: Weak<RefCell<dyn NodeCoordinator>> = parent_inner_coordinator;
             Some(parent_dyn_node_coordinator)
         }));

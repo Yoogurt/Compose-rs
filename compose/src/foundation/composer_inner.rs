@@ -172,8 +172,13 @@ impl ComposerInner {
             None => {
                 let root = self.root.clone().unwrap();
                 drop(slot_table_mut);
+                if root.as_ptr() == current.as_ptr() {
+                    dbg!("skipping attach root to itself");
+                    return;
+                }
+
                 self.record_insert_up_fix_up(Box::new(move || {
-                    LayoutNode::adopt_child(&root, &current);
+                    LayoutNode::adopt_child(&root, &current, true);
                 }));
             }
             Some(parent) => {
@@ -182,7 +187,7 @@ impl ComposerInner {
                         let parent = parent.clone();
                         drop(slot_table_mut);
                         self.record_insert_up_fix_up(Box::new(move || {
-                            LayoutNode::adopt_child(&parent, &current);
+                            LayoutNode::adopt_child(&parent, &current, false);
                         }));
                     }
                     _ => {
@@ -191,6 +196,8 @@ impl ComposerInner {
                 }
             }
         }
+
+        self.register_insert_up_fix_up();
     }
 
     pub(crate) fn validate_node_expected(&mut self) {

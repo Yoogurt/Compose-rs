@@ -82,10 +82,12 @@ fn main() {
         test_box_composable();
     });
 
-    compose_view.dispatch_measure(800, 500);
     Composer::apply_changes();
     Composer::apply_deferred_changes();
     Composer::validate_group();
+
+    compose_view.dispatch_measure(800, 500);
+
     Composer::destroy();
     drop(compose_view);
 

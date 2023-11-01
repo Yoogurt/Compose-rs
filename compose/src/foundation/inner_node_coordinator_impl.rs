@@ -57,9 +57,8 @@ impl Measurable for InnerNodeCoordinator {
 
         let measure_policy = &mut self.measure_policy;
         let _measure_result = {
-            let layout_node = unsafe { self.layout_node.upgrade() }.unwrap();
-
-            let children = &layout_node.borrow_mut().children;
+            let children_rc = unsafe { self.layout_node.upgrade() }.unwrap().borrow().get_children();
+            let children = children_rc.borrow_mut();
 
             let children_rc = children.iter().map(|child| {
                 child.borrow_mut().layout_node_layout_delegate.clone()
