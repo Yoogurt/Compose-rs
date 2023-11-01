@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use std::mem::MaybeUninit;
 use std::rc::{Rc, Weak};
 use crate::foundation::geometry::IntSize;
-use crate::foundation::look_ahead_capable_placeable::NodeWrapper;
+use crate::foundation::look_ahead_capable_placeable::NodeCoordinatorTrait;
 use crate::foundation::utils::weak_upgrade::WeakUpdater;
 use super::constraint::Constraint;
 use super::layout_node::LayoutNode;
@@ -28,7 +28,7 @@ impl NodeCoordinatorImpl {
     }
 }
 
-impl NodeWrapper for NodeCoordinatorImpl {
+impl NodeCoordinatorTrait for NodeCoordinatorImpl {
     fn set_wrapped(&mut self, wrapped: Option<Rc<RefCell<dyn NodeCoordinator>>>) {
         self.wrapped = wrapped
     }
@@ -64,6 +64,7 @@ impl NodeCoordinatorImpl {
             wrapped_by: None,
             layout_node: Weak::new(),
             measure_result: MeasureResult::default(),
+            parent_data: None,
         }
     }
 

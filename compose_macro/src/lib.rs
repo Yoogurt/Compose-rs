@@ -20,7 +20,7 @@ use crate::function_params_collector::collect_function_params;
 use crate::hash_code_generator::generate_hash_code;
 
 #[proc_macro_attribute]
-pub fn Compose(attribute: TokenStream, funtion: TokenStream) -> TokenStream {
+pub fn Composable(attribute: TokenStream, funtion: TokenStream) -> TokenStream {
     let function = parse_macro_input!(funtion as ItemFn);
     let attribute = parse_attribute(attribute);
 

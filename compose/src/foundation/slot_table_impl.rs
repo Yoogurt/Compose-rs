@@ -1,21 +1,35 @@
+use crate::foundation::slot_table::{SlotReader, SlotWriter};
 use super::{slot_table_type::GroupKind, slot_table::SlotTable};
+use std::cell::Ref;
+use std::ops::Deref;
 
-impl SlotTable {
-    pub(crate) fn push(&mut self, data: GroupKind) -> &GroupKind {
-        self.data.insert(self.index, data);
-            let result = &self.data[self.index ];
-        self.index += 1;
-        return   result;
+pub(crate) struct GroupKindBorrowGuard<'a> {
+    slot: Ref<'a, Vec<GroupKind>>,
+    index: usize,
+}
+
+impl<'a> GroupKindBorrowGuard<'a> {
+    fn new(slot: Ref<'a, Vec<GroupKind>>, index: usize) -> Self {
+        Self { slot, index }
     }
 }
 
-impl Default for SlotTable {
-    fn default() -> Self {
-        SlotTable {
-            index: 0,
-            data: Default::default(),
-            readers: 0,
-            writer: 0
-        }
+impl Deref for GroupKindBorrowGuard<'_> {
+    type Target = GroupKind;
+
+    fn deref(&self) -> &Self::Target {
+        &self.slot[self.index]
+    }
+}
+
+impl SlotTable {
+    pub(crate) fn open_reader(&mut self) -> SlotReader {
+        self.readers += 1;
+        SlotReader::new(self.slots.clone())
+    }
+
+    pub(crate) fn open_writer(&mut self) -> SlotWriter {
+        self.writer += 1;
+        SlotWriter::new(self.slots.clone())
     }
 }

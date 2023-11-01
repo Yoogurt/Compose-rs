@@ -4,6 +4,7 @@ use std::mem::MaybeUninit;
 
 use std::rc::{Rc};
 use crate::foundation::modifier_container::ModifierContainer;
+use crate::foundation::outer_coordinator::OuterCoordinator;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
 
@@ -145,6 +146,10 @@ impl MeasurePassDelegate {
         self.layout_pending = true;
     }
 
+    fn get_outer_coodinator(& self) -> Rc<RefCell<dyn NodeCoordinator>>{
+        self.nodes.as_ref().unwrap().borrow_mut().outer_coordinator.clone()
+    }
+
     pub(crate) fn perform_measure(&mut self, constraint: &Constraint) {
         if self.layout_state != LayoutState::Idle {
             panic!("layout state is not idle before measure starts")
@@ -152,11 +157,15 @@ impl MeasurePassDelegate {
         self.layout_state = LayoutState::Measuring;
         self.measure_pending = false;
 
-        self.nodes.as_ref().unwrap().borrow_mut().outer_coordinator.borrow_mut().measure(constraint);
+        self.get_outer_coodinator().borrow_mut().measure(constraint);
 
         if self.layout_state == LayoutState::Measuring {
             self.mark_layout_pending();
         }
+    }
+
+    pub(crate) fn update_parent_data(& self) -> bool{
+        true
     }
 }
 
@@ -203,7 +212,11 @@ impl LayoutNodeLayoutDelegate {
         }
     }
 
-    pub(crate) fn update_parent_data(&mut self) {}
+    pub(crate) fn update_parent_data(&self){
+        if self.measure_pass_delegate.borrow_mut().update_parent_data() {
+
+        }
+    }
 }
 
 impl Measurable for MeasurePassDelegate {

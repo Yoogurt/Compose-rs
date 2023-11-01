@@ -8,7 +8,7 @@ use super::{measurable::MultiChildrenMeasurePolicy, look_ahead_capable_placeable
 
 #[derive(Delegate)]
 pub(crate) struct InnerNodeCoordinator {
-    #[to(Placeable, Measured, NodeWrapper)]
+    #[to(Placeable, Measured, NodeCoordinatorTrait)]
     pub(crate) node_coordinator_impl: NodeCoordinatorImpl,
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
     pub(crate) measure_policy: MultiChildrenMeasurePolicy,

@@ -13,14 +13,16 @@ use compose::foundation::bridge::platform_compose_view::MacOSComposeView;
 use compose::foundation::composer::Composer;
 use compose::foundation::drawing::canvas_impl::new_canvas;
 use compose::foundation::geometry::IntSize;
-use compose_macro::Compose;
+use compose_macro::Composable;
 use compose::foundation::modifier::Modifier;
 use compose::foundation::layout::size_modifier::SizeModifier;
 use compose::foundation::geometry::IntoDp;
 
-#[Compose]
-fn test() {
+#[Composable]
+fn test_box_composable() {
     Box!(Modifier.width(10.dp()), {
+         Box!(Modifier.width(10.dp()), {
+    })
     })
 }
 
@@ -76,9 +78,11 @@ fn run_skia() {
 fn main() {
     let mut compose_view = MacOSComposeView::new();
     // run_skia()
-    test();
+    compose_view.set_content(|| {
+        test_box_composable();
+    });
 
-    // compose_view.dispatch_measure(800, 500);
+    compose_view.dispatch_measure(800, 500);
     Composer::apply_changes();
     Composer::apply_deferred_changes();
     Composer::validate_group();

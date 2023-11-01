@@ -35,6 +35,12 @@ impl MacOSComposeView {
         result
     }
 
+    pub fn set_content(&self, content: impl FnOnce()) {
+        Composer::start_root();
+        content();
+        Composer::end_root();
+    }
+
     pub fn dispatch_measure(&mut self, width: usize, height: usize) {
         let constraint = Constraint::new(0..=width, 0..=height);
         self.measure_and_layout_delegate

@@ -1,4 +1,4 @@
-use compose_macro::Compose;
+use compose_macro::Composable;
 
 use crate::foundation::{layout_receiver::LayoutReceiver, measurable::Measurable, constraint::Constraint, measure_result::MeasureResult, modifier::Modifier};
 use crate::{self as compose};
@@ -35,7 +35,7 @@ fn box_measure_policy(layout_receiver: LayoutReceiver, measurable: &mut [&mut dy
     }
 }
 
-#[Compose]
+#[Composable]
 pub fn box_internal(modifier: Modifier, content: fn()) {
     Layout(modifier, Box::new(box_measure_policy), content);
 }

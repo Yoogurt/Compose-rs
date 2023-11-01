@@ -7,14 +7,14 @@ use core::any::Any;
 use auto_delegate::delegate;
 
 #[delegate]
-pub trait NodeWrapper {
+pub trait NodeCoordinatorTrait {
     fn set_wrapped(&mut self, wrapped: Option<Rc<RefCell<dyn NodeCoordinator>>>);
     fn get_wrapped(&self) -> Option<Rc<RefCell<dyn NodeCoordinator>>>;
     fn set_wrapped_by(&mut self, wrapped_by: Option<Weak<RefCell<dyn NodeCoordinator>>>);
     fn get_wrapped_by(&self) -> Option<Rc<RefCell<dyn NodeCoordinator>>>;
 }
 
-pub trait NodeCoordinator: NodeWrapper + Placeable + Debug + Measurable {
+pub trait NodeCoordinator: NodeCoordinatorTrait + Placeable + Debug + Measurable {
     fn on_initialize(&self) {}
     fn on_place(&self) {}
 
@@ -35,4 +35,6 @@ pub(crate) struct NodeCoordinatorImpl {
     pub(crate) wrapped: Option<Rc<RefCell<dyn NodeCoordinator>>>,
     pub(crate) wrapped_by: Option<Weak<RefCell<dyn NodeCoordinator>>>,
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
+
+    pub(crate) parent_data: Option<Box<dyn Any>>
 }

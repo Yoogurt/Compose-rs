@@ -1,4 +1,4 @@
-use compose_macro::Compose;
+use compose_macro::Composable;
 
 use crate::foundation::composer::Composer;
 use crate::foundation::measurable::{MultiChildrenMeasurePolicy, SingleChildMeasurePolicy};
@@ -24,10 +24,10 @@ impl Modifier {
     }
 }
 
-#[Compose]
-pub fn Layout(modifier: Modifier, measure_policy: MultiChildrenMeasurePolicy, content: fn()) {
+#[Composable]
+pub fn Layout(modifier: Modifier, measure_policy: MultiChildrenMeasurePolicy, content: impl FnMut()) {
      ComposeNode(move |node| {
          node.set_measure_policy(measure_policy);
          node.set_modifier(modifier);
-    });
+    }, content);
 }
