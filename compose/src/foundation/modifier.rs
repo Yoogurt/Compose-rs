@@ -1,22 +1,21 @@
-use std::any::{Any, TypeId};
+use std::any::Any;
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::rc::{Rc, Weak};
 use compose_macro::Leak;
 use auto_delegate::delegate;
-use crate::foundation::delegatable_node::DelegatableNode;
 use crate::foundation::layout_modifier_node::LayoutModifierNode;
 use crate::foundation::node_coordinator::NodeCoordinator;
-use crate::foundation::memory::leak_token::{LeakToken, LeakableObject};
 use crate::foundation::utils::weak_upgrade::WeakUpdater;
+use std::fmt::{Formatter, Write};
+use std::ops::{Add, Deref};
 
 pub const Modifier: Modifier = Modifier::Unit;
 
 #[derive(Debug)]
 pub enum NodeKind<'a> {
     Any(&'a mut dyn Node),
-    // DelegatingNode(&'a mut dyn DelegatableNode),
-    LayoutMidifierNode(&'a mut dyn LayoutModifierNode),
+    LayoutModifierNode(&'a mut dyn LayoutModifierNode),
 }
 
 #[macro_export]
@@ -77,7 +76,7 @@ impl Node for NodeImpl {
     }
 
     fn get_child(&self) -> Option<Rc<RefCell<dyn Node>>> {
-       self.child.clone()
+        self.child.clone()
     }
 
     fn as_any(&self) -> &dyn Any where Self: Sized {
@@ -110,4 +109,126 @@ pub enum Modifier {
         left: Box<Modifier>,
         right: Box<Modifier>,
     },
+}
+
+impl Modifier {
+    pub fn then(self, modifier: Modifier) -> Modifier {
+        if let Modifier::Unit = self {
+            return modifier;
+        }
+
+        if let Modifier::Unit = modifier {
+            return self;
+        }
+
+        Modifier::Combined {
+            left: Box::new(self),
+            right: Box::new(modifier),
+        }
+    }
+
+    pub fn fold_in<R>(&self, initial: R, mut operation: impl FnMut(R, &Modifier) -> R) -> R {
+        match self {
+            Modifier::Combined { left, right } => {
+                right.fold_in(left.fold_in(initial, &mut operation), operation)
+            }
+            _ => {
+                operation(initial, self)
+            }
+        }
+    }
+
+    pub fn fold_out<R>(&self, initial: R, operation: &mut dyn FnMut(&Modifier, R) -> R) -> R {
+        match self {
+            Modifier::Combined { left, right } => {
+                left.fold_out(right.fold_out(initial, operation), operation)
+            }
+            _ => {
+                operation(self, initial)
+            }
+        }
+    }
+
+    pub fn any(&self, mut predicate: impl FnMut(&Modifier) -> bool) -> bool {
+        match self {
+            Modifier::Combined { left, right } => {
+                left.any(&mut predicate) || right.any(predicate)
+            }
+            _ => {
+                predicate(self)
+            }
+        }
+    }
+
+    pub fn all(&self, mut predicate: impl FnMut(&Modifier) -> bool) -> bool {
+        match self {
+            Modifier::Combined { left, right } => {
+                left.all(&mut predicate) && right.all(predicate)
+            }
+            _ => {
+                predicate(self)
+            }
+        }
+    }
+
+    pub(crate) fn flatten(self) -> Vec<Modifier> {
+        let mut result = Vec::<Modifier>::with_capacity(16);
+        let mut stack: Vec<Modifier> = vec![self];
+
+        while let Some(next) = stack.pop() {
+            match next {
+                Modifier::Combined { left, right } => {
+                    stack.push(*right);
+                    stack.push(*left);
+                }
+
+                _ => {
+                    result.push(next);
+                }
+            }
+        }
+
+        result
+    }
+}
+
+impl Modifier {
+    const fn is_element(&self) -> bool {
+        match self {
+            Modifier::ModifierNodeElement { .. } => { true }
+            _ => { false }
+        }
+    }
+}
+
+impl Add for Modifier {
+    type Output = Modifier;
+    fn add(self, rhs: Self) -> Self::Output {
+        self.then(rhs)
+    }
+}
+
+impl Debug for Modifier {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Modifier::Unit => {
+                f.write_str("<modifier:unit>")
+            }
+            Modifier::Combined {
+                left, right
+            } => {
+                f.write_str("<modifier:combined>")?;
+                left.fmt(f)?;
+                right.fmt(f)
+            }
+            Modifier::ModifierNodeElement { create, update } => {
+                f.write_str("<modifier:element[")?;
+                f.write_str(&format!("create:{:p}", create.deref()))?;
+                f.write_str(&format!(",update:{:p}]>", update.deref()))
+            }
+            _ => {
+                f.write_str("<unknown modifier>")
+            }
+        }
+    }
 }

@@ -11,7 +11,7 @@ use crate::foundation::measurable::{Measurable, SingleChildMeasurePolicy};
 use crate::foundation::modifier::{Modifier, Node, NodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::geometry::{CoerceAtLeast, CoerceIn, Dp};
 use crate::foundation::layout_modifier_node::LayoutModifierNode;
-use crate::foundation::layout_receiver::MeasureScope;
+use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
@@ -85,7 +85,7 @@ impl LayoutModifierNode for SizeNode {
 
 impl NodeKindPatch for SizeNode {
     fn get_node_kind(&mut self) -> NodeKind {
-        NodeKind::LayoutMidifierNode(self)
+        NodeKind::LayoutModifierNode(self)
     }
 }
 

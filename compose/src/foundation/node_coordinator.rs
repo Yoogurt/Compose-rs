@@ -1,8 +1,7 @@
 use std::{rc::Rc, rc::Weak, cell::RefCell};
 use core::fmt::Debug;
-use auto_delegate::Delegate;
 use crate::foundation::constraint::Constraint;
-use super::{placeable::{Placeable}, measurable::Measurable, layout_node::LayoutNode, measure_result::MeasureResult, look_ahead_capable_placeable::LookaheadCapablePlaceable, look_ahead_capable_placeable_impl::LookaheadCapablePlaceableImpl};
+use super::{placeable::{Placeable}, measurable::Measurable};
 use core::any::Any;
 use auto_delegate::delegate;
 
@@ -28,17 +27,4 @@ pub trait NodeCoordinator: NodeCoordinatorTrait + Placeable + Debug + Measurable
 
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;
-}
-
-#[derive(Debug, Delegate)]
-pub(crate) struct NodeCoordinatorImpl {
-    #[to(Placeable, Measured, PlaceablePlaceAt, MeasureScope)]
-    pub(crate) look_ahead_capable_placeable_impl: LookaheadCapablePlaceableImpl,
-    pub(crate) measure_result: MeasureResult,
-    pub(crate) wrapped: Option<Rc<RefCell<dyn NodeCoordinator>>>,
-    pub(crate) wrapped_by: Option<Weak<RefCell<dyn NodeCoordinator>>>,
-    pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
-    pub(crate) z_index: f32,
-
-    pub(crate) parent_data: Option<Box<dyn Any>>
 }

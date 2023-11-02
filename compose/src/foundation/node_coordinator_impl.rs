@@ -1,16 +1,33 @@
 use std::any::Any;
 use std::cell::RefCell;
+use std::ops::{Deref, DerefMut};
 use std::rc::{Rc, Weak};
-use crate::foundation::geometry::IntSize;
+use auto_delegate::Delegate;
+use crate::foundation::geometry::{IntOffset, IntSize};
+use crate::foundation::look_ahead_capable_placeable::LookaheadCapablePlaceable;
+use crate::foundation::look_ahead_capable_placeable_impl::LookaheadCapablePlaceableImpl;
 use crate::foundation::node_coordinator::NodeCoordinatorTrait;
+use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 use crate::foundation::utils::weak_upgrade::WeakUpdater;
 use super::constraint::Constraint;
 use super::layout_node::LayoutNode;
-use super::look_ahead_capable_placeable_impl::LookaheadCapablePlaceableImpl;
 use super::placeable::Placeable;
-use super::node_coordinator::{NodeCoordinatorImpl, NodeCoordinator};
+use super::node_coordinator::NodeCoordinator;
 use super::measurable::Measurable;
 use super::measure_result::MeasureResult;
+
+#[derive(Debug, Delegate)]
+pub(crate) struct NodeCoordinatorImpl {
+    #[to(Placeable, Measured, MeasureScope)]
+    pub(crate) look_ahead_capable_placeable_impl: LookaheadCapablePlaceableImpl,
+    pub(crate) measure_result: MeasureResult,
+    pub(crate) wrapped: Option<Rc<RefCell<dyn NodeCoordinator>>>,
+    pub(crate) wrapped_by: Option<Weak<RefCell<dyn NodeCoordinator>>>,
+    pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
+    pub(crate) z_index: f32,
+
+    pub(crate) parent_data: Option<Box<dyn Any>>,
+}
 
 impl Measurable for NodeCoordinatorImpl {
     fn measure(&mut self, _constraint: &Constraint) -> &mut dyn Placeable {
@@ -23,8 +40,22 @@ impl NodeCoordinatorImpl {
         self.layout_node = Weak::new();
     }
 
-    pub(crate)  fn layout_node(&self) -> Weak<RefCell<LayoutNode>> {
+    pub(crate) fn layout_node(&self) -> Weak<RefCell<LayoutNode>> {
         self.layout_node.clone()
+    }
+}
+
+impl Deref for NodeCoordinatorImpl {
+    type Target = dyn LookaheadCapablePlaceable;
+
+    fn deref(&self) -> &Self::Target {
+        &self.look_ahead_capable_placeable_impl
+    }
+}
+
+impl DerefMut for NodeCoordinatorImpl {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.look_ahead_capable_placeable_impl
     }
 }
 
@@ -49,7 +80,7 @@ impl NodeCoordinatorTrait for NodeCoordinatorImpl {
         self.z_index
     }
 
-    fn set_z_index(&mut self,z_index:f32) {
+    fn set_z_index(&mut self, z_index: f32) {
         self.z_index = z_index;
     }
 }
@@ -73,7 +104,7 @@ impl NodeCoordinatorImpl {
             layout_node: Weak::new(),
             measure_result: MeasureResult::default(),
             parent_data: None,
-            z_index: 0.0
+            z_index: 0.0,
         }
     }
 
@@ -88,7 +119,19 @@ impl NodeCoordinatorImpl {
         }
     }
 
-    pub(crate) fn on_layout_modifier_node_changed(&self) {
+    pub(crate) fn on_layout_modifier_node_changed(&self) {}
 
+    fn place_self(&mut self, position: IntOffset, z_index: f32) {
+        if self.get_position() != position {
+            self.set_position(position);
+        }
+
+        self.z_index = z_index;
+    }
+}
+
+impl PlaceablePlaceAt for NodeCoordinatorImpl {
+    fn place_at(&mut self, position: IntOffset, z_index: f32) {
+        self.place_self(position, z_index)
     }
 }

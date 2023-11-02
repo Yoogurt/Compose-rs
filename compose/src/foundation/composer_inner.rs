@@ -1,13 +1,9 @@
 use std::{rc::Rc, cell::RefCell};
 use std::any::Any;
-use std::ops::Deref;
-
-use crate::foundation::composer::Composer;
 use crate::foundation::slot_table::{SlotTable, SlotReader, SlotWriter};
-use crate::foundation::slot_table_type::{GroupKindIndex, SlotTableType};
-use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
+use crate::foundation::slot_table_type::GroupKindIndex;
 
-use super::{constraint::Constraint, slot_table_type::GroupKind, layout_node::LayoutNode, layout_node_guard::LayoutNodeGuard};
+use super::{constraint::Constraint, slot_table_type::GroupKind, layout_node::LayoutNode};
 
 pub(crate) struct ComposerInner {
     pub(crate) hash: i64,
@@ -104,20 +100,6 @@ impl ComposerInner {
 
     pub(crate) fn use_node(&mut self) -> Rc<RefCell<LayoutNode>> {
         todo!()
-        // self.create_node()
-        // self.validate_node_expected();
-        // let node = LayoutNode::new();
-        // let node = self.slot_table.push(GroupKind::LayoutNodeType(node));
-        //
-        // match node.deref() {
-        //     GroupKind::LayoutNodeType(node) => {
-        //         self.layout_node_stack.push(node.clone());
-        //         return node.clone();
-        //     }
-        //     _ => {
-        //         panic!("unexpect type")
-        //     }
-        // }
     }
 
     pub(crate) fn record_fix_up(&mut self, fix_up: Box<dyn FnOnce()>) {

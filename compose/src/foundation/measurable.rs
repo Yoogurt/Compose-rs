@@ -1,5 +1,5 @@
 
-use super::{constraint::Constraint, placeable::Placeable, layout_receiver::MeasureScope, measure_result::MeasureResult};
+use super::{constraint::Constraint, placeable::Placeable, measure_scope::MeasureScope, measure_result::MeasureResult};
 
 pub trait Measurable {
     fn measure(&mut self, constraint: &Constraint) -> &mut dyn Placeable;

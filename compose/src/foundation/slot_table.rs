@@ -1,12 +1,13 @@
 use std::cell::{RefCell, RefMut};
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
-use std::marker::PhantomData;
 use std::ops::Index;
 use super::slot_table_type::{GroupKindIndex, GroupKind};
 use std::rc::Rc;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::slot_table_type::SlotTableType;
+use std::cell::Ref;
+use std::ops::Deref;
 
 #[derive(Debug, Default)]
 pub(crate) struct SlotTable {
@@ -80,7 +81,7 @@ impl SlotWriter {
         });
     }
 
-    pub(crate) fn get_group_kind<'a, 'b>(&mut self, group_kind: GroupKindIndex,  data: &'a  mut RefMut<'b, Vec<SlotTableType>>) -> Option<&'a mut GroupKind>  {
+    pub(crate) fn get_group_kind<'a, 'b>(&mut self, group_kind: GroupKindIndex, data: &'a mut RefMut<'b, Vec<SlotTableType>>) -> Option<&'a mut GroupKind> {
         let parent = self.group_parent.get_mut(&group_kind);
         match parent {
             None => {
@@ -108,5 +109,36 @@ impl SlotWriter {
 
     pub(crate) fn end_insert_layout_node(&mut self) {
         self.group_parent.get_mut(&GroupKindIndex::LayoutNode).unwrap().pop();
+    }
+}
+
+pub(crate) struct GroupKindBorrowGuard<'a> {
+    slot: Ref<'a, Vec<GroupKind>>,
+    index: usize,
+}
+
+impl<'a> GroupKindBorrowGuard<'a> {
+    fn new(slot: Ref<'a, Vec<GroupKind>>, index: usize) -> Self {
+        Self { slot, index }
+    }
+}
+
+impl Deref for GroupKindBorrowGuard<'_> {
+    type Target = GroupKind;
+
+    fn deref(&self) -> &Self::Target {
+        &self.slot[self.index]
+    }
+}
+
+impl SlotTable {
+    pub(crate) fn open_reader(&mut self) -> SlotReader {
+        self.readers += 1;
+        SlotReader::new(self.slots.clone())
+    }
+
+    pub(crate) fn open_writer(&mut self) -> SlotWriter {
+        self.writer += 1;
+        SlotWriter::new(self.slots.clone())
     }
 }

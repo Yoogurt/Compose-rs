@@ -1,6 +1,6 @@
 use compose_macro::Composable;
 
-use crate::foundation::{layout_receiver::MeasureScope, measurable::Measurable, constraint::Constraint, measure_result::MeasureResult, modifier::Modifier};
+use crate::foundation::{measure_scope::MeasureScope, measurable::Measurable, constraint::Constraint, measure_result::MeasureResult, modifier::Modifier};
 use crate::{self as compose};
 use crate::foundation::utils::box_wrapper::WrapWithBox;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;

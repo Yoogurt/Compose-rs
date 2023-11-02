@@ -1,6 +1,7 @@
 use crate::foundation::geometry::Density;
-use crate::foundation::placeable::{PlacementScope, PlacementScopeImpl};
-use super::{layout_receiver::MeasureScopeImpl, layout_receiver::MeasureScope, layout_direction::LayoutDirection, measure_result::MeasureResult};
+use crate::foundation::placement_scope::PlacementScope;
+use crate::foundation::placement_scope_impl::PlacementScopeImpl;
+use super::{measure_scope::MeasureScopeImpl, measure_scope::MeasureScope, layout_direction::LayoutDirection, measure_result::MeasureResult};
 
 impl MeasureScopeImpl {
     pub(crate) fn new() -> Self {
@@ -10,7 +11,6 @@ impl MeasureScopeImpl {
         }
     }
 }
-
 
 impl MeasureScope for MeasureScopeImpl {
     fn get_density(&self) -> Density {

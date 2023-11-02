@@ -1,9 +1,19 @@
-use crate::foundation::geometry::{IntOffset, IntSize, CoerceIn};
-use crate::foundation::layout_direction::LayoutDirection;
-use crate::foundation::layout_receiver::MeasureScope;
-use crate::foundation::placeable::{PlaceablePlaceAt, PlacementScopeImpl};
+use auto_delegate::Delegate;
+use crate::foundation::constraint::Constraint;
+use crate::foundation::geometry::{CoerceIn, IntOffset, IntSize};
+use crate::foundation::measured::MeasuredImpl;
+use crate::foundation::placeable::Placeable;
+use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 
-use super::{placeable::{PlaceableImpl, Placeable, PlacementScope}, measured::MeasuredImpl, constraint::Constraint};
+#[derive(Debug, Delegate, Default)]
+pub(crate) struct PlaceableImpl {
+    pub(crate) width: usize,
+    pub(crate) height: usize,
+    #[to(Measured)]
+    pub(crate) measured: MeasuredImpl,
+    pub(crate) measured_size: IntSize,
+    pub(crate) measurement_constraint: Constraint,
+}
 
 impl PlaceableImpl {
     pub(crate) fn new() -> Self {
@@ -25,7 +35,7 @@ impl PlaceableImpl {
 }
 
 impl PlaceablePlaceAt for PlaceableImpl {
-    fn place_at(&mut self,_position:IntOffset,_z_index:f32) {
+    fn place_at(&mut self, _position: IntOffset, _z_index: f32) {
         unimplemented!("place_at to PlaceableImpl should implement by yourself");
     }
 }
@@ -39,54 +49,17 @@ impl Placeable for PlaceableImpl {
         self.height
     }
 
-    fn get_measured_size(&self) -> IntSize {
-        self.measured_size
-    }
-
     fn set_measured_size(&mut self, size: IntSize) {
         self.measured_size = size;
+    }
+
+    fn get_measured_size(&self) -> IntSize {
+        self.measured_size
     }
 
     fn set_measurement_constraint(&mut self, constraint: &Constraint) { self.measurement_constraint = *constraint; }
 
     fn get_measurement_constraint(&self) -> &Constraint {
         &self.measurement_constraint
-    }
-}
-
-impl PlacementScope for PlacementScopeImpl<'_> {
-    fn parent_width(&self) -> usize {
-        self.width
-    }
-
-    fn parent_height(&self) -> usize {
-        self.height
-    }
-
-    fn parent_layout_direction(&self) -> LayoutDirection {
-        self.measure_scope.get_layout_direction()
-    }
-
-    fn place_relative(&self, placeable: &mut dyn Placeable, x: i32, y: i32) {
-        self.place_relative_with_z(placeable, x, y, 0.0)
-    }
-
-    fn place_relative_with_z(&self, placeable: &mut dyn Placeable, x: i32, y: i32, z_index: f32) {
-        // mirror
-        if self.parent_layout_direction() == LayoutDirection::Ltr || self.parent_width() == 0 {
-            placeable.place_at((x, y).into(), z_index)
-        } else {
-            placeable.place_at((self.parent_width() as i32 - placeable.get_width() as i32 - x, y).into(), z_index)
-        }
-    }
-}
-
-impl<'a> PlacementScopeImpl<'a> {
-    pub(crate) fn new(width: usize, height: usize, measure_scope: &'a dyn MeasureScope) -> Self {
-        PlacementScopeImpl {
-            width,
-            height,
-            measure_scope,
-        }
     }
 }

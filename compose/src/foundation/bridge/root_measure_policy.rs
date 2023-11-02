@@ -1,5 +1,5 @@
 use crate::foundation::constraint::Constraint;
-use crate::foundation::layout_receiver::MeasureScope;
+use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::measurable::{Measurable, MultiChildrenMeasurePolicy};
 use crate::foundation::measure_result::MeasureResult;
 

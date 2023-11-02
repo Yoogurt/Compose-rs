@@ -1,8 +1,9 @@
 use crate::foundation::geometry::Density;
 use super::layout_direction::LayoutDirection;
-use crate::foundation::placeable::PlacementScope;
 use crate::foundation::measure_result::MeasureResult;
 use auto_delegate::delegate;
+use crate::foundation::placement_scope::PlacementScope;
+
 #[delegate]
 pub trait MeasureScope {
     fn get_density(&self) -> Density;
