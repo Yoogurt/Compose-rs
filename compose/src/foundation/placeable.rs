@@ -1,6 +1,6 @@
 
 use auto_delegate::{delegate, Delegate};
-use crate::foundation::layout_receiver::LayoutReceiver;
+use crate::foundation::layout_receiver::MeasureScope;
 use super::{layout_direction::LayoutDirection, constraint::Constraint, measured::{Measured, MeasuredImpl}, geometry::{IntSize, IntOffset}, measure_result::MeasureResult};
 
 pub trait PlacementScope {
@@ -18,7 +18,12 @@ pub type PlacementAction = Box<dyn FnOnce(&dyn PlacementScope)>;
 pub type MeasureAction = Box<dyn FnOnce() -> MeasureResult>;
 
 #[delegate]
-pub trait Placeable: Measured {
+pub trait PlaceablePlaceAt {
+    fn place_at(&mut self, _position: IntOffset, _z_index: f32) {}
+}
+
+#[delegate]
+pub trait Placeable: Measured + PlaceablePlaceAt {
     fn get_width(&self) -> usize;
     fn get_height(&self) -> usize;
 
@@ -27,11 +32,9 @@ pub trait Placeable: Measured {
 
     fn set_measurement_constraint(&mut self, constraint: &Constraint);
     fn get_measurement_constraint(&self) -> &Constraint;
-
-    fn place_at(&mut self, position: IntOffset, z_index: f32);
 }
 
-#[derive(Debug, Delegate)]
+#[derive(Debug, Delegate, Default)]
 pub(crate) struct PlaceableImpl {
     pub(crate) width: usize,
     pub(crate) height: usize,
@@ -44,5 +47,5 @@ pub(crate) struct PlaceableImpl {
 pub(crate) struct PlacementScopeImpl<'a> {
     pub(crate) width: usize,
     pub(crate) height: usize,
-    pub(crate) scope: &'a LayoutReceiver
+    pub(crate) measure_scope: &'a dyn MeasureScope
 }

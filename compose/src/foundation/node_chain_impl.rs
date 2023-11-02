@@ -4,10 +4,9 @@ use auto_delegate::Delegate;
 use crate::foundation::layout_modifier_node::LayoutModifierNode;
 use crate::foundation::layout_modifier_node_coordinator::LayoutModifierNodeCoordinator;
 use crate::foundation::layout_node::LayoutNode;
-use crate::foundation::look_ahead_capable_placeable::NodeCoordinator;
+use crate::foundation::node_coordinator::NodeCoordinator;
 use crate::foundation::modifier::{Node, NodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::modifier_container::ModifierContainer;
-use crate::foundation::utils::optional_weak::OptionalWeak;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::impl_node_kind_any;
 
@@ -224,6 +223,26 @@ impl NodeChain {
 
         if coordinator_sync_needed {
             self.sync_coordinators();
+        }
+    }
+
+    pub(crate) fn for_each_coordinator(
+        &self,
+        mut block: impl FnMut(&LayoutModifierNodeCoordinator),
+    ) {
+        let mut coordinator = self.outer_coordinator.clone();
+        let inner_coordinator = self.inner_coordinator.clone();
+
+        while coordinator.as_ptr() != inner_coordinator.as_ptr() {
+            block(
+                coordinator
+                    .borrow()
+                    .as_any()
+                    .downcast_ref::<LayoutModifierNodeCoordinator>()
+                    .unwrap(),
+            );
+            let wrapped =coordinator.borrow().get_wrapped().unwrap();
+            coordinator = wrapped;
         }
     }
 }

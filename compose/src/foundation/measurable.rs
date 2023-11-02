@@ -1,18 +1,18 @@
 
-use super::{constraint::Constraint, layout_result::Placeable, layout_receiver::LayoutReceiver, measure_result::MeasureResult};
+use super::{constraint::Constraint, placeable::Placeable, layout_receiver::MeasureScope, measure_result::MeasureResult};
 
 pub trait Measurable {
     fn measure(&mut self, constraint: &Constraint) -> &mut dyn Placeable;
 }
 
-pub type SingleChildMeasurePolicy = Box<dyn FnMut(LayoutReceiver, &mut dyn Measurable, &Constraint)
+pub type SingleChildMeasurePolicy = Box<dyn FnMut(&mut dyn MeasureScope, &mut dyn Measurable, &Constraint)
                                        -> MeasureResult>;
 
-pub type SingleChildMeasurePolicyUnBox = fn(LayoutReceiver, &mut dyn Measurable, &Constraint)
+pub type SingleChildMeasurePolicyUnBox = fn(&mut dyn  MeasureScope, &mut dyn Measurable, &Constraint)
                                             -> MeasureResult;
 
-pub type MultiChildrenMeasurePolicy = Box<dyn FnMut(LayoutReceiver, &mut [&mut dyn Measurable], &Constraint)
+pub type MultiChildrenMeasurePolicy = Box<dyn FnMut(&mut dyn MeasureScope, &mut [&mut dyn Measurable], &Constraint)
                                          -> MeasureResult>;
 
-pub type MultiChildrenMeasurePolicyUnBox = fn(LayoutReceiver, &mut [&mut dyn Measurable], &Constraint)
-    -> MeasureResult;
+pub type MultiChildrenMeasurePolicyUnBox = fn(&mut dyn MeasureScope, &mut [&mut dyn Measurable], &Constraint)
+                                              -> MeasureResult;

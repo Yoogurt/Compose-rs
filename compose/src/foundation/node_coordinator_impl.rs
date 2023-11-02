@@ -1,14 +1,14 @@
 use std::any::Any;
 use std::cell::RefCell;
-use std::mem::MaybeUninit;
 use std::rc::{Rc, Weak};
 use crate::foundation::geometry::IntSize;
-use crate::foundation::look_ahead_capable_placeable::NodeCoordinatorTrait;
+use crate::foundation::node_coordinator::NodeCoordinatorTrait;
 use crate::foundation::utils::weak_upgrade::WeakUpdater;
 use super::constraint::Constraint;
 use super::layout_node::LayoutNode;
-use super::layout_result::{Placeable, PlaceableImpl};
-use super::look_ahead_capable_placeable::{NodeCoordinatorImpl, NodeCoordinator};
+use super::look_ahead_capable_placeable_impl::LookaheadCapablePlaceableImpl;
+use super::placeable::Placeable;
+use super::node_coordinator::{NodeCoordinatorImpl, NodeCoordinator};
 use super::measurable::Measurable;
 use super::measure_result::MeasureResult;
 
@@ -44,6 +44,14 @@ impl NodeCoordinatorTrait for NodeCoordinatorImpl {
     fn get_wrapped_by(&self) -> Option<Rc<RefCell<dyn NodeCoordinator>>> {
         self.wrapped_by.try_upgrade()
     }
+
+    fn get_z_index(&self) -> f32 {
+        self.z_index
+    }
+
+    fn set_z_index(&mut self,z_index:f32) {
+        self.z_index = z_index;
+    }
 }
 
 impl NodeCoordinator for NodeCoordinatorImpl {
@@ -59,12 +67,13 @@ impl NodeCoordinator for NodeCoordinatorImpl {
 impl NodeCoordinatorImpl {
     pub(crate) fn new() -> Self {
         NodeCoordinatorImpl {
-            placeable_impl: PlaceableImpl::new(),
+            look_ahead_capable_placeable_impl: LookaheadCapablePlaceableImpl::default(),
             wrapped: None,
             wrapped_by: None,
             layout_node: Weak::new(),
             measure_result: MeasureResult::default(),
             parent_data: None,
+            z_index: 0.0
         }
     }
 

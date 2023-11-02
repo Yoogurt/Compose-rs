@@ -1,3 +1,5 @@
+use std::default;
+
 use super::{Density, Dp};
 
 impl Density {
@@ -19,6 +21,15 @@ impl Density {
             usize::MAX
         } else {
             px.round() as usize
+        }
+    }
+}
+
+impl Default for Density {
+    fn default() -> Self {
+        Self {
+            density: 1f64,
+            font_scale: 1f64
         }
     }
 }

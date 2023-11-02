@@ -1,7 +1,9 @@
 use compose_macro::Composable;
 
-use crate::foundation::{layout_receiver::LayoutReceiver, measurable::Measurable, constraint::Constraint, measure_result::MeasureResult, modifier::Modifier};
+use crate::foundation::{layout_receiver::MeasureScope, measurable::Measurable, constraint::Constraint, measure_result::MeasureResult, modifier::Modifier};
 use crate::{self as compose};
+use crate::foundation::utils::box_wrapper::WrapWithBox;
+use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
 use crate::widgets::layout::Layout;
 
@@ -20,10 +22,10 @@ macro_rules! Box {
     };
 }
 
-fn box_measure_policy(layout_receiver: LayoutReceiver, measurable: &mut [&mut dyn Measurable], constraint: &Constraint) -> MeasureResult {
+fn box_measure_policy(measure_scope: &mut dyn MeasureScope, measurable: &mut [&mut dyn Measurable], constraint: &Constraint) -> MeasureResult {
     let children_count = measurable.len();
     match children_count {
-        0 => { layout_receiver.layout(constraint.min_width, constraint.min_height, |_| {}) }
+        0 => { measure_scope.layout(constraint.min_width, constraint.min_height, &mut |_| {}) }
         1 => {
             let placeable = measurable[0].measure(constraint);
             placeable.place_at((0,0).into(), 0.0);

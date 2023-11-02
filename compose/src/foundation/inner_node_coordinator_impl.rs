@@ -3,21 +3,20 @@ use std::cell::RefCell;
 use std::fmt::{Debug, Formatter};
 
 use std::ops::DerefMut;
-use std::rc::{Weak};
+use std::rc::Weak;
 use crate::foundation::layout_node::UsageByParent;
 use crate::foundation::measurable::MultiChildrenMeasurePolicy;
 
 use super::constraint::Constraint;
 use super::inner_node_coordinator::InnerNodeCoordinator;
-use super::layout_node::{LayoutNode};
-use super::layout_receiver::LayoutReceiver;
-use super::layout_result::Placeable;
-use super::look_ahead_capable_placeable::{NodeCoordinatorImpl, NodeCoordinator};
+use super::layout_node::LayoutNode;
+use super::layout_receiver::MeasureScope;
+use super::placeable::{Placeable, PlaceablePlaceAt};
+use super::node_coordinator::{NodeCoordinatorImpl, NodeCoordinator};
 use super::measurable::Measurable;
 use super::measure_result::MeasureResult;
 
-
-fn error_measure_policy(_layout_receiver: LayoutReceiver, _children: &mut [&mut dyn Measurable], _constraint: &Constraint) -> MeasureResult {
+fn error_measure_policy(measure_scope: &mut dyn MeasureScope, _children: &mut [&mut dyn Measurable], _constraint: &Constraint) -> MeasureResult {
     panic!("no measure policy provided")
 }
 
@@ -43,7 +42,7 @@ impl InnerNodeCoordinator {
         println!("child {:p} measured {:?}\n", self, self.get_measured_size());
     }
 
-    pub(crate) fn handle_measured_result(&mut self, measure_result: MeasureResult) {
+    pub(crate) fn set_measured_result(&mut self, measure_result: MeasureResult) {
         dbg!(&measure_result);
         // self.set_measured_size(measure_result);
     }
@@ -56,8 +55,8 @@ impl Measurable for InnerNodeCoordinator {
         });
 
         let measure_policy = &mut self.measure_policy;
-        let _measure_result = {
-            let children_rc = unsafe { self.layout_node.upgrade() }.unwrap().borrow().get_children();
+        let measure_result = {
+            let children_rc = self.layout_node.upgrade().unwrap().borrow().get_children();
             let children = children_rc.borrow_mut();
 
             let children_rc = children.iter().map(|child| {
@@ -73,13 +72,22 @@ impl Measurable for InnerNodeCoordinator {
                 child.deref_mut()
             }).collect::<Vec<_>>();
 
-            let layout_receiver = LayoutReceiver::new();
-            measure_policy(layout_receiver, &mut children_dyn_measurable[..], constraint)
+            let measure_scope = &mut self.node_coordinator_impl;
+            measure_policy(measure_scope, &mut children_dyn_measurable[..], constraint)
         };
+        self.set_measured_result(measure_result);
 
         self.on_measured();
         // self.handle_measured_result(measure_result);
         &mut self.node_coordinator_impl
+    }
+}
+
+impl PlaceablePlaceAt for InnerNodeCoordinator {
+    fn place_at(&mut self,position:super::geometry::IntOffset,z_index:f32) {
+        self.node_coordinator_impl.place_at(position, z_index)
+        
+        
     }
 }
 

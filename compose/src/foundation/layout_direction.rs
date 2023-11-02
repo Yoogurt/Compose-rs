@@ -1,5 +1,6 @@
-#[derive(PartialEq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy, Debug, Default)]
 pub enum LayoutDirection {
+    #[default]
     Ltr,
     Rtl,
 }

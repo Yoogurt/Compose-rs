@@ -64,3 +64,9 @@ impl<R,T> From<R> for Size<T> where R: Into<(T,T)> , T: U64ConverterUnsigned {
         Self::new(value.0, value.1)
     }
 }
+
+impl<T> Default for Size<T> where T: U64ConverterUnsigned + Default {
+    fn default() -> Self {
+        Self::new(T::default(), T::default())
+    }
+}

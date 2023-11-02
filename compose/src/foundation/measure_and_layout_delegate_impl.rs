@@ -50,13 +50,19 @@ impl MeasureAndLayoutDelegate {
             layout_node_layout_delegate.borrow_mut().remeasure(constraint);
     }
 
-    fn recurse_remeasure(&self) {
-        self.remeasure_only(self.root.clone());
+    fn recurse_remeasure(&self, layout_node: Rc<RefCell<LayoutNode>>) {
+        self.remeasure_only(layout_node.clone());
+
+        layout_node.borrow().for_each_child(|child| {
+            self.recurse_remeasure(child.clone());
+        });
+
+        self.remeasure_only(layout_node);
     }
 
     pub(crate) fn measure_only(&mut self) {
         self.perform_measure_and_layout(|self_| {
-            self_.recurse_remeasure();
+            self_.recurse_remeasure(self_.root.clone());
         });
     }
 }

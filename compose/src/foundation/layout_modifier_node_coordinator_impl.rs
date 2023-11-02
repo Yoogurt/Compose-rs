@@ -1,17 +1,28 @@
 use std::any::Any;
 use std::cell::RefCell;
-use std::fmt::{Debug, Formatter};
+use std::ops::{DerefMut, Deref};
 use std::rc::{Rc, Weak};
 use crate::foundation::constraint::Constraint;
-use crate::foundation::geometry::{IntOffset, IntSize};
-use crate::foundation::layout_modifier_node::LayoutModifierNode;
 use crate::foundation::layout_modifier_node_coordinator::LayoutModifierNodeCoordinator;
 use crate::foundation::layout_node::LayoutNode;
-use crate::foundation::layout_result::Placeable;
-use crate::foundation::look_ahead_capable_placeable::{NodeCoordinator, NodeCoordinatorImpl};
+use crate::foundation::placeable::Placeable;
+use crate::foundation::node_coordinator::{NodeCoordinator, NodeCoordinatorImpl};
 use crate::foundation::measurable::Measurable;
-use crate::foundation::measured::Measured;
 use crate::foundation::modifier::Node;
+
+impl DerefMut for LayoutModifierNodeCoordinator {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.node_coordinator_impl
+    }
+}
+
+impl Deref for LayoutModifierNodeCoordinator {
+    type Target = dyn NodeCoordinator;
+
+    fn deref(&self) -> &Self::Target {
+        &self.node_coordinator_impl
+    }
+}
 
 impl LayoutModifierNodeCoordinator {
     pub(crate) fn new(layout_node: Weak<RefCell<LayoutNode>>, measure_node: Rc<RefCell<dyn Node>>) -> Self {

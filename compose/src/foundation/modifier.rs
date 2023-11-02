@@ -6,7 +6,7 @@ use compose_macro::Leak;
 use auto_delegate::delegate;
 use crate::foundation::delegatable_node::DelegatableNode;
 use crate::foundation::layout_modifier_node::LayoutModifierNode;
-use crate::foundation::look_ahead_capable_placeable::NodeCoordinator;
+use crate::foundation::node_coordinator::NodeCoordinator;
 use crate::foundation::memory::leak_token::{LeakToken, LeakableObject};
 use crate::foundation::utils::weak_upgrade::WeakUpdater;
 

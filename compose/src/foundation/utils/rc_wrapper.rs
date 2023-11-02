@@ -7,7 +7,7 @@ pub(crate) trait WrapWithRcRefCell {
 
 impl<T> WrapWithRcRefCell for T {
     #[inline]
-    fn wrap_with_rc_refcell(self) -> Rc<RefCell<Self>> {
+    fn wrap_with_rc_refcell(self) -> Rc<RefCell<T>> {
         Rc::new(RefCell::new(self))
     }
 }

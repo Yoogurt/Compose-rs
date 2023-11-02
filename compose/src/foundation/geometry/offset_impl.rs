@@ -138,6 +138,18 @@ impl Offset<f32> {
     }
 }
 
+impl<T> Default for Offset<T> where T: U64ConverterUnsigned + Default {
+    fn default() -> Self {
+        Self::new(T::default(), T::default())
+    }
+}
+
+impl<T> PartialEq for Offset<T> where T: U64ConverterUnsigned + PartialEq {
+    fn eq(&self, other: &Self) -> bool {
+        self.x() == other.x() && self.y() == other.y()
+    }
+}
+
 #[test]
 fn test_offset() {
     let mut offset = IntOffset::new(1, 2);

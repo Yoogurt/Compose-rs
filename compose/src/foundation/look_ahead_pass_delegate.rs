@@ -1,6 +1,6 @@
 use auto_delegate::Delegate;
 
-use super::layout_result::PlaceableImpl;
+use super::placeable::PlaceableImpl;
 
 #[derive(Delegate, Debug)]
 pub(crate) struct LookaheadPassDelegate {
