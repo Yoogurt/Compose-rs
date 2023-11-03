@@ -102,8 +102,8 @@ pub enum Modifier {
     #[default]
     Unit,
     ModifierNodeElement {
-        create: Box<dyn FnMut() -> Rc<RefCell<dyn Node>>>,
-        update: Box<dyn FnMut(&'static Rc<RefCell<dyn Node>>)>,
+        create: Box<dyn FnMut() -> Box<dyn LayoutModifierNode>>,
+        update: Box<dyn FnMut(&'static Box<dyn LayoutModifierNode>)>,
     },
     Combined {
         left: Box<Modifier>,

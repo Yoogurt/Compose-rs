@@ -7,6 +7,7 @@ use super::{parent_data::ParentData, measure_result::MeasureResult, inner_node_c
 use auto_delegate::Delegate;
 use crate::foundation::layout_modifier_node::LayoutModifierNode;
 use crate::foundation::layout_modifier_node_coordinator::LayoutModifierNodeCoordinator;
+use crate::foundation::layout_modifier_node_impl::LayoutModifierNodeImpl;
 use crate::foundation::modifier::{NodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::impl_node_kind_any;
@@ -113,6 +114,7 @@ impl NodeChain {
             }
         };
 
+        let node = LayoutModifierNodeImpl::new(node).wrap_with_rc_refcell() as Rc<RefCell<dyn Node>>;
         Self::insert_child(node, parent)
     }
 
@@ -166,6 +168,8 @@ impl NodeChain {
                     }
                     node_coordinator.clone()
                 } else {
+                    let a = Rc::downcast::<RefCell<LayoutModifierNodeImpl>>(node_rc).expect("downcast fail from node coordinator");
+
                     let c = LayoutModifierNodeCoordinator::new(self.layout_node.clone(), node_rc.clone()).wrap_with_rc_refcell();
                     let weak_layout_modifier_node_coordinator = Rc::downgrade(&c);
                     let weak_dyn_node_coordinator: Weak<RefCell<dyn NodeCoordinator>> = weak_layout_modifier_node_coordinator;
@@ -236,6 +240,7 @@ impl NodeChain {
 
         if coordinator_sync_needed {
             self.sync_coordinators();
+            dbg!("after sync coordinators {:?}", &self.outer_coordinator);
         }
     }
 

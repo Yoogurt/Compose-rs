@@ -19,6 +19,7 @@ pub trait NodeCoordinatorTrait {
 pub trait NodeCoordinator: NodeCoordinatorTrait + Placeable + Debug + Measurable {
     fn on_initialize(&self) {}
     fn on_place(&self) {}
+    fn on_measured(&mut self) {}
 
     fn perform_measure<'a, F>(&'a mut self, constraint: &Constraint, block: F) -> &'a mut dyn Placeable where F: FnOnce(&'a mut Self) -> &'a mut dyn Placeable, Self: Sized {
         self.set_measurement_constraint(constraint);

@@ -64,15 +64,12 @@ fn size_measure_policy<T>(min_width: T,
     })
 }
 
-#[derive(Debug, Default, Delegate)]
+#[derive(Debug, Default)]
 struct SizeNode {
     min_width: Dp,
     max_width: Dp,
     min_height: Dp,
     max_height: Dp,
-
-    #[to(Node)]
-    node_impl: NodeImpl,
 }
 
 impl DelegatableNode for SizeNode {}

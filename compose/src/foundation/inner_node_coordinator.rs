@@ -8,7 +8,7 @@ use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::measurable::Measurable;
 use crate::foundation::measure_result::MeasureResult;
 use std::any::Any;
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug, format, Formatter};
 
 use std::ops::DerefMut;
 use crate::foundation::geometry::IntOffset;
@@ -111,7 +111,11 @@ impl NodeCoordinator for InnerNodeCoordinator {
 }
 
 impl Debug for InnerNodeCoordinator {
-    fn fmt(&self, _f: &mut Formatter<'_>) -> std::fmt::Result {
-        todo!()
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("InnerNodeCoordinator")
+            .field("node_coordinator_impl", &self.node_coordinator_impl)
+            .field("layout_node", &self.layout_node)
+            .field("measure_policy", &format!("measure_policy: {:p}", &self.measure_policy))
+            .finish()
     }
 }

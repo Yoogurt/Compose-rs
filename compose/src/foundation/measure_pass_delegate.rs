@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::ops::{Deref, DerefMut};
 use std::rc::{Rc, Weak};
 use auto_delegate::Delegate;
 use crate::foundation::constraint::Constraint;
@@ -31,9 +32,23 @@ pub(crate) struct MeasurePassDelegate {
     pub(crate) is_placed: bool,
 }
 
+impl Deref for MeasurePassDelegate {
+    type Target = dyn Placeable;
+
+    fn deref(&self) -> &Self::Target {
+        &self.placeable_impl
+    }
+}
+
+impl DerefMut for MeasurePassDelegate {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.placeable_impl
+    }
+}
+
 impl Remeasurable for MeasurePassDelegate {
     fn remeasure(&mut self, constraint: &Constraint) -> bool {
-        if !self.measure_pending {
+        if !self.measure_pending && self.get_measurement_constraint() == constraint{
             return false;
         }
 
@@ -124,6 +139,9 @@ impl MeasurePassDelegate {
         }
         self.layout_state = LayoutState::Measuring;
         self.measure_pending = false;
+
+        let outer_coordinator =self.get_outer_coordinator();
+        dbg!("perform measure from chain {:?}", &outer_coordinator);
 
         self.get_outer_coordinator()
             .borrow_mut()

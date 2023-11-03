@@ -20,7 +20,7 @@ use super::measure_result::MeasureResult;
 pub(crate) struct NodeCoordinatorImpl {
     #[to(Placeable, Measured, MeasureScope)]
     pub(crate) look_ahead_capable_placeable_impl: LookaheadCapablePlaceableImpl,
-    pub(crate) measure_result: MeasureResult,
+    // pub(crate) measure_result: MeasureResult,
     pub(crate) wrapped: Option<Rc<RefCell<dyn NodeCoordinator>>>,
     pub(crate) wrapped_by: Option<Weak<RefCell<dyn NodeCoordinator>>>,
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
@@ -102,22 +102,22 @@ impl NodeCoordinatorImpl {
             wrapped: None,
             wrapped_by: None,
             layout_node: Weak::new(),
-            measure_result: MeasureResult::default(),
+            // measure_result: MeasureResult::default(),
             parent_data: None,
             z_index: 0.0,
         }
     }
 
-    fn on_measure_result_changed(&mut self, size: IntSize) {
-        self.set_measured_size(size);
-    }
+    // fn on_measure_result_changed(&mut self, size: IntSize) {
+    //     self.set_measured_size(size);
+    // }
 
-    fn set_measure_result(&mut self, measure_result: MeasureResult) {
-        if self.measure_result != measure_result {
-            let measure_size: (usize, usize) = measure_result.into();
-            self.on_measure_result_changed(measure_size.into());
-        }
-    }
+    // fn set_measure_result(&mut self, measure_result: MeasureResult) {
+    //     if self.measure_result != measure_result {
+    //         let measure_size: (usize, usize) = measure_result.into();
+    //         self.on_measure_result_changed(measure_size.into());
+    //     }
+    // }
 
     pub(crate) fn on_layout_modifier_node_changed(&self) {}
 

@@ -7,6 +7,8 @@ use crate::foundation::modifier::Node;
 use std::any::Any;
 use std::ops::{DerefMut, Deref};
 use crate::foundation::constraint::Constraint;
+use crate::foundation::layout_modifier_node::LayoutModifierNode;
+use crate::foundation::layout_modifier_node_impl::LayoutModifierNodeImpl;
 use crate::foundation::placeable::Placeable;
 use crate::foundation::measurable::Measurable;
 use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
@@ -14,9 +16,9 @@ use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
 #[derive(Debug, Delegate)]
 pub(crate) struct LayoutModifierNodeCoordinator {
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
+    pub(crate) layout_modifier_node: Rc<RefCell<LayoutModifierNodeImpl>>,
     #[to(Placeable, Measured, NodeCoordinatorTrait, MeasureScope, PlaceablePlaceAt)]
     pub(crate) node_coordinator_impl: NodeCoordinatorImpl,
-    pub(crate) layout_modifier_node: Rc<RefCell<dyn Node>>,
 }
 
 impl DerefMut for LayoutModifierNodeCoordinator {
@@ -34,7 +36,7 @@ impl Deref for LayoutModifierNodeCoordinator {
 }
 
 impl LayoutModifierNodeCoordinator {
-    pub(crate) fn new(layout_node: Weak<RefCell<LayoutNode>>, measure_node: Rc<RefCell<dyn Node>>) -> Self {
+    pub(crate) fn new(layout_node: Weak<RefCell<LayoutNode>>, measure_node: Rc<RefCell<LayoutModifierNodeImpl>>) -> Self {
         Self {
             layout_node,
             node_coordinator_impl: NodeCoordinatorImpl::new(),
@@ -54,7 +56,14 @@ impl LayoutModifierNodeCoordinator {
 
 impl Measurable for LayoutModifierNodeCoordinator {
     fn measure(&mut self, constraint: &Constraint) -> &mut dyn Placeable {
-        todo!()
+        self.perform_measure(constraint, move |self_| {
+            let layout_modifier_node = self.layout_modifier_node.clone();
+
+self_
+        });
+
+        self.on_measured();
+        self
     }
 }
 

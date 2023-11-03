@@ -12,6 +12,7 @@ use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
 #[derive(Debug)]
 pub(crate) struct LayoutNodeLayoutDelegate {
+    pub(crate) debug_label: String,
     pub(crate) last_constraints : Option<Constraint>,
     pub(crate) nodes: Option<Rc<RefCell<NodeChain>>>,
     pub(crate) modifier_container: Rc<RefCell<ModifierContainer>>,
@@ -24,6 +25,7 @@ pub(crate) struct LayoutNodeLayoutDelegate {
 impl LayoutNodeLayoutDelegate {
     pub(crate) fn new() -> Rc<RefCell<Self>> {
         LayoutNodeLayoutDelegate {
+            debug_label: "".to_string(),
             last_constraints: None,
             modifier_container: ModifierContainer::new().wrap_with_rc_refcell(),
             nodes: None,
