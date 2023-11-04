@@ -2,7 +2,7 @@ use std::{cell::RefCell};
 use std::rc::Weak;
 
 use auto_delegate::Delegate;
-use crate::foundation::constraint::Constraint;
+use crate::foundation::constraint::Constraints;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::measurable::Measurable;
@@ -21,13 +21,13 @@ use super::node_coordinator::NodeCoordinator;
 
 #[derive(Delegate)]
 pub(crate) struct InnerNodeCoordinator {
-    #[to(Placeable, Measured, NodeCoordinatorTrait, MeasureScope)]
+    #[to(Placeable, Measured, NodeCoordinatorTrait, MeasureScope, IntrinsicMeasurable)]
     pub(crate) node_coordinator_impl: NodeCoordinatorImpl,
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
     pub(crate) measure_policy: MultiChildrenMeasurePolicy,
 }
 
-fn error_measure_policy(measure_scope: &mut dyn MeasureScope, _children: &mut [&mut dyn Measurable], _constraint: &Constraint) -> MeasureResult {
+fn error_measure_policy(measure_scope: &mut dyn MeasureScope, _children: &mut [&mut dyn Measurable], _constraint: &Constraints) -> MeasureResult {
     panic!("no measure policy provided")
 }
 
@@ -60,7 +60,7 @@ impl InnerNodeCoordinator {
 }
 
 impl Measurable for InnerNodeCoordinator {
-    fn measure(&mut self, constraint: &Constraint) -> &mut dyn Placeable {
+    fn measure(&mut self, constraint: &Constraints) -> &mut dyn Placeable {
         { self.layout_node.upgrade().unwrap().borrow() }.for_each_child(|child| {
             child.borrow_mut().get_measure_pass_delegate().borrow_mut().set_measured_by_parent(UsageByParent::NotUsed)
         });
@@ -90,7 +90,15 @@ impl Measurable for InnerNodeCoordinator {
 
         self.on_measured();
         // self.handle_measured_result(measure_result);
-        &mut self.node_coordinator_impl
+        self
+    }
+
+    fn as_placeable_mut(&mut self) -> &mut dyn Placeable {
+        self
+    }
+
+    fn as_measurable_mut(&mut self) -> &mut dyn Measurable {
+        self
     }
 }
 

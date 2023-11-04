@@ -46,3 +46,5 @@ mod placeable_place_at;
 mod placement_scope;
 mod placeable_impl;
 mod layout_modifier_node_impl;
+mod r#trait;
+mod intrinsic_measurable;

@@ -1,11 +1,11 @@
-use crate::foundation::constraint::Constraint;
+use crate::foundation::constraint::Constraints;
 use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::measurable::{Measurable, MultiChildrenMeasurePolicy};
 use crate::foundation::measure_result::MeasureResult;
 
 #[inline]
 pub(crate) fn root_measure_policy() -> MultiChildrenMeasurePolicy {
-    Box::new(|measure_scope: &mut dyn MeasureScope, measurables: &mut [&mut dyn Measurable], constraint: &Constraint| -> MeasureResult {
+    Box::new(|measure_scope: &mut dyn MeasureScope, measurables: &mut [&mut dyn Measurable], constraint: &Constraints| -> MeasureResult {
         match measurables.len() {
             0 => {
                 (constraint.min_width, constraint.min_height).into()

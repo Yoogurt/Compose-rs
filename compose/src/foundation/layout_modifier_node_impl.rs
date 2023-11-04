@@ -1,11 +1,14 @@
+use std::any::Any;
 use std::fmt::{Debug, Formatter};
 use auto_delegate::Delegate;
-use crate::foundation::constraint::Constraint;
+use crate::foundation::constraint::Constraints;
 use crate::foundation::delegatable_node::DelegatableNode;
 use crate::foundation::layout_modifier_node::LayoutModifierNode;
 use crate::foundation::measurable::Measurable;
+use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::modifier::{NodeImpl, NodeKind, NodeKindPatch};
+use crate::foundation::r#trait::any_converter::AnyConverter;
 
 #[derive(Debug, Delegate)]
 pub(crate) struct LayoutModifierNodeImpl {
@@ -18,16 +21,26 @@ impl LayoutModifierNodeImpl {
     pub(crate) fn new(layout_modifier_node: Box<dyn LayoutModifierNode>) -> Self {
         Self {
             layout_modifier_node,
-            ..Default::default()
+            node_impl: NodeImpl::default(),
         }
+    }
+}
+
+impl AnyConverter for LayoutModifierNodeImpl {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 }
 
 impl DelegatableNode for LayoutModifierNodeImpl {}
 
 impl LayoutModifierNode for LayoutModifierNodeImpl {
-    fn measure(&mut self, layout_receiver: &mut dyn MeasureScope, measurable: &dyn Measurable, constraint: &Constraint) {
-        self.layout_modifier_node.measure(layout_receiver, measurable, constraint)
+    fn measure(&mut self, measure_scope: &mut dyn MeasureScope, measurable: &mut dyn Measurable, constraint: &Constraints) -> MeasureResult {
+        self.layout_modifier_node.measure(measure_scope, measurable, constraint)
     }
 }
 

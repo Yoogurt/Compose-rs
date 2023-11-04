@@ -3,7 +3,7 @@ use std::any::Any;
 use crate::foundation::slot_table::{SlotTable, SlotReader, SlotWriter};
 use crate::foundation::slot_table_type::GroupKindIndex;
 
-use super::{constraint::Constraint, slot_table_type::GroupKind, layout_node::LayoutNode};
+use super::{constraint::Constraints, slot_table_type::GroupKind, layout_node::LayoutNode};
 
 pub(crate) struct ComposerInner {
     pub(crate) hash: i64,
@@ -35,7 +35,7 @@ impl ComposerInner {
         self.deferred_changes.clear();
     }
 
-    pub(crate) fn dispatch_layout_to_first_layout_node(&self, _constraint: &Constraint) {
+    pub(crate) fn dispatch_layout_to_first_layout_node(&self, _constraint: &Constraints) {
         // for slot_table_type in self.slot_table.slots.borrow().deref() {
         //     match slot_table_type.data {
         //         GroupKind::LayoutNodeType(_layout_node) => {

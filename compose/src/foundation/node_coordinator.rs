@@ -1,6 +1,6 @@
 use std::{rc::Rc, rc::Weak, cell::RefCell};
 use core::fmt::Debug;
-use crate::foundation::constraint::Constraint;
+use crate::foundation::constraint::Constraints;
 use super::{placeable::{Placeable}, measurable::Measurable};
 use core::any::Any;
 use auto_delegate::delegate;
@@ -21,7 +21,7 @@ pub trait NodeCoordinator: NodeCoordinatorTrait + Placeable + Debug + Measurable
     fn on_place(&self) {}
     fn on_measured(&mut self) {}
 
-    fn perform_measure<'a, F>(&'a mut self, constraint: &Constraint, block: F) -> &'a mut dyn Placeable where F: FnOnce(&'a mut Self) -> &'a mut dyn Placeable, Self: Sized {
+    fn perform_measure<'a, F>(&'a mut self, constraint: &Constraints, block: F) -> &'a mut dyn Placeable where F: FnOnce(&'a mut Self) -> &'a mut dyn Placeable, Self: Sized {
         self.set_measurement_constraint(constraint);
         block(self)
     }

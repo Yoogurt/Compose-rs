@@ -168,8 +168,6 @@ impl NodeChain {
                     }
                     node_coordinator.clone()
                 } else {
-                    let a = Rc::downcast::<RefCell<LayoutModifierNodeImpl>>(node_rc).expect("downcast fail from node coordinator");
-
                     let c = LayoutModifierNodeCoordinator::new(self.layout_node.clone(), node_rc.clone()).wrap_with_rc_refcell();
                     let weak_layout_modifier_node_coordinator = Rc::downgrade(&c);
                     let weak_dyn_node_coordinator: Weak<RefCell<dyn NodeCoordinator>> = weak_layout_modifier_node_coordinator;

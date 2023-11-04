@@ -1,5 +1,5 @@
 #[derive(Debug, Clone, Copy, Default)]
-pub struct Constraint {
+pub struct Constraints {
     pub min_width: usize,
     pub max_width: usize,
     pub min_height: usize,
@@ -9,11 +9,11 @@ pub struct Constraint {
 use std::ops::RangeInclusive;
 use crate::foundation::geometry::{CoerceIn, IntSize};
 
-impl Constraint {
+impl Constraints {
     pub const INFINITE: usize = usize::MAX;
 
-    pub const fn unbounded() -> Constraint {
-        Constraint {
+    pub const fn unbounded() -> Constraints {
+        Constraints {
             min_width: 0,
             max_width: usize::MAX,
             min_height: 0,
@@ -21,8 +21,8 @@ impl Constraint {
         }
     }
 
-    pub const fn new(width: RangeInclusive<usize>, height: RangeInclusive<usize>) -> Constraint {
-        Constraint {
+    pub const fn new(width: RangeInclusive<usize>, height: RangeInclusive<usize>) -> Constraints {
+        Constraints {
             min_width: *width.start(),
             max_width: *width.end(),
             min_height: *height.start(),
@@ -30,8 +30,8 @@ impl Constraint {
         }
     }
 
-    pub const fn fixed(width: usize, height: usize) -> Constraint {
-        Constraint {
+    pub const fn fixed(width: usize, height: usize) -> Constraints {
+        Constraints {
             min_width: width,
             max_width: width,
             min_height: height,
@@ -39,8 +39,8 @@ impl Constraint {
         }
     }
 
-    pub const fn fixed_width(width: usize) -> Constraint {
-        Constraint {
+    pub const fn fixed_width(width: usize) -> Constraints {
+        Constraints {
             min_width: width,
             max_width: width,
             min_height: 0,
@@ -48,8 +48,8 @@ impl Constraint {
         }
     }
 
-    pub const fn fixed_height(height: usize) -> Constraint {
-        Constraint {
+    pub const fn fixed_height(height: usize) -> Constraints {
+        Constraints {
             min_width: 0,
             max_width: usize::MAX,
             min_height: height,
@@ -73,7 +73,7 @@ impl Constraint {
         self.min_height == self.max_height
     }
 
-    pub fn constrain(&self, other_constraint: &Constraint) -> Constraint {
+    pub fn constrain(&self, other_constraint: &Constraints) -> Constraints {
         Self::new(self.min_width.coerce_in(other_constraint.width_range())..=self.max_width.coerce_in(other_constraint.width_range()),
                   self.min_height.coerce_in(other_constraint.height_range())..=self.max_height.coerce_in(other_constraint.height_range()))
     }
@@ -97,9 +97,17 @@ impl Constraint {
     pub fn height_range(&self) -> RangeInclusive<usize> {
         self.min_height..=self.max_height
     }
+
+    pub fn min_dimension(&self) -> (usize, usize) {
+        (self.min_width, self.min_height)
+    }
+
+    pub fn max_dimension(&self) -> (usize, usize) {
+        (self.max_width, self.max_height)
+    }
 }
 
-impl PartialEq for Constraint {
+impl PartialEq for Constraints {
     fn eq(&self, other: &Self) -> bool {
         self.min_width == other.min_width
             && self.max_width == other.max_width
@@ -108,7 +116,7 @@ impl PartialEq for Constraint {
     }
 }
 
-impl From<(RangeInclusive<usize>, RangeInclusive<usize>)> for Constraint {
+impl From<(RangeInclusive<usize>, RangeInclusive<usize>)> for Constraints {
     fn from(value: (RangeInclusive<usize>, RangeInclusive<usize>)) -> Self {
         Self::new(value.0, value.1)
     }

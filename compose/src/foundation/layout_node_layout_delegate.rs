@@ -1,6 +1,7 @@
 use std::cell::{Ref, RefCell, RefMut};
 use std::rc::Rc;
-use crate::foundation::constraint::Constraint;
+use crate::foundation::constraint::Constraints;
+use crate::foundation::layout_state::LayoutState;
 use crate::foundation::look_ahead_pass_delegate::LookaheadPassDelegate;
 use crate::foundation::measurable::Measurable;
 use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
@@ -13,11 +14,11 @@ use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 #[derive(Debug)]
 pub(crate) struct LayoutNodeLayoutDelegate {
     pub(crate) debug_label: String,
-    pub(crate) last_constraints : Option<Constraint>,
+    pub(crate) last_constraints : Option<Constraints>,
     pub(crate) nodes: Option<Rc<RefCell<NodeChain>>>,
     pub(crate) modifier_container: Rc<RefCell<ModifierContainer>>,
     pub(crate) measure_pass_delegate: Rc<RefCell<MeasurePassDelegate>>,
-    pub(crate) lookahead_pass_delegate: Rc<RefCell<LookaheadPassDelegate>>,
+    // pub(crate) lookahead_pass_delegate: Rc<RefCell<LookaheadPassDelegate>>,
     pub(crate) measure_pending: bool,
     pub(crate) layout_pending: bool,
 }
@@ -30,7 +31,7 @@ impl LayoutNodeLayoutDelegate {
             modifier_container: ModifierContainer::new().wrap_with_rc_refcell(),
             nodes: None,
             measure_pass_delegate: MeasurePassDelegate::new().wrap_with_rc_refcell(),
-            lookahead_pass_delegate: LookaheadPassDelegate::new().wrap_with_rc_refcell(),
+            // lookahead_pass_delegate: LookaheadPassDelegate::new().wrap_with_rc_refcell(),
             measure_pending: false,
             layout_pending: false,
         }
@@ -41,10 +42,11 @@ impl LayoutNodeLayoutDelegate {
         &mut self,
         node_chain: Rc<RefCell<NodeChain>>,
         modifier_container: Rc<RefCell<ModifierContainer>>,
+        layout_state: Rc<RefCell<LayoutState>>
     ) {
         self.nodes = Some(node_chain.clone());
         self.modifier_container = modifier_container;
-        self.measure_pass_delegate.borrow_mut().attach(node_chain);
+        self.measure_pass_delegate.borrow_mut().attach(node_chain, layout_state);
     }
 
     pub(crate) fn as_measurable(&self) -> Ref<dyn Measurable> {
@@ -58,7 +60,7 @@ impl LayoutNodeLayoutDelegate {
     fn request_remeasure(&self) {}
     fn request_relayout(&self) {}
 
-    pub fn remeasure(&mut self, mut constraint: Option<Constraint>) -> bool {
+    pub fn remeasure(&mut self, mut constraint: Option<Constraints>) -> bool {
         if constraint.is_none() {
             constraint = self.last_constraints;
         }

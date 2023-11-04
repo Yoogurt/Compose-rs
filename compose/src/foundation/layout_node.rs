@@ -21,7 +21,7 @@ pub(crate) struct LayoutNode {
     pub(crate) children: Rc<RefCell<Vec<Rc<RefCell<LayoutNode>>>>>,
     pub(crate) layout_node_layout_delegate: Rc<RefCell<LayoutNodeLayoutDelegate>>,
     pub(crate) usage_by_parent: UsageByParent,
-    pub(crate) layout_state: LayoutState,
+    pub(crate) layout_state: Rc<RefCell<LayoutState>>,
 }
 
 impl LayoutNode {
@@ -32,7 +32,7 @@ impl LayoutNode {
             children: vec![].wrap_with_rc_refcell(),
             layout_node_layout_delegate: LayoutNodeLayoutDelegate::new(),
             usage_by_parent: UsageByParent::NotUsed,
-            layout_state: LayoutState::Idle,
+            layout_state: LayoutState::Idle.wrap_with_rc_refcell(),
         };
 
         let node = node.wrap_with_rc_refcell();
@@ -45,10 +45,11 @@ impl LayoutNode {
                 .borrow_mut()
                 .attach(Rc::downgrade(&node), modifier_container.clone());
 
+            let layout_state = node_mut.layout_state.clone();
             node_mut
                 .layout_node_layout_delegate
                 .borrow_mut()
-                .attach(node_chain, modifier_container);
+                .attach(node_chain, modifier_container, layout_state);
         }
 
         node
@@ -59,11 +60,11 @@ impl LayoutNode {
     }
 
     pub(crate) fn get_layout_state(&self) -> LayoutState {
-        self.layout_state
+        *self.layout_state.borrow()
     }
 
     pub(crate) fn set_layout_state(&mut self, layout_state: LayoutState) {
-        self.layout_state = layout_state
+        *self.layout_state.borrow_mut() = layout_state
     }
 
     pub(crate) fn get_children(&self) -> Rc<RefCell<Vec<Rc<RefCell<LayoutNode>>>>> {

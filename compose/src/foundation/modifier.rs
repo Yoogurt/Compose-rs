@@ -9,6 +9,7 @@ use crate::foundation::node_coordinator::NodeCoordinator;
 use crate::foundation::utils::weak_upgrade::WeakUpdater;
 use std::fmt::{Formatter, Write};
 use std::ops::{Add, Deref};
+use crate::foundation::r#trait::any_converter::AnyConverter;
 
 pub const Modifier: Modifier = Modifier::Unit;
 
@@ -26,6 +27,16 @@ macro_rules! impl_node_kind_any {
                 NodeKind::Any(self)
             }
         }
+
+        impl crate::foundation::r#trait::any_converter::AnyConverter for $tt {
+            fn as_any(&self) -> &dyn std::any::Any {
+                self
+            }
+
+             fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+                self
+            }
+        }
     };
 }
 
@@ -34,7 +45,7 @@ pub trait NodeKindPatch {
 }
 
 #[delegate]
-pub trait Node: NodeKindPatch + Debug + Any {
+pub trait Node: NodeKindPatch + AnyConverter + Debug {
     fn set_parent(&mut self, parent: Option<Weak<RefCell<dyn Node>>>);
     fn get_parent(&self) -> Option<Rc<RefCell<dyn Node>>>;
 
@@ -43,9 +54,6 @@ pub trait Node: NodeKindPatch + Debug + Any {
 
     fn update_coordinator(&mut self, coordinator: Option<Weak<RefCell<dyn NodeCoordinator>>>);
     fn get_coordinator(&self) -> Option<Weak<RefCell<dyn NodeCoordinator>>>;
-
-    fn as_any(&self) -> &dyn Any;
-    fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
 #[Leak]
@@ -59,6 +67,16 @@ pub(crate) struct NodeImpl {
 impl NodeKindPatch for NodeImpl {
     fn get_node_kind(&mut self) -> NodeKind {
         todo!("implement get node kind by yourself")
+    }
+}
+
+impl AnyConverter for NodeImpl {
+    fn as_any(&self) -> &dyn Any  {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
     }
 }
 
@@ -79,20 +97,12 @@ impl Node for NodeImpl {
         self.child.clone()
     }
 
-    fn as_any(&self) -> &dyn Any where Self: Sized {
-        self
-    }
-
-    fn as_any_mut(&mut self) -> &mut dyn Any where Self: Sized {
-        self
+    fn update_coordinator(&mut self, coordinator: Option<Weak<RefCell<dyn NodeCoordinator>>>) {
+        self.coordinator = coordinator;
     }
 
     fn get_coordinator(&self) -> Option<Weak<RefCell<dyn NodeCoordinator>>> {
         self.coordinator.clone()
-    }
-
-    fn update_coordinator(&mut self, coordinator: Option<Weak<RefCell<dyn NodeCoordinator>>>) {
-        self.coordinator = coordinator;
     }
 }
 
@@ -103,7 +113,7 @@ pub enum Modifier {
     Unit,
     ModifierNodeElement {
         create: Box<dyn FnMut() -> Box<dyn LayoutModifierNode>>,
-        update: Box<dyn FnMut(&'static Box<dyn LayoutModifierNode>)>,
+        update: Box<dyn FnMut(&'static mut Box<dyn LayoutModifierNode>)>,
     },
     Combined {
         left: Box<Modifier>,

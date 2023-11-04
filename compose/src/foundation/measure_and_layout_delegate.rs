@@ -1,12 +1,12 @@
 use std::{cell::RefCell, rc::Rc};
 use crate::foundation::measurable::MultiChildrenMeasurePolicy;
 use super::{
-    constraint::Constraint, layout_node::LayoutNode,
+    constraint::Constraints, layout_node::LayoutNode,
 };
 
 pub struct MeasureAndLayoutDelegate {
     pub(crate) root: Rc<RefCell<LayoutNode>>,
-    pub(crate) root_constraint: Constraint,
+    pub(crate) root_constraint: Constraints,
     pub(crate) during_measure_layout: bool,
 }
 
@@ -14,12 +14,12 @@ impl MeasureAndLayoutDelegate {
     pub(crate) fn new() -> Self {
         MeasureAndLayoutDelegate {
             root: LayoutNode::new(),
-            root_constraint: Constraint::unbounded(),
+            root_constraint: Constraints::unbounded(),
             during_measure_layout: false,
         }
     }
 
-    pub(crate) fn update_root_constraints(&mut self, constraint: Constraint) {
+    pub(crate) fn update_root_constraints(&mut self, constraint: Constraints) {
         if constraint == self.root_constraint {
             dbg!("constraint the same, skip measuring");
             return;

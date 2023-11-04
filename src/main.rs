@@ -22,7 +22,10 @@ use compose::foundation::geometry::IntoDp;
 fn test_box_composable() {
     Box!(Modifier.width(10.dp()), {
          Box!(Modifier.width(10.dp()), {
-    })
+    });
+
+         Box!(Modifier.width(10.dp()), {
+    });
     })
 }
 

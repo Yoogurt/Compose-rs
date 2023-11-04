@@ -4,17 +4,17 @@ use std::ops::{Deref, DerefMut};
 use std::rc::{Rc, Weak};
 use auto_delegate::Delegate;
 use crate::foundation::geometry::{IntOffset, IntSize};
+use crate::foundation::intrinsic_measurable::IntrinsicMeasurable;
 use crate::foundation::look_ahead_capable_placeable::LookaheadCapablePlaceable;
 use crate::foundation::look_ahead_capable_placeable_impl::LookaheadCapablePlaceableImpl;
 use crate::foundation::node_coordinator::NodeCoordinatorTrait;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 use crate::foundation::utils::weak_upgrade::WeakUpdater;
-use super::constraint::Constraint;
+use super::constraint::Constraints;
 use super::layout_node::LayoutNode;
 use super::placeable::Placeable;
 use super::node_coordinator::NodeCoordinator;
 use super::measurable::Measurable;
-use super::measure_result::MeasureResult;
 
 #[derive(Debug, Delegate)]
 pub(crate) struct NodeCoordinatorImpl {
@@ -29,9 +29,31 @@ pub(crate) struct NodeCoordinatorImpl {
     pub(crate) parent_data: Option<Box<dyn Any>>,
 }
 
+impl IntrinsicMeasurable for NodeCoordinatorImpl {
+    fn set_parent_data(&mut self, parent_data: Option<Box<dyn Any>>) {
+        self.parent_data = parent_data;
+    }
+
+    fn get_parent_data(&self) -> Option<&Box<dyn Any>> {
+        self.parent_data.as_ref()
+    }
+
+    fn get_parent_data_mut(&mut self) -> Option<&mut Box<dyn Any>> {
+        self.parent_data.as_mut()
+    }
+}
+
 impl Measurable for NodeCoordinatorImpl {
-    fn measure(&mut self, _constraint: &Constraint) -> &mut dyn Placeable {
+    fn measure(&mut self, _constraint: &Constraints) -> &mut dyn Placeable {
         unimplemented!("layout node wrapper should implement measure")
+    }
+
+    fn as_placeable_mut(&mut self) -> &mut dyn Placeable {
+        unimplemented!("layout node wrapper should implement as_placeable_mut")
+    }
+
+    fn as_measurable_mut(&mut self) -> &mut dyn Measurable {
+        unimplemented!("layout node wrapper should implement as_measurable_mut")
     }
 }
 

@@ -1,6 +1,6 @@
 use std::{rc::Rc, cell::RefCell};
 use crate::foundation::composer_inner::ComposerInner;
-use crate::foundation::constraint::Constraint;
+use crate::foundation::constraint::Constraints;
 use crate::foundation::layout_node::LayoutNode;
 
 pub struct Composer {
@@ -12,7 +12,7 @@ thread_local! {
 }
 
 impl Composer {
-    pub fn dispatch_layout_to_first_layout_node(constraint: &Constraint) {
+    pub fn dispatch_layout_to_first_layout_node(constraint: &Constraints) {
         COMPOSER.with(|local_composer| {
             local_composer.inner.borrow().dispatch_layout_to_first_layout_node(constraint);
         })
