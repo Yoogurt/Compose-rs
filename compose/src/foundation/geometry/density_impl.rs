@@ -6,7 +6,7 @@ impl Density {
     pub fn new(density: f64, font_scale: f64) -> Self {
         Self {
             density,
-            font_scale
+            font_scale,
         }
     }
 
@@ -29,7 +29,7 @@ impl Default for Density {
     fn default() -> Self {
         Self {
             density: 1f64,
-            font_scale: 1f64
+            font_scale: 1f64,
         }
     }
 }

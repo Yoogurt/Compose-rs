@@ -1,6 +1,6 @@
+use crate::foundation::geometry::{Dp, IntoDp};
 use std::hash::{Hash, Hasher};
 use std::ops::{Add, Sub};
-use crate::foundation::geometry::{Dp, IntoDp};
 
 impl IntoDp for f32 {
     fn dp(self) -> Dp {
@@ -60,9 +60,7 @@ impl Dp {
     pub const UNSPECIFIC: Dp = Self::new(f64::NAN);
 
     const fn new(value: f64) -> Self {
-        Self {
-            value
-        }
+        Self { value }
     }
 
     pub fn is_infinite(&self) -> bool {

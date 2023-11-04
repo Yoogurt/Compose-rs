@@ -1,4 +1,4 @@
-use crate::foundation::canvas::{Canvas, CanvasSaveGuard, CanvasExtension};
+use crate::foundation::canvas::{Canvas, CanvasExtension, CanvasSaveGuard};
 
 pub struct MacOSCanvas<'a> {
     inner: &'a mut skia_safe::Canvas,
@@ -6,20 +6,14 @@ pub struct MacOSCanvas<'a> {
 
 impl<'a> MacOSCanvas<'a> {
     pub fn new(skia_canvas: &'a mut skia_safe::Canvas) -> MacOSCanvas {
-        MacOSCanvas {
-            inner: skia_canvas
-        }
+        MacOSCanvas { inner: skia_canvas }
     }
 }
-
-
 
 impl Canvas for MacOSCanvas<'_> {
     fn save(&mut self) -> CanvasSaveGuard<'_> {
         self.inner.save();
-        CanvasSaveGuard {
-            canvas: self
-        }
+        CanvasSaveGuard { canvas: self }
     }
 
     fn restore(&mut self) {

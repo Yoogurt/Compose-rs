@@ -1,10 +1,15 @@
 use crate::foundation::constraint::Constraints;
 use crate::foundation::delegatable_node::DelegatableNode;
-use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::measurable::Measurable;
 use crate::foundation::measure_result::MeasureResult;
+use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::modifier::NodeKindPatch;
 
-pub trait LayoutModifierNode : DelegatableNode + NodeKindPatch {
-    fn measure(&mut self, measure_scope: &mut dyn MeasureScope, measurable: &mut dyn Measurable, constraint: &Constraints) -> MeasureResult;
+pub trait LayoutModifierNode: DelegatableNode + NodeKindPatch {
+    fn measure(
+        &mut self,
+        measure_scope: &mut dyn MeasureScope,
+        measurable: &mut dyn Measurable,
+        constraint: &Constraints,
+    ) -> MeasureResult;
 }

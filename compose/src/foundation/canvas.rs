@@ -1,5 +1,5 @@
 pub struct CanvasSaveGuard<'a> {
-    pub(crate) canvas: &'a mut dyn Canvas
+    pub(crate) canvas: &'a mut dyn Canvas,
 }
 
 impl Drop for CanvasSaveGuard<'_> {

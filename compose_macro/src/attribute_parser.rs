@@ -22,20 +22,15 @@ impl ComposeAttribute {
 }
 
 pub(crate) fn parse_attribute(attribute: TokenStream) -> ComposeAttribute {
-    let attribute = attribute.into_iter().map_while(|value| {
-        match value {
-            TokenTree::Ident(ident) => {
-                ident.span().source_text()
-            }
-            _ => {
-                None
-            }
-        }
-    }).collect::<HashSet<String>>();
+    let attribute = attribute
+        .into_iter()
+        .map_while(|value| match value {
+            TokenTree::Ident(ident) => ident.span().source_text(),
+            _ => None,
+        })
+        .collect::<HashSet<String>>();
 
     let mut mutable = attribute.contains(&"Mutable".to_owned());
 
-    ComposeAttribute {
-        mutable: mutable
-    }
+    ComposeAttribute { mutable: mutable }
 }

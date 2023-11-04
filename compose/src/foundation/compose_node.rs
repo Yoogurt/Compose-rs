@@ -1,6 +1,6 @@
-use std::ops::DerefMut;
 use crate::foundation::composer::Composer;
 use crate::foundation::layout_node::LayoutNode;
+use std::ops::DerefMut;
 
 pub(crate) fn ComposeNode(mut update: impl FnOnce(&mut LayoutNode), mut content: impl FnMut()) {
     Composer::start_node();
@@ -9,7 +9,7 @@ pub(crate) fn ComposeNode(mut update: impl FnOnce(&mut LayoutNode), mut content:
     } else {
         Composer::use_node()
     };
-        update(node.borrow_mut().deref_mut());
+    update(node.borrow_mut().deref_mut());
     content();
     Composer::end_node();
 }

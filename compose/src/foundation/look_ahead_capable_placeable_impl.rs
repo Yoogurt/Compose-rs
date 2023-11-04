@@ -1,10 +1,10 @@
-use auto_delegate::Delegate;
 use crate::foundation::geometry::IntOffset;
 use crate::foundation::look_ahead_capable_placeable::LookaheadCapablePlaceable;
 use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::measure_scope::MeasureScopeImpl;
 use crate::foundation::placeable_impl::PlaceableImpl;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
+use auto_delegate::Delegate;
 
 #[derive(Default, Debug, Delegate)]
 pub(crate) struct LookaheadCapablePlaceableImpl {

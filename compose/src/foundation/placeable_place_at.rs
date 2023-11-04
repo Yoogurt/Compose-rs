@@ -1,5 +1,5 @@
-use auto_delegate::delegate;
 use crate::foundation::geometry::IntOffset;
+use auto_delegate::delegate;
 
 #[delegate]
 pub trait PlaceablePlaceAt {

@@ -1,8 +1,3 @@
-use std::any::Any;
-use std::cell::RefCell;
-use std::ops::{Deref, DerefMut};
-use std::rc::{Rc, Weak};
-use auto_delegate::Delegate;
 use crate::foundation::constraint::Constraints;
 use crate::foundation::geometry::{IntOffset, IntSize};
 use crate::foundation::intrinsic_measurable::IntrinsicMeasurable;
@@ -17,6 +12,11 @@ use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 use crate::foundation::remeasurable::{Remeasurable, StatefulRemeasurable};
 use crate::foundation::usage_by_parent::UsageByParent;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
+use auto_delegate::Delegate;
+use std::any::Any;
+use std::cell::RefCell;
+use std::ops::{Deref, DerefMut};
+use std::rc::{Rc, Weak};
 
 #[derive(Debug, Delegate)]
 pub(crate) struct MeasurePassDelegate {
@@ -33,7 +33,7 @@ pub(crate) struct MeasurePassDelegate {
     pub(crate) place_once: bool,
     pub(crate) is_placed: bool,
     pub(crate) layout_state: Option<Rc<RefCell<LayoutState>>>,
-    pub(crate) parent_data: Option<Box<dyn Any>>
+    pub(crate) parent_data: Option<Box<dyn Any>>,
 }
 
 impl Deref for MeasurePassDelegate {
@@ -52,7 +52,7 @@ impl DerefMut for MeasurePassDelegate {
 
 impl Remeasurable for MeasurePassDelegate {
     fn remeasure(&mut self, constraint: &Constraints) -> bool {
-        if !self.measure_pending && self.get_measurement_constraint() == constraint{
+        if !self.measure_pending && self.get_measurement_constraint() == constraint {
             return false;
         }
 
@@ -111,7 +111,7 @@ impl MeasurePassDelegate {
             place_once: false,
             is_placed: false,
             layout_state: None,
-            parent_data: None
+            parent_data: None,
         }
     }
 
@@ -119,7 +119,11 @@ impl MeasurePassDelegate {
         self.measured_by_parent = measured_by_parent;
     }
 
-    pub(crate) fn attach(&mut self, node_chain: Rc<RefCell<NodeChain>>, layout_state: Rc<RefCell<LayoutState>>) {
+    pub(crate) fn attach(
+        &mut self,
+        node_chain: Rc<RefCell<NodeChain>>,
+        layout_state: Rc<RefCell<LayoutState>>,
+    ) {
         self.nodes = Some(node_chain);
         self.layout_state = Some(layout_state);
     }
@@ -133,10 +137,7 @@ impl MeasurePassDelegate {
     }
 
     fn get_outer_coordinator(&self) -> Rc<RefCell<dyn NodeCoordinator>> {
-        self.get_node_chain()
-            .borrow_mut()
-            .outer_coordinator
-            .clone()
+        self.get_node_chain().borrow_mut().outer_coordinator.clone()
     }
 
     fn set_layout_state(&mut self, layout_state: LayoutState) {
@@ -154,7 +155,7 @@ impl MeasurePassDelegate {
         self.set_layout_state(LayoutState::Measuring);
         self.measure_pending = false;
 
-        let outer_coordinator =self.get_outer_coordinator();
+        let outer_coordinator = self.get_outer_coordinator();
         dbg!("perform measure from chain {:?}", &outer_coordinator);
 
         self.get_outer_coordinator()
@@ -260,4 +261,3 @@ impl Measurable for MeasurePassDelegate {
         self
     }
 }
-

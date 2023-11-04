@@ -1,5 +1,3 @@
-use std::cell::{Ref, RefCell, RefMut};
-use std::rc::Rc;
 use crate::foundation::constraint::Constraints;
 use crate::foundation::layout_state::LayoutState;
 use crate::foundation::look_ahead_pass_delegate::LookaheadPassDelegate;
@@ -10,11 +8,13 @@ use crate::foundation::node_chain::NodeChain;
 use crate::foundation::remeasurable::Remeasurable;
 use crate::foundation::usage_by_parent::UsageByParent;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
+use std::cell::{Ref, RefCell, RefMut};
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub(crate) struct LayoutNodeLayoutDelegate {
     pub(crate) debug_label: String,
-    pub(crate) last_constraints : Option<Constraints>,
+    pub(crate) last_constraints: Option<Constraints>,
     pub(crate) nodes: Option<Rc<RefCell<NodeChain>>>,
     pub(crate) modifier_container: Rc<RefCell<ModifierContainer>>,
     pub(crate) measure_pass_delegate: Rc<RefCell<MeasurePassDelegate>>,
@@ -42,11 +42,13 @@ impl LayoutNodeLayoutDelegate {
         &mut self,
         node_chain: Rc<RefCell<NodeChain>>,
         modifier_container: Rc<RefCell<ModifierContainer>>,
-        layout_state: Rc<RefCell<LayoutState>>
+        layout_state: Rc<RefCell<LayoutState>>,
     ) {
         self.nodes = Some(node_chain.clone());
         self.modifier_container = modifier_container;
-        self.measure_pass_delegate.borrow_mut().attach(node_chain, layout_state);
+        self.measure_pass_delegate
+            .borrow_mut()
+            .attach(node_chain, layout_state);
     }
 
     pub(crate) fn as_measurable(&self) -> Ref<dyn Measurable> {

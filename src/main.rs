@@ -1,31 +1,29 @@
 #![allow(warnings)]
 
-use std::hash::Hash;
-use std::default::Default as STDefault;
-use minifb::{Key, Scale, ScaleMode, Window, WindowOptions};
-use skia_safe::{
-    surface, surfaces, AlphaType, Color, Color4f, ColorSpace, ColorType, ImageInfo, Rect, Surface,
-};
-use std::time::Duration;
-use skia_safe::canvas::lattice::RectType::Default;
-use compose::Box;
 use compose::foundation::bridge::platform_compose_view::MacOSComposeView;
 use compose::foundation::composer::Composer;
 use compose::foundation::drawing::canvas_impl::new_canvas;
 use compose::foundation::geometry::IntSize;
-use compose_macro::Composable;
-use compose::foundation::modifier::Modifier;
-use compose::foundation::layout::size_modifier::SizeModifier;
 use compose::foundation::geometry::IntoDp;
+use compose::foundation::layout::size_modifier::SizeModifier;
+use compose::foundation::modifier::Modifier;
+use compose::Box;
+use compose_macro::Composable;
+use minifb::{Key, Scale, ScaleMode, Window, WindowOptions};
+use skia_safe::canvas::lattice::RectType::Default;
+use skia_safe::{
+    surface, surfaces, AlphaType, Color, Color4f, ColorSpace, ColorType, ImageInfo, Rect, Surface,
+};
+use std::default::Default as STDefault;
+use std::hash::Hash;
+use std::time::Duration;
 
 #[Composable]
 fn test_box_composable() {
     Box!(Modifier.width(10.dp()), {
-         Box!(Modifier.width(10.dp()), {
-    });
+        Box!(Modifier.width(10.dp()), {});
 
-         Box!(Modifier.width(10.dp()), {
-    });
+        Box!(Modifier.width(10.dp()), {});
     })
 }
 
@@ -40,7 +38,7 @@ fn run_skia() {
             ..STDefault::default()
         },
     )
-        .unwrap();
+    .unwrap();
 
     let mut buffer = vec![0; 800 * 500];
     const BYTE_PER_PIXEL: usize = 4;
@@ -61,7 +59,8 @@ fn run_skia() {
             800 * BYTE_PER_PIXEL,
             None,
         )
-    }.unwrap();
+    }
+    .unwrap();
 
     let mut painter = skia_safe::Paint::default();
     painter.set_color(<u32 as Into<Color>>::into(0xff0000ffu32));
@@ -76,7 +75,6 @@ fn run_skia() {
         compose_view.dispatch_draw(&mut canvas);
     }
 }
-
 
 fn main() {
     let mut compose_view = MacOSComposeView::new();

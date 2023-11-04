@@ -1,12 +1,11 @@
-use std::any::Any;
-use auto_delegate::Delegate;
 use crate::foundation::constraint::Constraints;
 use crate::foundation::intrinsic_measurable::IntrinsicMeasurable;
 use crate::foundation::measurable::Measurable;
 use crate::foundation::placeable::Placeable;
 use crate::foundation::placeable_impl::PlaceableImpl;
 use crate::foundation::remeasurable::Remeasurable;
-
+use auto_delegate::Delegate;
+use std::any::Any;
 
 #[derive(Delegate, Debug)]
 pub(crate) struct LookaheadPassDelegate {

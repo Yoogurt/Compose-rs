@@ -1,33 +1,43 @@
-use std::{cell::RefCell};
+use std::cell::RefCell;
 use std::rc::Weak;
 
-use auto_delegate::Delegate;
 use crate::foundation::constraint::Constraints;
 use crate::foundation::layout_node::LayoutNode;
-use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::measurable::Measurable;
 use crate::foundation::measure_result::MeasureResult;
+use crate::foundation::measure_scope::MeasureScope;
+use auto_delegate::Delegate;
 use std::any::Any;
-use std::fmt::{Debug, format, Formatter};
+use std::fmt::{format, Debug, Formatter};
 
-use std::ops::DerefMut;
+use super::node_coordinator::NodeCoordinator;
+use super::placeable::Placeable;
 use crate::foundation::geometry::IntOffset;
 use crate::foundation::measurable::MultiChildrenMeasurePolicy;
 use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 use crate::foundation::usage_by_parent::UsageByParent;
-use super::placeable::Placeable;
-use super::node_coordinator::NodeCoordinator;
+use std::ops::DerefMut;
 
 #[derive(Delegate)]
 pub(crate) struct InnerNodeCoordinator {
-    #[to(Placeable, Measured, NodeCoordinatorTrait, MeasureScope, IntrinsicMeasurable)]
+    #[to(
+        Placeable,
+        Measured,
+        NodeCoordinatorTrait,
+        MeasureScope,
+        IntrinsicMeasurable
+    )]
     pub(crate) node_coordinator_impl: NodeCoordinatorImpl,
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
     pub(crate) measure_policy: MultiChildrenMeasurePolicy,
 }
 
-fn error_measure_policy(measure_scope: &mut dyn MeasureScope, _children: &mut [&mut dyn Measurable], _constraint: &Constraints) -> MeasureResult {
+fn error_measure_policy(
+    measure_scope: &mut dyn MeasureScope,
+    _children: &mut [&mut dyn Measurable],
+    _constraint: &Constraints,
+) -> MeasureResult {
     panic!("no measure policy provided")
 }
 
@@ -62,7 +72,11 @@ impl InnerNodeCoordinator {
 impl Measurable for InnerNodeCoordinator {
     fn measure(&mut self, constraint: &Constraints) -> &mut dyn Placeable {
         { self.layout_node.upgrade().unwrap().borrow() }.for_each_child(|child| {
-            child.borrow_mut().get_measure_pass_delegate().borrow_mut().set_measured_by_parent(UsageByParent::NotUsed)
+            child
+                .borrow_mut()
+                .get_measure_pass_delegate()
+                .borrow_mut()
+                .set_measured_by_parent(UsageByParent::NotUsed)
         });
 
         let measure_policy = &mut self.measure_policy;
@@ -70,18 +84,22 @@ impl Measurable for InnerNodeCoordinator {
             let children_rc = self.layout_node.upgrade().unwrap().borrow().get_children();
             let children = children_rc.borrow_mut();
 
-            let children_rc = children.iter().map(|child| {
-                child.borrow_mut().layout_node_layout_delegate.clone()
-            }).collect::<Vec<_>>();
-            let mut children_ref_mut = children_rc.iter().map(|child| {
-                child.borrow_mut()
-            }).collect::<Vec<_>>();
-            let mut children_ref_mut = children_ref_mut.iter_mut().map(|child| {
-                child.deref_mut().as_measurable_mut()
-            }).collect::<Vec<_>>();
-            let mut children_dyn_measurable = children_ref_mut.iter_mut().map(|child| {
-                child.deref_mut()
-            }).collect::<Vec<_>>();
+            let children_rc = children
+                .iter()
+                .map(|child| child.borrow_mut().layout_node_layout_delegate.clone())
+                .collect::<Vec<_>>();
+            let mut children_ref_mut = children_rc
+                .iter()
+                .map(|child| child.borrow_mut())
+                .collect::<Vec<_>>();
+            let mut children_ref_mut = children_ref_mut
+                .iter_mut()
+                .map(|child| child.deref_mut().as_measurable_mut())
+                .collect::<Vec<_>>();
+            let mut children_dyn_measurable = children_ref_mut
+                .iter_mut()
+                .map(|child| child.deref_mut())
+                .collect::<Vec<_>>();
 
             let measure_scope = &mut self.node_coordinator_impl;
             measure_policy(measure_scope, &mut children_dyn_measurable[..], constraint)
@@ -123,7 +141,10 @@ impl Debug for InnerNodeCoordinator {
         f.debug_struct("InnerNodeCoordinator")
             .field("node_coordinator_impl", &self.node_coordinator_impl)
             .field("layout_node", &self.layout_node)
-            .field("measure_policy", &format!("measure_policy: {:p}", &self.measure_policy))
+            .field(
+                "measure_policy",
+                &format!("measure_policy: {:p}", &self.measure_policy),
+            )
             .finish()
     }
 }

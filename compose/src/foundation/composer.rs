@@ -1,7 +1,7 @@
-use std::{rc::Rc, cell::RefCell};
 use crate::foundation::composer_inner::ComposerInner;
 use crate::foundation::constraint::Constraints;
 use crate::foundation::layout_node::LayoutNode;
+use std::{cell::RefCell, rc::Rc};
 
 pub struct Composer {
     pub(crate) inner: RefCell<ComposerInner>,
@@ -14,20 +14,24 @@ thread_local! {
 impl Composer {
     pub fn dispatch_layout_to_first_layout_node(constraint: &Constraints) {
         COMPOSER.with(|local_composer| {
-            local_composer.inner.borrow().dispatch_layout_to_first_layout_node(constraint);
+            local_composer
+                .inner
+                .borrow()
+                .dispatch_layout_to_first_layout_node(constraint);
         })
     }
 
     pub(crate) fn attach_root_layout_node(root: Rc<RefCell<LayoutNode>>) -> bool {
         COMPOSER.with(|local_composer| {
-            local_composer.inner.borrow_mut().attach_root_layout_node(root)
+            local_composer
+                .inner
+                .borrow_mut()
+                .attach_root_layout_node(root)
         })
     }
 
     pub fn destroy() {
-        COMPOSER.with(|local_composer| {
-            local_composer.inner.borrow_mut().destroy()
-        })
+        COMPOSER.with(|local_composer| local_composer.inner.borrow_mut().destroy())
     }
 
     pub(crate) fn detach_root_layout_node() {
@@ -43,63 +47,54 @@ impl Composer {
     }
 
     pub(crate) fn start_root() {
-        COMPOSER.with(|local_composer| {
-            local_composer.inner.borrow_mut().start_root()
-        })
+        COMPOSER.with(|local_composer| local_composer.inner.borrow_mut().start_root())
     }
 
     pub(crate) fn end_root() {
-        COMPOSER.with(|local_composer| {
-            local_composer.inner.borrow_mut().end_root()
-        })
+        COMPOSER.with(|local_composer| local_composer.inner.borrow_mut().end_root())
     }
 
     pub(crate) fn start_node() {
-        COMPOSER.with(|local_composer| {
-            local_composer.inner.borrow_mut().start_node()
-        })
+        COMPOSER.with(|local_composer| local_composer.inner.borrow_mut().start_node())
     }
 
     pub(crate) fn create_node() -> Rc<RefCell<LayoutNode>> {
-        COMPOSER.with(|local_composer| {
-            local_composer.inner.borrow_mut().create_node()
-        })
+        COMPOSER.with(|local_composer| local_composer.inner.borrow_mut().create_node())
     }
 
     pub(crate) fn use_node() -> Rc<RefCell<LayoutNode>> {
-        COMPOSER.with(|local_composer| {
-            local_composer.inner.borrow_mut().use_node()
-        })
+        COMPOSER.with(|local_composer| local_composer.inner.borrow_mut().use_node())
     }
 
     pub(crate) fn record_fix_up(fix_up: Box<dyn FnOnce()>) {
-        COMPOSER.with(move |local_composer| {
-            local_composer.inner.borrow_mut().record_fix_up(fix_up)
-        })
+        COMPOSER.with(move |local_composer| local_composer.inner.borrow_mut().record_fix_up(fix_up))
     }
 
     pub(crate) fn record_insert_up_fix_up(insert_up: Box<dyn FnOnce()>) {
         COMPOSER.with(move |local_composer| {
-            local_composer.inner.borrow_mut().record_insert_up_fix_up(insert_up)
+            local_composer
+                .inner
+                .borrow_mut()
+                .record_insert_up_fix_up(insert_up)
         })
     }
 
     pub(crate) fn record_deferred_change(&mut self, derred_change: Box<dyn FnOnce()>) {
         COMPOSER.with(move |local_composer| {
-            local_composer.inner.borrow_mut().record_deferred_change(derred_change)
+            local_composer
+                .inner
+                .borrow_mut()
+                .record_deferred_change(derred_change)
         })
     }
 
     pub fn apply_changes() {
-        COMPOSER.with(move |local_composer| {
-            local_composer.inner.borrow_mut().apply_changes()
-        })
+        COMPOSER.with(move |local_composer| local_composer.inner.borrow_mut().apply_changes())
     }
 
     pub fn apply_deferred_changes() {
-        COMPOSER.with(move |local_composer| {
-            local_composer.inner.borrow_mut().apply_deferred_changes()
-        })
+        COMPOSER
+            .with(move |local_composer| local_composer.inner.borrow_mut().apply_deferred_changes())
     }
 
     pub(crate) fn end_node() {
@@ -109,9 +104,7 @@ impl Composer {
     }
 
     pub(crate) fn inserting() -> bool {
-        COMPOSER.with(|local_composer| {
-            local_composer.inner.borrow().inserting()
-        })
+        COMPOSER.with(|local_composer| local_composer.inner.borrow().inserting())
     }
 
     pub fn end_group(hash: i64) {
@@ -121,9 +114,7 @@ impl Composer {
     }
 
     pub fn validate_group() {
-        COMPOSER.with(|local_composer| {
-            local_composer.inner.borrow_mut().validate_group()
-        })
+        COMPOSER.with(|local_composer| local_composer.inner.borrow_mut().validate_group())
     }
 
     pub fn skip_compose() {}

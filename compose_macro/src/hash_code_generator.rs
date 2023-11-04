@@ -1,10 +1,10 @@
 use lazy_static::lazy_static;
-use std::sync::RwLock;
-use std::collections::HashSet;
 use rand::random;
+use std::collections::HashSet;
+use std::sync::RwLock;
 
 lazy_static! {
-    static ref COMPOSER_HASH : RwLock<HashSet<i64>> = RwLock::new(HashSet::new());
+    static ref COMPOSER_HASH: RwLock<HashSet<i64>> = RwLock::new(HashSet::new());
 }
 
 pub(crate) fn generate_hash_code() -> i64 {
@@ -16,7 +16,7 @@ pub(crate) fn generate_hash_code() -> i64 {
         // hash < 1000 reserve for Composer
         while hash < 1000 && composer_hash.contains(&hash) {
             hash = random();
-        };
+        }
         composer_hash.insert(hash.clone());
     }
 

@@ -1,18 +1,17 @@
-use std::cell::RefCell;
-use crate::foundation::modifier_container::ModifierContainer;
-use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
-use std::rc::{Rc, Weak};
 use crate::foundation::layout_node_layout_delegate::LayoutNodeLayoutDelegate;
 use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
+use crate::foundation::modifier_container::ModifierContainer;
 use crate::foundation::usage_by_parent::UsageByParent;
+use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
+use std::cell::RefCell;
+use std::rc::{Rc, Weak};
 
 use super::canvas::Canvas;
 use super::measurable::MultiChildrenMeasurePolicy;
 use super::measure_result::MeasureResult;
 use super::modifier::Modifier;
 use super::remeasurable::StatefulRemeasurable;
-use super::{layout_state::LayoutState, node_chain::NodeChain,
-};
+use super::{layout_state::LayoutState, node_chain::NodeChain};
 
 #[derive(Debug)]
 pub(crate) struct LayoutNode {
@@ -46,10 +45,11 @@ impl LayoutNode {
                 .attach(Rc::downgrade(&node), modifier_container.clone());
 
             let layout_state = node_mut.layout_state.clone();
-            node_mut
-                .layout_node_layout_delegate
-                .borrow_mut()
-                .attach(node_chain, modifier_container, layout_state);
+            node_mut.layout_node_layout_delegate.borrow_mut().attach(
+                node_chain,
+                modifier_container,
+                layout_state,
+            );
         }
 
         node
@@ -79,8 +79,8 @@ impl LayoutNode {
     }
 
     pub(crate) fn for_each_child<F>(&self, f: F)
-        where
-            F: FnMut(&Rc<RefCell<LayoutNode>>),
+    where
+        F: FnMut(&Rc<RefCell<LayoutNode>>),
     {
         self.children.borrow().iter().for_each(f);
     }

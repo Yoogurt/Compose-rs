@@ -1,6 +1,8 @@
-use auto_delegate::delegate;
+use super::{
+    constraint::Constraints, geometry::IntSize, measure_result::MeasureResult, measured::Measured,
+};
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
-use super::{constraint::Constraints, measured::Measured, geometry::IntSize, measure_result::MeasureResult};
+use auto_delegate::delegate;
 
 pub type MeasureAction = Box<dyn FnOnce() -> MeasureResult>;
 

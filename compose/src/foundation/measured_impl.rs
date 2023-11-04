@@ -1,4 +1,4 @@
-use super::measured::{MeasuredImpl, Measured};
+use super::measured::{Measured, MeasuredImpl};
 use std::any::Any;
 
 impl MeasuredImpl {

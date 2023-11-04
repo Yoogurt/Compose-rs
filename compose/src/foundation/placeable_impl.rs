@@ -1,9 +1,9 @@
-use auto_delegate::Delegate;
 use crate::foundation::constraint::Constraints;
 use crate::foundation::geometry::{CoerceIn, IntOffset, IntSize};
 use crate::foundation::measured::MeasuredImpl;
 use crate::foundation::placeable::Placeable;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
+use auto_delegate::Delegate;
 
 #[derive(Debug, Delegate, Default)]
 pub(crate) struct PlaceableImpl {
@@ -29,8 +29,14 @@ impl PlaceableImpl {
 
 impl PlaceableImpl {
     fn recalculate_width_and_height(&mut self) {
-        self.width = self.measured_size.width().coerce_in(self.measurement_constraint.width_range());
-        self.height = self.measured_size.height().coerce_in(self.measurement_constraint.height_range());
+        self.width = self
+            .measured_size
+            .width()
+            .coerce_in(self.measurement_constraint.width_range());
+        self.height = self
+            .measured_size
+            .height()
+            .coerce_in(self.measurement_constraint.height_range());
     }
 }
 
@@ -57,7 +63,9 @@ impl Placeable for PlaceableImpl {
         self.measured_size
     }
 
-    fn set_measurement_constraint(&mut self, constraint: &Constraints) { self.measurement_constraint = *constraint; }
+    fn set_measurement_constraint(&mut self, constraint: &Constraints) {
+        self.measurement_constraint = *constraint;
+    }
 
     fn get_measurement_constraint(&self) -> &Constraints {
         &self.measurement_constraint

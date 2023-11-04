@@ -4,8 +4,6 @@ use crate::foundation::constraint::Constraints;
 
 use crate::foundation::measure_and_layout_delegate::MeasureAndLayoutDelegate;
 
-
-
 use crate::foundation::composer::Composer;
 
 pub struct MacOSComposeView {

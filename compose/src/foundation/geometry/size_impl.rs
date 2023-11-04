@@ -1,4 +1,3 @@
-
 use std::ops::{Div, Mul};
 
 use super::{Size, U64ConverterUnsigned};
@@ -13,7 +12,10 @@ impl U64ConverterUnsigned for usize {
     }
 }
 
-impl<T> Size<T> where T: U64ConverterUnsigned {
+impl<T> Size<T>
+where
+    T: U64ConverterUnsigned,
+{
     #[inline]
     fn packed_value(x: T, y: T) -> u64 {
         let lhs = x.as_u64();
@@ -44,28 +46,41 @@ impl<T> Size<T> where T: U64ConverterUnsigned {
     }
 }
 
-impl<T> Mul<T> for Size<T> where T: U64ConverterUnsigned {
+impl<T> Mul<T> for Size<T>
+where
+    T: U64ConverterUnsigned,
+{
     type Output = Size<T>;
     fn mul(self, rhs: T) -> Self::Output {
         Size::new(self.width() * rhs, self.height() * rhs)
     }
 }
 
-impl<T> Div<T> for Size<T> where T: U64ConverterUnsigned {
+impl<T> Div<T> for Size<T>
+where
+    T: U64ConverterUnsigned,
+{
     type Output = Size<T>;
     fn div(self, rhs: T) -> Self::Output {
         Size::new(self.width() / rhs, self.height() / rhs)
     }
 }
 
-impl<R,T> From<R> for Size<T> where R: Into<(T,T)> , T: U64ConverterUnsigned {
+impl<R, T> From<R> for Size<T>
+where
+    R: Into<(T, T)>,
+    T: U64ConverterUnsigned,
+{
     fn from(value: R) -> Self {
         let value = value.into();
         Self::new(value.0, value.1)
     }
 }
 
-impl<T> Default for Size<T> where T: U64ConverterUnsigned + Default {
+impl<T> Default for Size<T>
+where
+    T: U64ConverterUnsigned + Default,
+{
     fn default() -> Self {
         Self::new(T::default(), T::default())
     }

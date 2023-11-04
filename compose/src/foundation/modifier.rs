@@ -1,15 +1,15 @@
+use crate::foundation::layout_modifier_node::LayoutModifierNode;
+use crate::foundation::node_coordinator::NodeCoordinator;
+use crate::foundation::oop::any_converter::AnyConverter;
+use crate::foundation::utils::weak_upgrade::WeakUpdater;
+use auto_delegate::delegate;
+use compose_macro::Leak;
 use std::any::Any;
 use std::cell::RefCell;
 use std::fmt::Debug;
-use std::rc::{Rc, Weak};
-use compose_macro::Leak;
-use auto_delegate::delegate;
-use crate::foundation::layout_modifier_node::LayoutModifierNode;
-use crate::foundation::node_coordinator::NodeCoordinator;
-use crate::foundation::utils::weak_upgrade::WeakUpdater;
 use std::fmt::{Formatter, Write};
 use std::ops::{Add, Deref};
-use crate::foundation::r#trait::any_converter::AnyConverter;
+use std::rc::{Rc, Weak};
 
 pub const Modifier: Modifier = Modifier::Unit;
 
@@ -28,12 +28,12 @@ macro_rules! impl_node_kind_any {
             }
         }
 
-        impl crate::foundation::r#trait::any_converter::AnyConverter for $tt {
+        impl crate::foundation::oop::any_converter::AnyConverter for $tt {
             fn as_any(&self) -> &dyn std::any::Any {
                 self
             }
 
-             fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+            fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
                 self
             }
         }
@@ -71,7 +71,7 @@ impl NodeKindPatch for NodeImpl {
 }
 
 impl AnyConverter for NodeImpl {
-    fn as_any(&self) -> &dyn Any  {
+    fn as_any(&self) -> &dyn Any {
         self
     }
 
@@ -105,7 +105,6 @@ impl Node for NodeImpl {
         self.coordinator.clone()
     }
 }
-
 
 #[derive(Default)]
 pub enum Modifier {
@@ -142,9 +141,7 @@ impl Modifier {
             Modifier::Combined { left, right } => {
                 right.fold_in(left.fold_in(initial, &mut operation), operation)
             }
-            _ => {
-                operation(initial, self)
-            }
+            _ => operation(initial, self),
         }
     }
 
@@ -153,31 +150,21 @@ impl Modifier {
             Modifier::Combined { left, right } => {
                 left.fold_out(right.fold_out(initial, operation), operation)
             }
-            _ => {
-                operation(self, initial)
-            }
+            _ => operation(self, initial),
         }
     }
 
     pub fn any(&self, mut predicate: impl FnMut(&Modifier) -> bool) -> bool {
         match self {
-            Modifier::Combined { left, right } => {
-                left.any(&mut predicate) || right.any(predicate)
-            }
-            _ => {
-                predicate(self)
-            }
+            Modifier::Combined { left, right } => left.any(&mut predicate) || right.any(predicate),
+            _ => predicate(self),
         }
     }
 
     pub fn all(&self, mut predicate: impl FnMut(&Modifier) -> bool) -> bool {
         match self {
-            Modifier::Combined { left, right } => {
-                left.all(&mut predicate) && right.all(predicate)
-            }
-            _ => {
-                predicate(self)
-            }
+            Modifier::Combined { left, right } => left.all(&mut predicate) && right.all(predicate),
+            _ => predicate(self),
         }
     }
 
@@ -205,8 +192,8 @@ impl Modifier {
 impl Modifier {
     const fn is_element(&self) -> bool {
         match self {
-            Modifier::ModifierNodeElement { .. } => { true }
-            _ => { false }
+            Modifier::ModifierNodeElement { .. } => true,
+            _ => false,
         }
     }
 }
@@ -221,12 +208,8 @@ impl Add for Modifier {
 impl Debug for Modifier {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Modifier::Unit => {
-                f.write_str("<modifier:unit>")
-            }
-            Modifier::Combined {
-                left, right
-            } => {
+            Modifier::Unit => f.write_str("<modifier:unit>"),
+            Modifier::Combined { left, right } => {
                 f.write_str("<modifier:combined>")?;
                 left.fmt(f)?;
                 right.fmt(f)
@@ -236,9 +219,7 @@ impl Debug for Modifier {
                 f.write_str(&format!("create:{:p}", create.deref()))?;
                 f.write_str(&format!(",update:{:p}]>", update.deref()))
             }
-            _ => {
-                f.write_str("<unknown modifier>")
-            }
+            _ => f.write_str("<unknown modifier>"),
         }
     }
 }

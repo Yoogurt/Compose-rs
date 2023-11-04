@@ -7,8 +7,6 @@ pub(crate) struct ModifierContainer {
 
 impl ModifierContainer {
     pub(crate) fn new() -> Self {
-        ModifierContainer {
-            current: vec![]
-        }
+        ModifierContainer { current: vec![] }
     }
 }

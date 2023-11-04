@@ -1,13 +1,13 @@
-use std::cell::{RefCell, RefMut};
-use std::collections::hash_map::Entry;
-use std::collections::HashMap;
-use std::ops::Index;
-use super::slot_table_type::{GroupKindIndex, GroupKind};
-use std::rc::Rc;
+use super::slot_table_type::{GroupKind, GroupKindIndex};
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::slot_table_type::SlotTableType;
 use std::cell::Ref;
+use std::cell::{RefCell, RefMut};
+use std::collections::hash_map::Entry;
+use std::collections::HashMap;
 use std::ops::Deref;
+use std::ops::Index;
+use std::rc::Rc;
 
 #[derive(Debug, Default)]
 pub(crate) struct SlotTable {
@@ -81,34 +81,29 @@ impl SlotWriter {
         });
     }
 
-    pub(crate) fn get_group_kind<'a, 'b>(&mut self, group_kind: GroupKindIndex, data: &'a mut RefMut<'b, Vec<SlotTableType>>) -> Option<&'a mut GroupKind> {
+    pub(crate) fn get_group_kind<'a, 'b>(
+        &mut self,
+        group_kind: GroupKindIndex,
+        data: &'a mut RefMut<'b, Vec<SlotTableType>>,
+    ) -> Option<&'a mut GroupKind> {
         let parent = self.group_parent.get_mut(&group_kind);
         match parent {
-            None => {
-                None
-            }
-            Some(stack) => {
-                match stack.last() {
-                    None => {
-                        None
-                    }
-                    Some(current) => {
-                        match data.get_mut(*current) {
-                            None => {
-                                None
-                            }
-                            Some(node) => {
-                                Some(&mut node.data)
-                            }
-                        }
-                    }
-                }
-            }
+            None => None,
+            Some(stack) => match stack.last() {
+                None => None,
+                Some(current) => match data.get_mut(*current) {
+                    None => None,
+                    Some(node) => Some(&mut node.data),
+                },
+            },
         }
     }
 
     pub(crate) fn end_insert_layout_node(&mut self) {
-        self.group_parent.get_mut(&GroupKindIndex::LayoutNode).unwrap().pop();
+        self.group_parent
+            .get_mut(&GroupKindIndex::LayoutNode)
+            .unwrap()
+            .pop();
     }
 }
 

@@ -5,14 +5,12 @@ use std::rc::Weak;
 #[repr(transparent)]
 #[derive(Debug)]
 pub(crate) struct OptionalWeak<T> {
-    weak: Option<Weak<RefCell<T>>>
+    weak: Option<Weak<RefCell<T>>>,
 }
 
 impl<T> Default for OptionalWeak<T> {
     fn default() -> Self {
-        Self {
-            weak: None
-        }
+        Self { weak: None }
     }
 }
 
@@ -32,8 +30,6 @@ impl<T> DerefMut for OptionalWeak<T> {
 
 impl<T> From<Option<Weak<RefCell<T>>>> for OptionalWeak<T> {
     fn from(weak: Option<Weak<RefCell<T>>>) -> Self {
-        Self {
-            weak
-        }
+        Self { weak }
     }
 }

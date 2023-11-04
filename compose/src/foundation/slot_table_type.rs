@@ -1,5 +1,5 @@
-use std::{cell::RefCell, rc::Rc, any::Any};
 use std::hash::{Hash, Hasher};
+use std::{any::Any, cell::RefCell, rc::Rc};
 
 use super::{layout_node::LayoutNode, slot_table::SlotTable};
 
@@ -12,10 +12,7 @@ pub(crate) enum GroupKindIndex {
 
 #[derive(Debug)]
 pub(crate) enum GroupKind {
-    Group {
-        hash: i64,
-        depth: usize,
-    },
+    Group { hash: i64, depth: usize },
     LayoutNodeType(Rc<RefCell<LayoutNode>>),
     CustomType(Box<dyn Any>),
 }
@@ -23,15 +20,9 @@ pub(crate) enum GroupKind {
 impl GroupKind {
     pub(crate) fn index(&self) -> GroupKindIndex {
         match self {
-            GroupKind::Group { .. } => {
-                GroupKindIndex::Group
-            }
-            GroupKind::LayoutNodeType(_) => {
-                GroupKindIndex::LayoutNode
-            }
-            GroupKind::CustomType(_) => {
-                GroupKindIndex::Custom
-            }
+            GroupKind::Group { .. } => GroupKindIndex::Group,
+            GroupKind::LayoutNodeType(_) => GroupKindIndex::LayoutNode,
+            GroupKind::CustomType(_) => GroupKindIndex::Custom,
         }
     }
 }

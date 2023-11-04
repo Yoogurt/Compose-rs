@@ -6,8 +6,8 @@ pub struct Constraints {
     pub max_height: usize,
 }
 
-use std::ops::RangeInclusive;
 use crate::foundation::geometry::{CoerceIn, IntSize};
+use std::ops::RangeInclusive;
 
 impl Constraints {
     pub const INFINITE: usize = usize::MAX;
@@ -74,12 +74,20 @@ impl Constraints {
     }
 
     pub fn constrain(&self, other_constraint: &Constraints) -> Constraints {
-        Self::new(self.min_width.coerce_in(other_constraint.width_range())..=self.max_width.coerce_in(other_constraint.width_range()),
-                  self.min_height.coerce_in(other_constraint.height_range())..=self.max_height.coerce_in(other_constraint.height_range()))
+        Self::new(
+            self.min_width.coerce_in(other_constraint.width_range())
+                ..=self.max_width.coerce_in(other_constraint.width_range()),
+            self.min_height.coerce_in(other_constraint.height_range())
+                ..=self.max_height.coerce_in(other_constraint.height_range()),
+        )
     }
 
     pub fn constrain_size(&self, size: IntSize) -> IntSize {
-        (size.width().coerce_in(self.width_range()), size.height().coerce_in(self.height_range())).into()
+        (
+            size.width().coerce_in(self.width_range()),
+            size.height().coerce_in(self.height_range()),
+        )
+            .into()
     }
 
     pub fn constrain_width(&self, width: usize) -> usize {

@@ -1,6 +1,6 @@
 use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::measure_scope::MeasureScope;
-use crate::foundation::placeable::{Placeable};
+use crate::foundation::placeable::Placeable;
 use crate::foundation::placement_scope::PlacementScope;
 
 pub(crate) struct PlacementScopeImpl<'a> {
@@ -31,7 +31,14 @@ impl PlacementScope for PlacementScopeImpl<'_> {
         if self.parent_layout_direction() == LayoutDirection::Ltr || self.parent_width() == 0 {
             placeable.place_at((x, y).into(), z_index)
         } else {
-            placeable.place_at((self.parent_width() as i32 - placeable.get_width() as i32 - x, y).into(), z_index)
+            placeable.place_at(
+                (
+                    self.parent_width() as i32 - placeable.get_width() as i32 - x,
+                    y,
+                )
+                    .into(),
+                z_index,
+            )
         }
     }
 }

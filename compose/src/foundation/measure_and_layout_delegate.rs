@@ -1,8 +1,6 @@
-use std::{cell::RefCell, rc::Rc};
+use super::{constraint::Constraints, layout_node::LayoutNode};
 use crate::foundation::measurable::MultiChildrenMeasurePolicy;
-use super::{
-    constraint::Constraints, layout_node::LayoutNode,
-};
+use std::{cell::RefCell, rc::Rc};
 
 pub struct MeasureAndLayoutDelegate {
     pub(crate) root: Rc<RefCell<LayoutNode>>,
@@ -28,7 +26,12 @@ impl MeasureAndLayoutDelegate {
         self.root_constraint = constraint;
 
         let root_mut = self.root.borrow_mut();
-        root_mut.layout_node_layout_delegate.borrow_mut().measure_pass_delegate.borrow_mut().mark_measure_pending();
+        root_mut
+            .layout_node_layout_delegate
+            .borrow_mut()
+            .measure_pass_delegate
+            .borrow_mut()
+            .mark_measure_pending();
     }
 
     pub(crate) fn update_root_measure_policy(&self, measure_policy: MultiChildrenMeasurePolicy) {
@@ -49,7 +52,9 @@ impl MeasureAndLayoutDelegate {
         };
 
         let layout_node_layout_delegate = layout_node.borrow().layout_node_layout_delegate.clone();
-        layout_node_layout_delegate.borrow_mut().remeasure(constraint);
+        layout_node_layout_delegate
+            .borrow_mut()
+            .remeasure(constraint);
     }
 
     fn recurse_remeasure(&self, layout_node: Rc<RefCell<LayoutNode>>) {

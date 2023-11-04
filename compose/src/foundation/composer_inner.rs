@@ -1,9 +1,9 @@
-use std::{rc::Rc, cell::RefCell};
-use std::any::Any;
-use crate::foundation::slot_table::{SlotTable, SlotReader, SlotWriter};
+use crate::foundation::slot_table::{SlotReader, SlotTable, SlotWriter};
 use crate::foundation::slot_table_type::GroupKindIndex;
+use std::any::Any;
+use std::{cell::RefCell, rc::Rc};
 
-use super::{constraint::Constraints, slot_table_type::GroupKind, layout_node::LayoutNode};
+use super::{constraint::Constraints, layout_node::LayoutNode, slot_table_type::GroupKind};
 
 pub(crate) struct ComposerInner {
     pub(crate) hash: i64,
@@ -84,10 +84,15 @@ impl ComposerInner {
     }
 
     pub(crate) fn start_group(&mut self, hash: i64) {
-        self.start(hash, None, GroupKind::Group {
+        self.start(
             hash,
-            depth: self.depth,
-        }, None);
+            None,
+            GroupKind::Group {
+                hash,
+                depth: self.depth,
+            },
+            None,
+        );
     }
 
     pub(crate) fn create_node(&mut self) -> Rc<RefCell<LayoutNode>> {
@@ -136,11 +141,12 @@ impl ComposerInner {
 
     pub(crate) fn end_node(&mut self) {
         let mut slot_table_mut = self.slot_table.slots.borrow_mut();
-        let current_ref = self.writer.get_group_kind(GroupKindIndex::LayoutNode, &mut slot_table_mut).expect("unbalance create node pair");
+        let current_ref = self
+            .writer
+            .get_group_kind(GroupKindIndex::LayoutNode, &mut slot_table_mut)
+            .expect("unbalance create node pair");
         let current = match current_ref {
-            GroupKind::LayoutNodeType(node) => {
-                node.clone()
-            }
+            GroupKind::LayoutNodeType(node) => node.clone(),
             _ => {
                 panic!("current node with wrong type")
             }
@@ -148,7 +154,9 @@ impl ComposerInner {
 
         self.writer.end_insert_layout_node();
 
-        let parent = self.writer.get_group_kind(GroupKindIndex::LayoutNode, &mut slot_table_mut);
+        let parent = self
+            .writer
+            .get_group_kind(GroupKindIndex::LayoutNode, &mut slot_table_mut);
 
         match parent {
             None => {
@@ -163,20 +171,18 @@ impl ComposerInner {
                     LayoutNode::adopt_child(&root, &current, true);
                 }));
             }
-            Some(parent) => {
-                match parent {
-                    GroupKind::LayoutNodeType(parent) => {
-                        let parent = parent.clone();
-                        drop(slot_table_mut);
-                        self.record_insert_up_fix_up(Box::new(move || {
-                            LayoutNode::adopt_child(&parent, &current, false);
-                        }));
-                    }
-                    _ => {
-                        panic!("parent with wrong type")
-                    }
+            Some(parent) => match parent {
+                GroupKind::LayoutNodeType(parent) => {
+                    let parent = parent.clone();
+                    drop(slot_table_mut);
+                    self.record_insert_up_fix_up(Box::new(move || {
+                        LayoutNode::adopt_child(&parent, &current, false);
+                    }));
                 }
-            }
+                _ => {
+                    panic!("parent with wrong type")
+                }
+            },
         }
 
         self.register_insert_up_fix_up();
@@ -213,7 +219,13 @@ impl ComposerInner {
         self.depth -= 1;
     }
 
-    pub(crate) fn start(&mut self, key: i64, object_key: Option<Box<dyn Any>>, group_kind: GroupKind, data: Option<Box<dyn Any>>) {
+    pub(crate) fn start(
+        &mut self,
+        key: i64,
+        object_key: Option<Box<dyn Any>>,
+        group_kind: GroupKind,
+        data: Option<Box<dyn Any>>,
+    ) {
         self.validate_node_not_expected();
         self.update_compound_hash_enter(key);
 
