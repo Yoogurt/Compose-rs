@@ -5,23 +5,24 @@ use super::{
 };
 use crate::foundation::layout_modifier_node::LayoutModifierNode;
 use crate::foundation::layout_modifier_node_coordinator::LayoutModifierNodeCoordinator;
-use crate::foundation::layout_modifier_node_impl::LayoutModifierNodeImpl;
+// use crate::foundation::layout_modifier_node_impl::LayoutModifierNodeImpl;
 use crate::foundation::layout_node::LayoutNode;
-use crate::foundation::modifier::Node;
-use crate::foundation::modifier::{NodeImpl, NodeKind, NodeKindPatch};
+use crate::foundation::modifier::ModifierNode;
+use crate::foundation::modifier::{ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::modifier_container::ModifierContainer;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::impl_node_kind_any;
 use auto_delegate::Delegate;
 use std::rc::Weak;
 use std::{cell::RefCell, rc::Rc};
+use std::ops::DerefMut;
 
 #[derive(Debug)]
 pub(crate) struct NodeChain {
-    pub(crate) sentine_head: Rc<RefCell<dyn Node>>,
+    pub(crate) sentine_head: Rc<RefCell<dyn ModifierNode>>,
 
-    pub(crate) head: Rc<RefCell<dyn Node>>,
-    pub(crate) tail: Rc<RefCell<dyn Node>>,
+    pub(crate) head: Rc<RefCell<dyn ModifierNode>>,
+    pub(crate) tail: Rc<RefCell<dyn ModifierNode>>,
     pub(crate) modifier_container: Rc<RefCell<ModifierContainer>>,
     pub(crate) parent_data: Option<Box<dyn ParentData>>,
     pub(crate) measure_result: MeasureResult,
@@ -34,15 +35,15 @@ pub(crate) struct NodeChain {
 
 #[derive(Debug, Delegate, Default)]
 struct TailModifierNode {
-    #[to(Node)]
-    node_impl: NodeImpl,
+    #[to(ModifierNode, LayoutNodeModifierConverter)]
+    node_impl: ModifierNodeImpl,
 }
 impl_node_kind_any!(TailModifierNode);
 
 #[derive(Debug, Default, Delegate)]
 struct SentineHeadNode {
-    #[to(Node)]
-    node_impl: NodeImpl,
+    #[to(ModifierNode, LayoutNodeModifierConverter)]
+    node_impl: ModifierNodeImpl,
 }
 impl_node_kind_any!(SentineHeadNode);
 
@@ -89,7 +90,7 @@ impl NodeChain {
         self.inner_coordinator.borrow_mut().attach(layout_node);
     }
 
-    fn pad_chain(&mut self) -> Rc<RefCell<dyn Node>> {
+    fn pad_chain(&mut self) -> Rc<RefCell<dyn ModifierNode>> {
         let current_head = self.head.clone();
         current_head
             .borrow_mut()
@@ -101,9 +102,9 @@ impl NodeChain {
     }
 
     fn insert_child(
-        node: Rc<RefCell<dyn Node>>,
-        parent: Rc<RefCell<dyn Node>>,
-    ) -> Rc<RefCell<dyn Node>> {
+        node: Rc<RefCell<dyn ModifierNode>>,
+        parent: Rc<RefCell<dyn ModifierNode>>,
+    ) -> Rc<RefCell<dyn ModifierNode>> {
         {
             let mut parent_mut = parent.borrow_mut();
             let the_child = parent_mut.get_child();
@@ -121,8 +122,8 @@ impl NodeChain {
 
     fn create_and_insert_node_as_child(
         element: &mut Modifier,
-        parent: Rc<RefCell<dyn Node>>,
-    ) -> Rc<RefCell<dyn Node>> {
+        parent: Rc<RefCell<dyn ModifierNode>>,
+    ) -> Rc<RefCell<dyn ModifierNode>> {
         let node = match element {
             Modifier::ModifierNodeElement { create, update } => create(),
 
@@ -131,12 +132,18 @@ impl NodeChain {
             }
         };
 
-        let node =
-            LayoutModifierNodeImpl::new(node).wrap_with_rc_refcell() as Rc<RefCell<dyn Node>>;
         Self::insert_child(node, parent)
     }
 
-    fn trim_chain(&mut self, padded_head: Rc<RefCell<dyn Node>>) -> Rc<RefCell<dyn Node>> {
+    pub(crate) fn tail_to_head(&mut self, mut block: impl FnMut(&mut dyn ModifierNode)) {
+        let mut node = Some(self.tail.clone());
+        while let Some(node_rc) = node {
+            block(node_rc.borrow_mut().deref_mut());
+            node = node_rc.borrow().get_parent();
+        }
+    }
+
+    fn trim_chain(&mut self, padded_head: Rc<RefCell<dyn ModifierNode>>) -> Rc<RefCell<dyn ModifierNode>> {
         if padded_head.as_ptr() != self.sentine_head.as_ptr() {
             panic!("trim_chain called on already trimmed chain")
         }
@@ -197,7 +204,7 @@ impl NodeChain {
                         self.layout_node.clone(),
                         node_rc.clone(),
                     )
-                    .wrap_with_rc_refcell();
+                        .wrap_with_rc_refcell();
                     let weak_layout_modifier_node_coordinator = Rc::downgrade(&c);
                     let weak_dyn_node_coordinator: Weak<RefCell<dyn NodeCoordinator>> =
                         weak_layout_modifier_node_coordinator;

@@ -1,7 +1,10 @@
+use std::any::Any;
+use std::cell::{RefCell, RefMut};
+use std::rc::Rc;
+use auto_delegate::Delegate;
 use compose_macro::Composable;
 
-use crate::foundation::layout_modifier_node::LayoutModifierNode;
-use crate::foundation::modifier::Node;
+use crate::foundation::modifier::{ModifierNode, ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::placeable::Placeable;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
@@ -10,6 +13,10 @@ use crate::foundation::{
     measure_scope::MeasureScope, modifier::Modifier,
 };
 use crate::{self as compose};
+use crate::foundation::delegatable_node::DelegatableNode;
+use crate::foundation::oop::any_converter::AnyConverter;
+use crate::foundation::oop::modifier_node_converter::LayoutNodeModifierConverter;
+use crate::foundation::parent_data_modifier_node::ParentDataModifierNode;
 
 use crate::widgets::layout::Layout;
 
@@ -32,28 +39,80 @@ trait BoxMeasurableTrait {
     fn matches_parent_size(&self) -> bool;
 }
 
+pub trait BoxScope {
+    fn align(&self) {}
+
+    fn match_parent_size(&self, modifier: Modifier) -> Modifier {
+        modifier.then(box_child_data_element(true))
+    }
+}
+
+impl BoxScope for BoxScopeInstance {}
+
+struct BoxScopeInstance {
+
+}
+
 impl BoxMeasurableTrait for &mut dyn Measurable {
     fn matches_parent_size(&self) -> bool {
-        if let Some(parent_data) = self.get_parent_data() {}
+        if let Some(parent_data) = self.get_parent_data() {
+            let box_child_data_node = parent_data.downcast_ref::<BoxChildDataNode>();
 
+            return if let Some(node) = box_child_data_node {
+                node.match_parent_size
+            } else {
+                false
+            };
+        }
         false
     }
 }
 
+#[derive(Delegate, Debug, Default)]
 struct BoxChildDataNode {
     match_parent_size: bool,
+    #[to(ModifierNode)]
+    node_impl: ModifierNodeImpl,
 }
 
+impl DelegatableNode for BoxChildDataNode {}
+
+impl AnyConverter for BoxChildDataNode {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn Any {
+        self
+    }
+}
+
+impl NodeKindPatch for BoxChildDataNode {
+    fn get_node_kind(&mut self) -> NodeKind {
+        NodeKind::ParentDataModifierNode(self)
+    }
+}
+
+impl ParentDataModifierNode for BoxChildDataNode {
+    fn modify_parent_data(&mut self, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {
+        todo!()
+    }
+}
+
+impl LayoutNodeModifierConverter for BoxChildDataNode {}
+
 fn box_child_data_element(match_parent_size: bool) -> Modifier {
-    // Modifier::ModifierNodeElement {
-    //     create: move || {
-    //         todo!()
-    //     }.wrap_with_box(),
-    //     update: move |_| {
-    //         todo!()
-    //     }.wrap_with_box(),
-    // }
-    todo!()
+    Modifier::ModifierNodeElement {
+        create: (move || {
+            let box_child_data_node = BoxChildDataNode::default();
+            box_child_data_node.wrap_with_rc_refcell() as Rc<RefCell<dyn ModifierNode>>
+        }).wrap_with_box(),
+        update: (move |mut box_child_data_node: RefMut<dyn ModifierNode>| {
+            if let Some(box_child_data_node) = box_child_data_node.as_any_mut().downcast_mut::<BoxChildDataNode>() {
+                box_child_data_node.match_parent_size = match_parent_size;
+            }
+        }).wrap_with_box(),
+    }
 }
 
 fn place_in_box(placeable: &mut dyn Placeable) {}

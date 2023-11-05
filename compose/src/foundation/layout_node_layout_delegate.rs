@@ -35,7 +35,7 @@ impl LayoutNodeLayoutDelegate {
             measure_pending: false,
             layout_pending: false,
         }
-        .wrap_with_rc_refcell()
+            .wrap_with_rc_refcell()
     }
 
     pub(crate) fn attach(

@@ -5,18 +5,21 @@ use crate::foundation::utils::weak_upgrade::WeakUpdater;
 use auto_delegate::delegate;
 use compose_macro::Leak;
 use std::any::Any;
-use std::cell::RefCell;
+use std::cell::{RefCell, RefMut};
 use std::fmt::Debug;
 use std::fmt::{Formatter, Write};
 use std::ops::{Add, Deref};
 use std::rc::{Rc, Weak};
+use crate::foundation::oop::modifier_node_converter::LayoutNodeModifierConverter;
+use crate::foundation::parent_data_modifier_node::ParentDataModifierNode;
 
 pub const Modifier: Modifier = Modifier::Unit;
 
 #[derive(Debug)]
 pub enum NodeKind<'a> {
-    Any(&'a mut dyn Node),
+    Any(&'a mut dyn ModifierNode),
     LayoutModifierNode(&'a mut dyn LayoutModifierNode),
+    ParentDataModifierNode(&'a mut dyn ParentDataModifierNode),
 }
 
 #[macro_export]
@@ -45,12 +48,12 @@ pub trait NodeKindPatch {
 }
 
 #[delegate]
-pub trait Node: NodeKindPatch + AnyConverter + Debug {
-    fn set_parent(&mut self, parent: Option<Weak<RefCell<dyn Node>>>);
-    fn get_parent(&self) -> Option<Rc<RefCell<dyn Node>>>;
+pub trait ModifierNode: NodeKindPatch + AnyConverter + LayoutNodeModifierConverter + Debug {
+    fn set_parent(&mut self, parent: Option<Weak<RefCell<dyn ModifierNode>>>);
+    fn get_parent(&self) -> Option<Rc<RefCell<dyn ModifierNode>>>;
 
-    fn set_child(&mut self, parent: Option<Rc<RefCell<dyn Node>>>);
-    fn get_child(&self) -> Option<Rc<RefCell<dyn Node>>>;
+    fn set_child(&mut self, parent: Option<Rc<RefCell<dyn ModifierNode>>>);
+    fn get_child(&self) -> Option<Rc<RefCell<dyn ModifierNode>>>;
 
     fn update_coordinator(&mut self, coordinator: Option<Weak<RefCell<dyn NodeCoordinator>>>);
     fn get_coordinator(&self) -> Option<Weak<RefCell<dyn NodeCoordinator>>>;
@@ -58,19 +61,19 @@ pub trait Node: NodeKindPatch + AnyConverter + Debug {
 
 #[Leak]
 #[derive(Debug, Default)]
-pub(crate) struct NodeImpl {
-    parent: Option<Weak<RefCell<dyn Node>>>,
-    child: Option<Rc<RefCell<dyn Node>>>,
+pub(crate) struct ModifierNodeImpl {
+    parent: Option<Weak<RefCell<dyn ModifierNode>>>,
+    child: Option<Rc<RefCell<dyn ModifierNode>>>,
     coordinator: Option<Weak<RefCell<dyn NodeCoordinator>>>,
 }
 
-impl NodeKindPatch for NodeImpl {
+impl NodeKindPatch for ModifierNodeImpl {
     fn get_node_kind(&mut self) -> NodeKind {
         todo!("implement get node kind by yourself")
     }
 }
 
-impl AnyConverter for NodeImpl {
+impl AnyConverter for ModifierNodeImpl {
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -80,20 +83,22 @@ impl AnyConverter for NodeImpl {
     }
 }
 
-impl Node for NodeImpl {
-    fn set_parent(&mut self, parent: Option<Weak<RefCell<dyn Node>>>) {
+impl LayoutNodeModifierConverter for ModifierNodeImpl {}
+
+impl ModifierNode for ModifierNodeImpl {
+    fn set_parent(&mut self, parent: Option<Weak<RefCell<dyn ModifierNode>>>) {
         self.parent = parent;
     }
 
-    fn get_parent(&self) -> Option<Rc<RefCell<dyn Node>>> {
+    fn get_parent(&self) -> Option<Rc<RefCell<dyn ModifierNode>>> {
         self.parent.try_upgrade()
     }
 
-    fn set_child(&mut self, child: Option<Rc<RefCell<dyn Node>>>) {
+    fn set_child(&mut self, child: Option<Rc<RefCell<dyn ModifierNode>>>) {
         self.child = child
     }
 
-    fn get_child(&self) -> Option<Rc<RefCell<dyn Node>>> {
+    fn get_child(&self) -> Option<Rc<RefCell<dyn ModifierNode>>> {
         self.child.clone()
     }
 
@@ -111,8 +116,8 @@ pub enum Modifier {
     #[default]
     Unit,
     ModifierNodeElement {
-        create: Box<dyn FnMut() -> Box<dyn LayoutModifierNode>>,
-        update: Box<dyn FnMut(&'static mut Box<dyn LayoutModifierNode>)>,
+        create: Box<dyn FnMut() -> Rc<RefCell<dyn ModifierNode>>>,
+        update: Box<dyn FnMut(RefMut<dyn ModifierNode>)>,
     },
     Combined {
         left: Box<Modifier>,

@@ -5,12 +5,16 @@ use crate::foundation::layout_modifier_node::LayoutModifierNode;
 use crate::foundation::measurable::{Measurable, SingleChildMeasurePolicy};
 use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::measure_scope::MeasureScope;
-use crate::foundation::modifier::{Modifier, NodeImpl, NodeKind, NodeKindPatch};
+use crate::foundation::modifier::{Modifier, ModifierNode, ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::oop::any_converter::AnyConverter;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
 use auto_delegate::Delegate;
 use std::any::Any;
+use std::cell::{RefCell, RefMut};
 use std::hash::{Hash, Hasher};
+use std::rc::Rc;
+use crate::foundation::oop::modifier_node_converter::LayoutNodeModifierConverter;
+use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
 pub trait SizeModifier {
     fn width(self, width: Dp) -> Modifier;
@@ -22,8 +26,8 @@ fn size_measure_policy<T>(
     min_height: T,
     max_height: T,
 ) -> SingleChildMeasurePolicy
-where
-    T: Into<Dp> + Copy + 'static,
+    where
+        T: Into<Dp> + Copy + 'static,
 {
     Box::new(
         move |measure_scope: &mut dyn MeasureScope,
@@ -88,8 +92,8 @@ struct SizeNode {
     max_height: Dp,
     enforce_incoming: bool,
 
-    #[to(Node)]
-    node_impl: NodeImpl,
+    #[to(ModifierNode)]
+    node_impl: ModifierNodeImpl,
 }
 
 impl AnyConverter for SizeNode {
@@ -147,6 +151,16 @@ impl SizeNode {
         };
 
         ((min_width..=max_width), (min_height..=max_height)).into()
+    }
+}
+
+impl LayoutNodeModifierConverter for SizeNode {
+    fn as_layout_node_modifier(&self) -> Option<&dyn LayoutModifierNode> {
+        Some(self)
+    }
+
+    fn as_layout_node_modifier_mut(&mut self) -> Option<&mut dyn LayoutModifierNode> {
+        Some(self)
     }
 }
 
@@ -243,8 +257,8 @@ fn size_element<T>(
     max_height_raw: T,
     enforce_incoming: bool,
 ) -> Modifier
-where
-    T: Into<Dp> + Copy + 'static,
+    where
+        T: Into<Dp> + Copy + 'static,
 {
     Modifier::ModifierNodeElement {
         create: (move || {
@@ -256,10 +270,10 @@ where
                 enforce_incoming,
                 ..Default::default()
             }
-            .wrap_with_box() as Box<dyn LayoutModifierNode>
+                .wrap_with_rc_refcell() as Rc<RefCell<dyn ModifierNode>>
         })
-        .wrap_with_box(),
-        update: (move |size_node: &mut Box<dyn LayoutModifierNode>| {
+            .wrap_with_box(),
+        update: (move |mut size_node: RefMut<dyn ModifierNode>| {
             if let Some(size_node) = size_node.as_any_mut().downcast_mut::<SizeNode>() {
                 size_node.min_width = min_width_raw.into();
                 size_node.max_width = max_width_raw.into();
@@ -270,7 +284,7 @@ where
                 panic!("wrong type for SizeNode");
             }
         })
-        .wrap_with_box(),
+            .wrap_with_box(),
     }
 }
 

@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::cell::{RefCell, RefMut};
 use std::rc::Weak;
 
 use crate::foundation::constraint::Constraints;
@@ -18,15 +18,17 @@ use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 use crate::foundation::usage_by_parent::UsageByParent;
 use std::ops::DerefMut;
+// use crate::foundation::layout_modifier_node_impl::LayoutModifierNodeImpl;
+use crate::foundation::layout_node_layout_delegate::LayoutNodeLayoutDelegate;
 
 #[derive(Delegate)]
 pub(crate) struct InnerNodeCoordinator {
     #[to(
-        Placeable,
-        Measured,
-        NodeCoordinatorTrait,
-        MeasureScope,
-        IntrinsicMeasurable
+    Placeable,
+    Measured,
+    NodeCoordinatorTrait,
+    MeasureScope,
+    IntrinsicMeasurable
     )]
     pub(crate) node_coordinator_impl: NodeCoordinatorImpl,
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
@@ -84,30 +86,29 @@ impl Measurable for InnerNodeCoordinator {
             let children_rc = self.layout_node.upgrade().unwrap().borrow().get_children();
             let children = children_rc.borrow_mut();
 
-            let children_rc = children
+            let layout_node_layout_delegate_rc = children
                 .iter()
                 .map(|child| child.borrow_mut().layout_node_layout_delegate.clone())
                 .collect::<Vec<_>>();
-            let mut children_ref_mut = children_rc
+            let mut layout_node_layout_delegate_ref_mut: Vec<RefMut<LayoutNodeLayoutDelegate>> = layout_node_layout_delegate_rc
                 .iter()
                 .map(|child| child.borrow_mut())
                 .collect::<Vec<_>>();
-            let mut children_ref_mut = children_ref_mut
+            let mut measurable_ref_mut: Vec<RefMut<dyn Measurable>> = layout_node_layout_delegate_ref_mut
                 .iter_mut()
                 .map(|child| child.deref_mut().as_measurable_mut())
                 .collect::<Vec<_>>();
-            let mut children_dyn_measurable = children_ref_mut
+            let mut measurable_mut: Vec<&mut dyn Measurable> = measurable_ref_mut
                 .iter_mut()
-                .map(|child| child.deref_mut())
+                .map(|child| { child.deref_mut() })
                 .collect::<Vec<_>>();
 
             let measure_scope = &mut self.node_coordinator_impl;
-            measure_policy(measure_scope, &mut children_dyn_measurable[..], constraint)
+            measure_policy(measure_scope, &mut measurable_mut[..], constraint)
         };
         self.set_measured_result(measure_result);
 
         self.on_measured();
-        // self.handle_measured_result(measure_result);
         self
     }
 

@@ -1,9 +1,9 @@
 use crate::foundation::constraint::Constraints;
 use crate::foundation::layout_modifier_node::LayoutModifierNode;
-use crate::foundation::layout_modifier_node_impl::LayoutModifierNodeImpl;
+// use crate::foundation::layout_modifier_node_impl::LayoutModifierNodeImpl;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::measurable::Measurable;
-use crate::foundation::modifier::Node;
+use crate::foundation::modifier::ModifierNode;
 use crate::foundation::node_coordinator::{NodeCoordinator, NodeCoordinatorTrait};
 use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
 use crate::foundation::placeable::Placeable;
@@ -17,7 +17,7 @@ use std::rc::{Rc, Weak};
 #[derive(Debug, Delegate)]
 pub(crate) struct LayoutModifierNodeCoordinator {
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
-    pub(crate) layout_modifier_node: Rc<RefCell<dyn Node>>,
+    pub(crate) layout_modifier_node: Rc<RefCell<dyn ModifierNode>>,
     #[to(
         Placeable,
         Measured,
@@ -46,7 +46,7 @@ impl Deref for LayoutModifierNodeCoordinator {
 impl LayoutModifierNodeCoordinator {
     pub(crate) fn new(
         layout_node: Weak<RefCell<LayoutNode>>,
-        measure_node: Rc<RefCell<dyn Node>>,
+        measure_node: Rc<RefCell<dyn ModifierNode>>,
     ) -> Self {
         Self {
             layout_node,
@@ -57,8 +57,8 @@ impl LayoutModifierNodeCoordinator {
 
     pub(crate) fn set_layout_modifier_node(
         &mut self,
-        mut layout_mod: Rc<RefCell<dyn Node>>,
-    ) -> Rc<RefCell<dyn Node>> {
+        mut layout_mod: Rc<RefCell<dyn ModifierNode>>,
+    ) -> Rc<RefCell<dyn ModifierNode>> {
         std::mem::swap(&mut self.layout_modifier_node, &mut layout_mod);
         layout_mod
     }
@@ -74,8 +74,7 @@ impl Measurable for LayoutModifierNodeCoordinator {
             let node = self_.layout_modifier_node.clone();
             if let Some(layout_node_modifier) = node
                 .borrow_mut()
-                .as_any_mut()
-                .downcast_mut::<LayoutModifierNodeImpl>()
+                .as_layout_node_modifier_mut()
             {
                 let wrapped = self_.get_wrapped().unwrap();
                 let mut wrapped_not_null = wrapped.borrow_mut();
@@ -85,7 +84,7 @@ impl Measurable for LayoutModifierNodeCoordinator {
                     constraint,
                 );
             } else {
-                panic!("downcast from type Node to LayoutModifierNodeImpl failed")
+                panic!("downcast from type Node to LayoutNodeModifier failed")
             }
 
             self_
