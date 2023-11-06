@@ -7,18 +7,20 @@ use compose::foundation::geometry::IntoDp;
 use compose::foundation::layout::size_modifier::SizeModifier;
 use compose::foundation::modifier::Modifier;
 use compose_macro::Composable;
-use minifb::{Key, Scale, ScaleMode, Window, WindowOptions};
-use skia_safe::{surfaces, AlphaType, Color, ColorSpace, ColorType, ImageInfo, Rect, Surface,
+use minifb::{Scale, ScaleMode, Window, WindowOptions};
+use skia_safe::{surfaces, AlphaType, ColorSpace, ColorType, ImageInfo, Rect, Surface,
 };
 use std::default::Default as STDefault;
 use std::hash::Hash;
 use std::time::Duration;
+use compose::foundation::background::BackgroundModifier;
+use compose::foundation::ui::graphics::color::Color;
 use compose::widgets::r#box::BoxLayout;
 
 #[Composable]
 fn test_box_composable() {
     BoxLayout(Modifier.width(10.dp()), |scope| {
-        BoxLayout(scope.match_parent_size(Modifier), |_| {});
+        BoxLayout(Modifier.background(Color::GREEN), |_| {});
     })
 }
 
@@ -54,9 +56,6 @@ fn run_skia(content: fn()) {
         )
     }
         .unwrap();
-
-    let mut painter = skia_safe::Paint::default();
-    painter.set_color(<u32 as Into<Color>>::into(0xff0000ffu32));
 
     let mut canvas = new_canvas(surface.canvas());
     let mut compose_view = MacOSComposeView::new();

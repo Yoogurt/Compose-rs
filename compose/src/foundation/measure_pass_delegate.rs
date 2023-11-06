@@ -156,7 +156,7 @@ impl MeasurePassDelegate {
         self.measure_pending = false;
 
         let outer_coordinator = self.get_outer_coordinator();
-        dbg!("perform measure from chain {:?}", &outer_coordinator);
+        // dbg!("perform measure from chain {:?}", &outer_coordinator);
 
         self.get_outer_coordinator()
             .borrow_mut()

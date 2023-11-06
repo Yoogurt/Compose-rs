@@ -42,7 +42,7 @@ pub(crate) struct InnerNodeCoordinator {
 }
 
 fn error_measure_policy(
-    measure_scope: &mut dyn MeasureScope,
+    _measure_scope: &mut dyn MeasureScope,
     _children: &mut [&mut dyn Measurable],
     _constraint: &Constraints,
 ) -> MeasureResult {

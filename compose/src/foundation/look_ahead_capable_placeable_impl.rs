@@ -17,7 +17,7 @@ pub(crate) struct LookaheadCapablePlaceableImpl {
 }
 
 impl PlaceablePlaceAt for LookaheadCapablePlaceableImpl {
-    fn place_at(&mut self, position: IntOffset, z_index: f32) {
+    fn place_at(&mut self, _position: IntOffset, _z_index: f32) {
         unimplemented!("unimplemented place_at for LookaheadCapablePlaceableImpl")
     }
 }

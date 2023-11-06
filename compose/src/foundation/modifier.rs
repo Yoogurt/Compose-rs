@@ -1,3 +1,5 @@
+#![allow(non_upper_case_globals)]
+
 use crate::foundation::layout_modifier_node::LayoutModifierNode;
 use crate::foundation::node_coordinator::NodeCoordinator;
 use crate::foundation::oop::AnyConverter;
@@ -10,7 +12,7 @@ use std::fmt::Debug;
 use std::fmt::{Formatter, Write};
 use std::ops::{Add, Deref};
 use std::rc::{Rc, Weak};
-use crate::foundation::oop::modifier_node_converter::LayoutNodeModifierConverter;
+use crate::foundation::oop::layout_node_modifier_converter::LayoutNodeModifierConverter;
 use crate::foundation::parent_data_modifier_node::ParentDataModifierNode;
 use crate::foundation::ui::draw::DrawModifierNode;
 
@@ -112,7 +114,7 @@ pub enum Modifier {
         create: Box<dyn FnMut() -> Rc<RefCell<dyn ModifierNode>>>,
         update: Box<dyn FnMut(RefMut<dyn ModifierNode>)>,
     },
-    ModifierDrawElemet(
+    ModifierDrawElement(
         Box<dyn DrawModifierNode>
     ),
     Combined {

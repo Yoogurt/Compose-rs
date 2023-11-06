@@ -172,7 +172,10 @@ impl NodeChain {
     ) -> Option<&'a mut dyn LayoutModifierNode> {
         match node_kind {
             NodeKind::LayoutModifierNode(result) => Some(result),
-            _ => None,
+            _ => {
+                println!("unknown type: {:?}", node_kind);
+                None
+            },
         }
     }
 
@@ -278,14 +281,14 @@ impl NodeChain {
                 todo!()
             }
 
-            dbg!(&after);
+            // dbg!(&after);
             modifier_container.current = after;
         }
         self.head = self.trim_chain(padded_head);
 
         if coordinator_sync_needed {
             self.sync_coordinators();
-            dbg!("after sync coordinators {:?}", &self.outer_coordinator);
+            // dbg!("after sync coordinators {:?}", &self.outer_coordinator);
         }
     }
 
