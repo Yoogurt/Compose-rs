@@ -1,6 +1,6 @@
 use std::ops::{Div, Mul};
 
-use super::{Size, U64ConverterUnsigned};
+use super::{Offset, Size, U64ConverterUnsigned};
 
 impl U64ConverterUnsigned for usize {
     fn as_u64(self) -> u64 {
@@ -13,8 +13,8 @@ impl U64ConverterUnsigned for usize {
 }
 
 impl<T> Size<T>
-where
-    T: U64ConverterUnsigned,
+    where
+        T: U64ConverterUnsigned,
 {
     #[inline]
     fn packed_value(x: T, y: T) -> u64 {
@@ -44,11 +44,15 @@ where
     pub fn height(&self) -> T {
         T::from_u64((self.packed_value & 0xffffffff00000000) >> 32)
     }
+
+    pub fn center(&self) -> Offset<T> {
+        Offset::new(self.width() / T::from_u64(2), self.height() / T::from_u64(2))
+    }
 }
 
 impl<T> Mul<T> for Size<T>
-where
-    T: U64ConverterUnsigned,
+    where
+        T: U64ConverterUnsigned,
 {
     type Output = Size<T>;
     fn mul(self, rhs: T) -> Self::Output {
@@ -57,8 +61,8 @@ where
 }
 
 impl<T> Div<T> for Size<T>
-where
-    T: U64ConverterUnsigned,
+    where
+        T: U64ConverterUnsigned,
 {
     type Output = Size<T>;
     fn div(self, rhs: T) -> Self::Output {
@@ -67,9 +71,9 @@ where
 }
 
 impl<R, T> From<R> for Size<T>
-where
-    R: Into<(T, T)>,
-    T: U64ConverterUnsigned,
+    where
+        R: Into<(T, T)>,
+        T: U64ConverterUnsigned,
 {
     fn from(value: R) -> Self {
         let value = value.into();
@@ -78,8 +82,8 @@ where
 }
 
 impl<T> Default for Size<T>
-where
-    T: U64ConverterUnsigned + Default,
+    where
+        T: U64ConverterUnsigned + Default,
 {
     fn default() -> Self {
         Self::new(T::default(), T::default())

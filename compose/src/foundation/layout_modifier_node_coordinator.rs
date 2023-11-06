@@ -4,7 +4,7 @@ use crate::foundation::layout_modifier_node::LayoutModifierNode;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::measurable::Measurable;
 use crate::foundation::modifier::ModifierNode;
-use crate::foundation::node_coordinator::{NodeCoordinator, NodeCoordinatorTrait};
+use crate::foundation::node_coordinator::{NodeCoordinator, NodeCoordinatorTrait, PerformDrawTrait};
 use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
 use crate::foundation::placeable::Placeable;
 use auto_delegate::Delegate;
@@ -13,18 +13,23 @@ use std::cell::RefCell;
 use std::ops::{Deref, DerefMut};
 use std::panic::panic_any;
 use std::rc::{Rc, Weak};
+use crate::foundation::canvas::Canvas;
+use crate::implement_any_by_self;
+use crate::foundation::node_coordinator::PerformMeasureHelper;
 
 #[derive(Debug, Delegate)]
 pub(crate) struct LayoutModifierNodeCoordinator {
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
     pub(crate) layout_modifier_node: Rc<RefCell<dyn ModifierNode>>,
     #[to(
-        Placeable,
-        Measured,
-        NodeCoordinatorTrait,
-        MeasureScope,
-        PlaceablePlaceAt,
-        IntrinsicMeasurable
+    Placeable,
+    Measured,
+    NodeCoordinatorTrait,
+    MeasureScope,
+    PlaceablePlaceAt,
+    IntrinsicMeasurable,
+    LookaheadCapablePlaceable,
+    TailModifierNodeProvider
     )]
     pub(crate) node_coordinator_impl: NodeCoordinatorImpl,
 }
@@ -103,12 +108,11 @@ impl Measurable for LayoutModifierNodeCoordinator {
     }
 }
 
-impl NodeCoordinator for LayoutModifierNodeCoordinator {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
 
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
+implement_any_by_self!(LayoutModifierNodeCoordinator);
+impl PerformDrawTrait for LayoutModifierNodeCoordinator {}
+impl NodeCoordinator for LayoutModifierNodeCoordinator {
+    fn draw(&mut self, canvas: &mut dyn Canvas) {
+        self.node_coordinator_impl.draw(canvas);
     }
 }

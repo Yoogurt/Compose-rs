@@ -1,4 +1,5 @@
 use crate::foundation::layout_node_layout_delegate::LayoutNodeLayoutDelegate;
+use crate::foundation::layout_node_draw_delegate::LayoutNodeDrawDelegate;
 use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
 use crate::foundation::modifier_container::ModifierContainer;
 use crate::foundation::usage_by_parent::UsageByParent;
@@ -19,6 +20,7 @@ pub(crate) struct LayoutNode {
     pub(crate) node_chain: Rc<RefCell<NodeChain>>,
     pub(crate) children: Rc<RefCell<Vec<Rc<RefCell<LayoutNode>>>>>,
     pub(crate) layout_node_layout_delegate: Rc<RefCell<LayoutNodeLayoutDelegate>>,
+    pub(crate) layout_node_draw_delegate: Rc<RefCell<LayoutNodeDrawDelegate>>,
     pub(crate) usage_by_parent: UsageByParent,
     pub(crate) layout_state: Rc<RefCell<LayoutState>>,
 }
@@ -30,6 +32,7 @@ impl LayoutNode {
             node_chain: NodeChain::new(),
             children: vec![].wrap_with_rc_refcell(),
             layout_node_layout_delegate: LayoutNodeLayoutDelegate::new(),
+            layout_node_draw_delegate: LayoutNodeDrawDelegate::new(),
             usage_by_parent: UsageByParent::NotUsed,
             layout_state: LayoutState::Idle.wrap_with_rc_refcell(),
         };
@@ -46,10 +49,12 @@ impl LayoutNode {
 
             let layout_state = node_mut.layout_state.clone();
             node_mut.layout_node_layout_delegate.borrow_mut().attach(
-                node_chain,
+                node_chain.clone(),
                 modifier_container,
                 layout_state,
             );
+
+            node_mut.layout_node_draw_delegate.borrow_mut().attach(node_chain);
         }
 
         node

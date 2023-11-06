@@ -1,6 +1,6 @@
-use super::{Offset, U64ConverterSigned, U64ConverterUnsigned};
+use super::{IntOffset, Offset, U64ConverterSigned, U64ConverterUnsigned};
 use lazy_static::lazy_static;
-use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
+use std::ops::{Add, Deref, Div, Mul, Neg, Rem, Sub};
 
 impl U64ConverterUnsigned for i32 {
     fn as_u64(self) -> u64 {
@@ -27,8 +27,8 @@ impl U64ConverterUnsigned for f32 {
 impl U64ConverterSigned for f32 {}
 
 impl<T> Offset<T>
-where
-    T: U64ConverterUnsigned,
+    where
+        T: U64ConverterUnsigned,
 {
     #[inline]
     fn packed_value(x: T, y: T) -> u64 {
@@ -61,8 +61,8 @@ where
 }
 
 impl<T> Neg for Offset<T>
-where
-    T: U64ConverterSigned,
+    where
+        T: U64ConverterSigned,
 {
     type Output = Offset<T>;
     fn neg(self) -> Self::Output {
@@ -71,8 +71,8 @@ where
 }
 
 impl<T> Sub for Offset<T>
-where
-    T: U64ConverterUnsigned,
+    where
+        T: U64ConverterUnsigned,
 {
     type Output = Offset<T>;
     fn sub(self, rhs: Self) -> Self::Output {
@@ -81,8 +81,8 @@ where
 }
 
 impl<T> Add for Offset<T>
-where
-    T: U64ConverterUnsigned,
+    where
+        T: U64ConverterUnsigned,
 {
     type Output = Offset<T>;
     fn add(self, rhs: Self) -> Self::Output {
@@ -91,8 +91,8 @@ where
 }
 
 impl<T> Mul<T> for Offset<T>
-where
-    T: U64ConverterUnsigned,
+    where
+        T: U64ConverterUnsigned,
 {
     type Output = Offset<T>;
     fn mul(self, rhs: T) -> Self::Output {
@@ -101,8 +101,8 @@ where
 }
 
 impl<T> Div<T> for Offset<T>
-where
-    T: U64ConverterUnsigned,
+    where
+        T: U64ConverterUnsigned,
 {
     type Output = Offset<T>;
     fn div(self, rhs: T) -> Self::Output {
@@ -111,8 +111,8 @@ where
 }
 
 impl<T> Rem<T> for Offset<T>
-where
-    T: U64ConverterSigned,
+    where
+        T: U64ConverterSigned,
 {
     type Output = Offset<T>;
     fn rem(self, rhs: T) -> Self::Output {
@@ -121,8 +121,8 @@ where
 }
 
 impl<T> From<(T, T)> for Offset<T>
-where
-    T: U64ConverterUnsigned,
+    where
+        T: U64ConverterUnsigned,
 {
     fn from(value: (T, T)) -> Self {
         Offset::new(value.0, value.1)
@@ -162,8 +162,8 @@ impl Offset<f32> {
 }
 
 impl<T> Default for Offset<T>
-where
-    T: U64ConverterUnsigned + Default,
+    where
+        T: U64ConverterUnsigned + Default,
 {
     fn default() -> Self {
         Self::new(T::default(), T::default())
@@ -171,11 +171,17 @@ where
 }
 
 impl<T> PartialEq for Offset<T>
-where
-    T: U64ConverterUnsigned + PartialEq,
+    where
+        T: U64ConverterUnsigned + PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
         self.x() == other.x() && self.y() == other.y()
+    }
+}
+
+impl IntOffset {
+    pub fn as_f32_offset(&self) -> Offset<f32> {
+        Offset::new(self.x() as f32, self.y() as f32)
     }
 }
 

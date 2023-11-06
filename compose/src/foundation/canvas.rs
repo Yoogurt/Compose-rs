@@ -1,3 +1,6 @@
+use skia_safe::Rect;
+use crate::foundation::ui::graphics::color::Color;
+
 pub struct CanvasSaveGuard<'a> {
     pub(crate) canvas: &'a mut dyn Canvas,
 }
@@ -12,6 +15,10 @@ pub trait Canvas {
     fn save(&mut self) -> CanvasSaveGuard<'_>;
     fn restore(&mut self);
     fn save_count(&self) -> usize;
+
+    fn translate(&mut self, x: f32, y:f32);
+
+    fn draw_rect(&mut self, color: Color, rect: Rect);
 }
 
 pub trait CanvasExtension: Canvas {

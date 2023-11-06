@@ -5,7 +5,7 @@ use super::{
 };
 use crate::foundation::layout_modifier_node::LayoutModifierNode;
 use crate::foundation::layout_modifier_node_coordinator::LayoutModifierNodeCoordinator;
-// use crate::foundation::layout_modifier_node_impl::LayoutModifierNodeImpl;
+use crate::foundation::node_coordinator::TailModifierNodeProvider;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::modifier::ModifierNode;
 use crate::foundation::modifier::{ModifierNodeImpl, NodeKind, NodeKindPatch};
@@ -22,7 +22,7 @@ pub(crate) struct NodeChain {
     pub(crate) sentine_head: Rc<RefCell<dyn ModifierNode>>,
 
     pub(crate) head: Rc<RefCell<dyn ModifierNode>>,
-    pub(crate) tail: Rc<RefCell<dyn ModifierNode>>,
+
     pub(crate) modifier_container: Rc<RefCell<ModifierContainer>>,
     pub(crate) parent_data: Option<Box<dyn ParentData>>,
     pub(crate) measure_result: MeasureResult,
@@ -34,7 +34,7 @@ pub(crate) struct NodeChain {
 }
 
 #[derive(Debug, Delegate, Default)]
-struct TailModifierNode {
+pub(crate) struct TailModifierNode {
     #[to(ModifierNode, LayoutNodeModifierConverter)]
     node_impl: ModifierNodeImpl,
 }
@@ -50,14 +50,12 @@ impl_node_kind_any!(SentineHeadNode);
 impl NodeChain {
     pub(crate) fn new() -> Rc<RefCell<Self>> {
         let inner_node_coordinator = InnerNodeCoordinator::new().wrap_with_rc_refcell();
-
-        let node = TailModifierNode::default().wrap_with_rc_refcell();
+        let head = inner_node_coordinator.borrow().get_tail();
 
         let result = NodeChain {
             sentine_head: SentineHeadNode::default().wrap_with_rc_refcell(),
 
-            head: node.clone(),
-            tail: node,
+            head,
             parent_data: None,
             modifier_container: ModifierContainer::new().wrap_with_rc_refcell(),
             measure_result: Default::default(),
@@ -126,7 +124,6 @@ impl NodeChain {
     ) -> Rc<RefCell<dyn ModifierNode>> {
         let node = match element {
             Modifier::ModifierNodeElement { create, update } => create(),
-
             _ => {
                 todo!()
             }
@@ -135,8 +132,12 @@ impl NodeChain {
         Self::insert_child(node, parent)
     }
 
+    fn get_tail(&self) -> Rc<RefCell<dyn ModifierNode>> {
+        self.inner_coordinator.borrow().get_tail()
+    }
+
     pub(crate) fn tail_to_head(&mut self, mut block: impl FnMut(&mut dyn ModifierNode)) {
-        let mut node = Some(self.tail.clone());
+        let mut node = Some(self.get_tail().clone());
         while let Some(node_rc) = node {
             block(node_rc.borrow_mut().deref_mut());
             node = node_rc.borrow().get_parent();
@@ -151,7 +152,7 @@ impl NodeChain {
             .sentine_head
             .borrow()
             .get_child()
-            .unwrap_or(self.tail.clone());
+            .unwrap_or(self.get_tail().clone());
         result.borrow_mut().set_parent(None);
         {
             let mut sentine_head_mut = self.sentine_head.borrow_mut();
@@ -177,7 +178,7 @@ impl NodeChain {
 
     fn sync_coordinators(&mut self) {
         let mut coordinator: Rc<RefCell<dyn NodeCoordinator>> = self.inner_coordinator.clone();
-        let mut node = self.tail.clone().borrow().get_parent();
+        let mut node = self.get_tail().borrow().get_parent();
 
         while let Some(node_rc) = node {
             let mut node_mut = node_rc.borrow_mut();

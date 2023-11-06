@@ -46,5 +46,8 @@ impl MacOSComposeView {
         self.measure_and_layout_delegate.measure_only();
     }
 
-    pub fn dispatch_draw(&mut self, _canvas: &dyn Canvas) {}
+    pub fn dispatch_draw(&mut self, canvas: &mut dyn Canvas) {
+        let draw_delegate = self.measure_and_layout_delegate.root.borrow().layout_node_draw_delegate.clone();
+        draw_delegate.borrow_mut().draw(canvas);
+    }
 }

@@ -14,44 +14,45 @@ use crate::foundation::{
 };
 use crate::{self as compose};
 use crate::foundation::delegatable_node::DelegatableNode;
-use crate::foundation::oop::any_converter::AnyConverter;
+use crate::foundation::oop::AnyConverter;
 use crate::foundation::oop::modifier_node_converter::LayoutNodeModifierConverter;
 use crate::foundation::parent_data_modifier_node::ParentDataModifierNode;
+use crate::foundation::ui::align::Alignment;
 
 use crate::widgets::layout::Layout;
 
-#[macro_export]
-macro_rules! Box {
-    ( $modifier_expr:expr, $($fn_body:tt)* ) => {
-        compose::widgets::r#box::box_internal($modifier_expr, || {
-             $($fn_body)*
-        });
-    };
-
-    ( $($fn_body:tt)* ) => {
-        compose::widgets::r#box::box_internal(std::default::Default::default(), || {
-             $($fn_body)*
-        });
-    };
-}
+// #[macro_export]
+// macro_rules! Box {
+//     ( $modifier_expr:expr, $fn_body:tt ) => {
+//         compose::widgets::r#box::box_internal($modifier_expr, || {
+//              $fn_body
+//         });
+//     };
+//
+//     ( $fn_body:tt ) => {
+//         compose::widgets::r#box::box_internal(std::default::Default::default(), || {
+//              $fn_body
+//         });
+//     };
+// }
 
 trait BoxMeasurableTrait {
     fn matches_parent_size(&self) -> bool;
 }
 
 pub trait BoxScope {
-    fn align(&self) {}
+    fn align(&self, modifier: Modifier, alignment: Alignment) -> Modifier {
+        modifier.then(box_child_data(alignment, false))
+    }
 
     fn match_parent_size(&self, modifier: Modifier) -> Modifier {
-        modifier.then(box_child_data_element(true))
+        modifier.then(box_child_data(Alignment::CENTER, true))
     }
 }
 
+struct BoxScopeInstance {}
 impl BoxScope for BoxScopeInstance {}
-
-struct BoxScopeInstance {
-
-}
+const INSTANCE: &dyn BoxScope = &BoxScopeInstance {};
 
 impl BoxMeasurableTrait for &mut dyn Measurable {
     fn matches_parent_size(&self) -> bool {
@@ -70,6 +71,7 @@ impl BoxMeasurableTrait for &mut dyn Measurable {
 
 #[derive(Delegate, Debug, Default)]
 struct BoxChildDataNode {
+    alignment: Alignment,
     match_parent_size: bool,
     #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
@@ -101,14 +103,19 @@ impl ParentDataModifierNode for BoxChildDataNode {
 
 impl LayoutNodeModifierConverter for BoxChildDataNode {}
 
-fn box_child_data_element(match_parent_size: bool) -> Modifier {
+fn box_child_data(alignment: Alignment, match_parent_size: bool) -> Modifier {
     Modifier::ModifierNodeElement {
         create: (move || {
-            let box_child_data_node = BoxChildDataNode::default();
+            let mut box_child_data_node = BoxChildDataNode::default();
+
+            box_child_data_node.alignment = alignment;
+            box_child_data_node.match_parent_size = match_parent_size;
+
             box_child_data_node.wrap_with_rc_refcell() as Rc<RefCell<dyn ModifierNode>>
         }).wrap_with_box(),
         update: (move |mut box_child_data_node: RefMut<dyn ModifierNode>| {
             if let Some(box_child_data_node) = box_child_data_node.as_any_mut().downcast_mut::<BoxChildDataNode>() {
+                box_child_data_node.alignment = alignment;
                 box_child_data_node.match_parent_size = match_parent_size;
             }
         }).wrap_with_box(),
@@ -190,6 +197,9 @@ fn box_measure_policy(
 }
 
 #[Composable]
-pub fn box_internal(modifier: Modifier, content: fn()) {
-    Layout(modifier, box_measure_policy, content);
+pub fn BoxLayout(modifier: Modifier, mut content: impl FnMut(&dyn BoxScope)) {
+    Layout(modifier, box_measure_policy, || {
+        let box_scope = BoxScopeInstance {};
+        content(&box_scope);
+    });
 }

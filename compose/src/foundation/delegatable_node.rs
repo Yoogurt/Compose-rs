@@ -1,4 +1,4 @@
-use crate::foundation::oop::any_converter::AnyConverter;
+use crate::foundation::oop::AnyConverter;
 use std::fmt::Debug;
 
 pub trait DelegatableNode: AnyConverter + Debug {

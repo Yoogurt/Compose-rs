@@ -18,17 +18,23 @@ use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 use crate::foundation::usage_by_parent::UsageByParent;
 use std::ops::DerefMut;
-// use crate::foundation::layout_modifier_node_impl::LayoutModifierNodeImpl;
+use crate::foundation::canvas::Canvas;
 use crate::foundation::layout_node_layout_delegate::LayoutNodeLayoutDelegate;
+use crate::foundation::node_coordinator::PerformDrawTrait;
+use crate::foundation::oop::AnyConverter;
+use crate::implement_any_by_self;
 
 #[derive(Delegate)]
 pub(crate) struct InnerNodeCoordinator {
     #[to(
     Placeable,
     Measured,
+    NodeCoordinator,
     NodeCoordinatorTrait,
     MeasureScope,
-    IntrinsicMeasurable
+    IntrinsicMeasurable,
+    LookaheadCapablePlaceable,
+    TailModifierNodeProvider
     )]
     pub(crate) node_coordinator_impl: NodeCoordinatorImpl,
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
@@ -127,13 +133,10 @@ impl PlaceablePlaceAt for InnerNodeCoordinator {
     }
 }
 
-impl NodeCoordinator for InnerNodeCoordinator {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
+implement_any_by_self!(InnerNodeCoordinator);
+impl PerformDrawTrait for InnerNodeCoordinator {
+    fn perform_draw(&mut self, canvas: &mut dyn Canvas) {
+        panic!("performing drawing")
     }
 }
 

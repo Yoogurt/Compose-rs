@@ -1,6 +1,6 @@
 use crate::foundation::layout_modifier_node::LayoutModifierNode;
 use crate::foundation::node_coordinator::NodeCoordinator;
-use crate::foundation::oop::any_converter::AnyConverter;
+use crate::foundation::oop::AnyConverter;
 use crate::foundation::utils::weak_upgrade::WeakUpdater;
 use auto_delegate::delegate;
 use compose_macro::Leak;
@@ -12,6 +12,7 @@ use std::ops::{Add, Deref};
 use std::rc::{Rc, Weak};
 use crate::foundation::oop::modifier_node_converter::LayoutNodeModifierConverter;
 use crate::foundation::parent_data_modifier_node::ParentDataModifierNode;
+use crate::foundation::ui::draw::DrawModifierNode;
 
 pub const Modifier: Modifier = Modifier::Unit;
 
@@ -31,15 +32,7 @@ macro_rules! impl_node_kind_any {
             }
         }
 
-        impl crate::foundation::oop::any_converter::AnyConverter for $tt {
-            fn as_any(&self) -> &dyn std::any::Any {
-                self
-            }
-
-            fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
-                self
-            }
-        }
+        crate::implement_any_by_self!($tt);
     };
 }
 
@@ -119,6 +112,9 @@ pub enum Modifier {
         create: Box<dyn FnMut() -> Rc<RefCell<dyn ModifierNode>>>,
         update: Box<dyn FnMut(RefMut<dyn ModifierNode>)>,
     },
+    ModifierDrawElemet(
+        Box<dyn DrawModifierNode>
+    ),
     Combined {
         left: Box<Modifier>,
         right: Box<Modifier>,
