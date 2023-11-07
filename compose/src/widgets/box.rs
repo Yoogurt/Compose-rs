@@ -3,6 +3,7 @@ use std::cell::{RefCell, RefMut};
 use std::rc::Rc;
 use auto_delegate::Delegate;
 use compose_macro::Composable;
+use compose_foundation_macro::ModifierElement;
 
 use crate::foundation::modifier::{ModifierNode, ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::placeable::Placeable;
@@ -15,7 +16,7 @@ use crate::foundation::{
 use crate::{self as compose};
 use crate::foundation::delegatable_node::DelegatableNode;
 use crate::foundation::oop::AnyConverter;
-use crate::foundation::oop::layout_node_modifier_converter::LayoutNodeModifierConverter;
+use crate::foundation::oop::LayoutModifierNodeConverter;
 use crate::foundation::parent_data_modifier_node::ParentDataModifierNode;
 use crate::foundation::ui::align::Alignment;
 
@@ -51,7 +52,9 @@ pub trait BoxScope {
 }
 
 struct BoxScopeInstance {}
+
 impl BoxScope for BoxScopeInstance {}
+
 const INSTANCE: &dyn BoxScope = &BoxScopeInstance {};
 
 impl BoxMeasurableTrait for &mut dyn Measurable {
@@ -69,7 +72,7 @@ impl BoxMeasurableTrait for &mut dyn Measurable {
     }
 }
 
-#[derive(Delegate, Debug, Default)]
+#[derive(Delegate, Debug, Default, ModifierElement)]
 struct BoxChildDataNode {
     alignment: Alignment,
     match_parent_size: bool,
@@ -78,16 +81,6 @@ struct BoxChildDataNode {
 }
 
 impl DelegatableNode for BoxChildDataNode {}
-
-impl AnyConverter for BoxChildDataNode {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
-}
 
 impl NodeKindPatch for BoxChildDataNode {
     fn get_node_kind(&mut self) -> NodeKind {
@@ -100,8 +93,6 @@ impl ParentDataModifierNode for BoxChildDataNode {
         todo!()
     }
 }
-
-impl LayoutNodeModifierConverter for BoxChildDataNode {}
 
 fn box_child_data(alignment: Alignment, match_parent_size: bool) -> Modifier {
     Modifier::ModifierNodeElement {

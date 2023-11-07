@@ -9,17 +9,16 @@ use crate::attribute_parser::parse_attribute;
 use crate::function_params_collector::collect_function_params;
 use crate::hash_code_generator::generate_hash_code;
 use crate::signature_checker::verify_signature;
-use proc_macro::{Span, TokenStream};
+use proc_macro::{Span, TokenStream, TokenTree};
+use std::collections::HashMap;
+use std::fmt::format;
 use proc_macro2::Ident;
 use quote::quote;
 use syn::parse::ParseStream;
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::token::Colon;
-use syn::{
-    parse_macro_input, AngleBracketedGenericArguments, FieldMutability, Fields, GenericArgument,
-    Path, PathArguments, PathSegment, Token, TypePath, Visibility,
-};
+use syn::{parse_macro_input, AngleBracketedGenericArguments, FieldMutability, Fields, GenericArgument, Path, PathArguments, PathSegment, Token, TypePath, Visibility, Meta};
 use syn::{ItemFn, ItemStruct};
 
 #[proc_macro_attribute]
@@ -100,88 +99,4 @@ pub fn Composable(attribute: TokenStream, funtion: TokenStream) -> TokenStream {
     };
 
     result.into()
-}
-
-#[proc_macro_attribute]
-pub fn Leak(attribute: TokenStream, struct_token_stream: TokenStream) -> TokenStream {
-    let struct_token = struct_token_stream.clone();
-    let mut struct_tokens = parse_macro_input!(struct_token as ItemStruct);
-
-    let struct_ident = &struct_tokens.ident;
-    let fields = &mut struct_tokens.fields;
-
-    match fields {
-        Fields::Named(field_named) => {
-            let named = &mut field_named.named;
-
-            let mut punctuated = Punctuated::<PathSegment, Token![::]>::new();
-            punctuated.push(PathSegment {
-                ident: Ident::new("crate", Span::call_site().into()),
-                arguments: Default::default(),
-            });
-            punctuated.push(PathSegment {
-                ident: Ident::new("foundation", Span::call_site().into()),
-                arguments: Default::default(),
-            });
-            punctuated.push(PathSegment {
-                ident: Ident::new("memory", Span::call_site().into()),
-                arguments: Default::default(),
-            });
-            punctuated.push(PathSegment {
-                ident: Ident::new("leak_token", Span::call_site().into()),
-                arguments: Default::default(),
-            });
-
-            let mut generic_argument_for_leak_object =
-                Punctuated::<GenericArgument, Token![,]>::new();
-            generic_argument_for_leak_object.push(GenericArgument::Type(syn::Type::Verbatim(
-                quote! {
-                    #struct_ident
-                },
-            )));
-            punctuated.push(PathSegment {
-                ident: Ident::new("LeakToken", Span::call_site().into()),
-                arguments: PathArguments::AngleBracketed(AngleBracketedGenericArguments {
-                    colon2_token: None,
-                    lt_token: Default::default(),
-                    args: generic_argument_for_leak_object,
-                    gt_token: Default::default(),
-                }),
-            });
-
-            let new_leak_object_field = syn::Field {
-                ident: Some(Ident::new("leak_object", Span::call_site().into())),
-                vis: Visibility::Inherited,
-                attrs: vec![],
-                colon_token: Some(Colon {
-                    spans: [Span::call_site().into()],
-                }),
-                mutability: FieldMutability::None,
-                ty: syn::Type::Path(TypePath {
-                    qself: None,
-                    path: Path {
-                        leading_colon: None,
-                        segments: punctuated,
-                    },
-                }),
-            };
-
-            dbg!(&new_leak_object_field);
-            named.insert(named.len(), new_leak_object_field);
-        }
-        _ => {}
-    }
-
-    let struct_name = struct_ident.to_string();
-
-    (quote! {
-        #struct_tokens
-
-        impl crate::foundation::memory::leak_token::LeakableObject for #struct_ident {
-            fn tag() -> &'static str{
-                #struct_name
-            }
-        }
-    })
-    .into()
 }

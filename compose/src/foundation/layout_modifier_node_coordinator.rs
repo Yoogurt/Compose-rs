@@ -79,7 +79,7 @@ impl Measurable for LayoutModifierNodeCoordinator {
             let node = self_.layout_modifier_node.clone();
             if let Some(layout_node_modifier) = node
                 .borrow_mut()
-                .as_layout_node_modifier_mut()
+                .as_layout_modifier_node_mut()
             {
                 let wrapped = self_.get_wrapped().unwrap();
                 let mut wrapped_not_null = wrapped.borrow_mut();

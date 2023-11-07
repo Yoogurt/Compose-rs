@@ -137,9 +137,21 @@ name = "compose"
 version = "0.1.0"
 dependencies = [
  "auto-delegate",
+ "compose_foundation_macro",
  "compose_macro",
  "lazy_static",
  "skia-safe",
+]
+
+[[package]]
+name = "compose_foundation_macro"
+version = "0.1.0"
+dependencies = [
+ "lazy_static",
+ "proc-macro2",
+ "quote",
+ "rand",
+ "syn",
 ]
 
 [[package]]

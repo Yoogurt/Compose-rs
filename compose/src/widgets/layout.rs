@@ -9,19 +9,6 @@ use crate::foundation::measurable::{
 use crate::foundation::modifier::Modifier;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
 
-impl Modifier {
-    pub fn layout(self, measure_policy: SingleChildMeasurePolicy) -> Modifier {
-        self.then(Self::layout_element(measure_policy))
-    }
-
-    fn layout_element(measure_policy: SingleChildMeasurePolicy) -> Modifier {
-        Modifier::ModifierNodeElement {
-            create: Box::new(|| todo!()),
-            update: Box::new(|_| {}),
-        }
-    }
-}
-
 #[Composable]
 pub fn Layout(
     modifier: Modifier,

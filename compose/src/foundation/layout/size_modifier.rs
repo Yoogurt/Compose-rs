@@ -13,7 +13,7 @@ use std::any::Any;
 use std::cell::{RefCell, RefMut};
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
-use crate::foundation::oop::layout_node_modifier_converter::LayoutNodeModifierConverter;
+use compose_foundation_macro::ModifierElement;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
 pub trait SizeModifier {
@@ -84,7 +84,8 @@ fn size_measure_policy<T>(
     )
 }
 
-#[derive(Debug, Default, Delegate)]
+#[derive(Debug, Default, Delegate, ModifierElement)]
+#[Impl(LayoutModifierNodeConverter)]
 struct SizeNode {
     min_width: Dp,
     max_width: Dp,
@@ -94,16 +95,6 @@ struct SizeNode {
 
     #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
-}
-
-impl AnyConverter for SizeNode {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-
-    fn as_any_mut(&mut self) -> &mut dyn Any {
-        self
-    }
 }
 
 impl DelegatableNode for SizeNode {}
@@ -151,16 +142,6 @@ impl SizeNode {
         };
 
         ((min_width..=max_width), (min_height..=max_height)).into()
-    }
-}
-
-impl LayoutNodeModifierConverter for SizeNode {
-    fn as_layout_node_modifier(&self) -> Option<&dyn LayoutModifierNode> {
-        Some(self)
-    }
-
-    fn as_layout_node_modifier_mut(&mut self) -> Option<&mut dyn LayoutModifierNode> {
-        Some(self)
     }
 }
 

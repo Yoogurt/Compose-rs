@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 compose_macro = {version = "0.1.0", path = "../compose_macro" }
+compose_foundation_macro = {version = "0.1.0", path = "../compose_foundation_macro" }
 skia-safe = "0.66.2"
 lazy_static = "1.4.0"
 auto-delegate = "0.0.9"

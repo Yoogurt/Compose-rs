@@ -4,9 +4,9 @@ use crate::foundation::measurable::Measurable;
 use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::modifier::NodeKindPatch;
-use crate::foundation::oop::layout_node_modifier_converter::LayoutNodeModifierConverter;
+use crate::foundation::oop::LayoutModifierNodeConverter;
 
-pub trait LayoutModifierNode: DelegatableNode + LayoutNodeModifierConverter + NodeKindPatch {
+pub trait LayoutModifierNode: DelegatableNode + LayoutModifierNodeConverter + NodeKindPatch {
     fn measure(
         &mut self,
         measure_scope: &mut dyn MeasureScope,

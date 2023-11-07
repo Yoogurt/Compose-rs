@@ -1,4 +1,5 @@
 /target/
 /compose/target/
 /compose_macro/target/
+/compose_foundation_macro/target/
 /.idea/

@@ -7,7 +7,7 @@ use crate::foundation::layout_modifier_node::LayoutModifierNode;
 use crate::foundation::layout_modifier_node_coordinator::LayoutModifierNodeCoordinator;
 use crate::foundation::node_coordinator::TailModifierNodeProvider;
 use crate::foundation::layout_node::LayoutNode;
-use crate::foundation::modifier::ModifierNode;
+use crate::foundation::modifier::{ModifierElement, ModifierNode};
 use crate::foundation::modifier::{ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::modifier_container::ModifierContainer;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
@@ -16,6 +16,13 @@ use auto_delegate::Delegate;
 use std::rc::Weak;
 use std::{cell::RefCell, rc::Rc};
 use std::ops::DerefMut;
+use compose_foundation_macro::{ModifierElement};
+
+#[derive(Debug, Delegate, Default, ModifierElement)]
+pub(crate) struct TailModifierNode {
+    #[to(ModifierNode)]
+    node_impl: ModifierNodeImpl,
+}
 
 #[derive(Debug)]
 pub(crate) struct NodeChain {
@@ -32,17 +39,11 @@ pub(crate) struct NodeChain {
     pub(crate) parent: Weak<RefCell<LayoutNode>>,
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
 }
-
-#[derive(Debug, Delegate, Default)]
-pub(crate) struct TailModifierNode {
-    #[to(ModifierNode, LayoutNodeModifierConverter)]
-    node_impl: ModifierNodeImpl,
-}
 impl_node_kind_any!(TailModifierNode);
 
-#[derive(Debug, Default, Delegate)]
+#[derive(Debug, Default, Delegate, ModifierElement)]
 struct SentineHeadNode {
-    #[to(ModifierNode, LayoutNodeModifierConverter)]
+    #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
 }
 impl_node_kind_any!(SentineHeadNode);
