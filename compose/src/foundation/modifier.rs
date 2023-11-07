@@ -18,32 +18,36 @@ use crate::foundation::ui::draw::DrawModifierNode;
 
 pub const Modifier: Modifier = Modifier::Unit;
 
-#[derive(Debug)]
-pub enum NodeKind<'a> {
-    Any(&'a mut dyn ModifierNode),
-    LayoutModifierNode(&'a mut dyn LayoutModifierNode),
-    ParentDataModifierNode(&'a mut dyn ParentDataModifierNode),
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum NodeKind {
+    Any = 1,
+    LayoutModifierNode = 2,
+    ParentDataModifierNode = 4,
+    DrawModifierNode = 8,
 }
 
 #[macro_export]
 macro_rules! impl_node_kind_any {
     ($tt:tt) => {
         impl NodeKindPatch for $tt {
-            fn get_node_kind(&mut self) -> NodeKind {
-                NodeKind::Any(self)
+            fn get_node_kind(&self) -> NodeKind {
+                NodeKind::Any
             }
         }
     };
 }
 
 pub trait NodeKindPatch {
-    fn get_node_kind(&mut self) -> NodeKind;
+    fn get_node_kind(& self) -> NodeKind;
 }
 
-pub trait ModifierElement: AnyConverter + LayoutModifierNodeConverter + DrawModifierNodeConverter{}
+pub trait ModifierElement: AnyConverter + LayoutModifierNodeConverter + DrawModifierNodeConverter + NodeKindPatch + Debug {
+    fn as_modifier_element(&self) -> &dyn ModifierElement;
+    fn as_modifier_element_mut(&mut self) -> &mut dyn ModifierElement;
+}
 
 #[delegate]
-pub trait ModifierNode: NodeKindPatch + ModifierElement + Debug {
+pub trait ModifierNode: ModifierElement {
     fn set_parent(&mut self, parent: Option<Weak<RefCell<dyn ModifierNode>>>);
 
     fn get_parent(&self) -> Option<Rc<RefCell<dyn ModifierNode>>>;
@@ -66,7 +70,7 @@ pub(crate) struct ModifierNodeImpl {
 }
 
 impl NodeKindPatch for ModifierNodeImpl {
-    fn get_node_kind(&mut self) -> NodeKind {
+    fn get_node_kind(& self) -> NodeKind {
         todo!("implement get node kind by yourself")
     }
 }
@@ -105,8 +109,8 @@ pub enum Modifier {
         create: Box<dyn FnMut() -> Rc<RefCell<dyn ModifierNode>>>,
         update: Box<dyn FnMut(RefMut<dyn ModifierNode>)>,
     },
-    ModifierDrawElement(
-        Box<dyn DrawModifierNode>
+    ModifierElement(
+        Rc<RefCell<dyn ModifierElement>>
     ),
     Combined {
         left: Box<Modifier>,
@@ -214,6 +218,20 @@ impl Debug for Modifier {
                 f.write_str(&format!(",update:{:p}]>", update.deref()))
             }
             _ => f.write_str("<unknown modifier>"),
+        }
+    }
+}
+
+pub(crate) trait DispatchForKind {
+    fn dispatch_for_kind(& self, kind: NodeKind, block: impl FnMut(& dyn ModifierElement)) ;
+}
+
+impl<T> DispatchForKind for RefCell<T> where T: ?Sized + ModifierNode {
+    fn dispatch_for_kind(&self, kind: NodeKind, mut block: impl FnMut(& dyn ModifierElement)) {
+        let node = self.borrow().get_node_kind();
+
+        if node == kind {
+            block(self.borrow().as_modifier_element());
         }
     }
 }

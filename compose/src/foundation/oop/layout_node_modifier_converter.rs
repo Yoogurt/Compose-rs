@@ -6,7 +6,5 @@ pub trait LayoutModifierNodeConverter {
     fn as_layout_modifier_node(&self) -> Option<&dyn LayoutModifierNode> {
         None
     }
-    fn as_layout_modifier_node_mut(&mut self) -> Option<&mut dyn LayoutModifierNode> {
-        None
-    }
+    fn as_layout_modifier_node_mut(&mut self) -> Option<&mut dyn LayoutModifierNode> { None }
 }

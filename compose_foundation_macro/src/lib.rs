@@ -95,7 +95,7 @@ pub fn Leak(attribute: TokenStream, struct_token_stream: TokenStream) -> TokenSt
 }
 
 #[proc_macro_derive(ModifierElement, attributes(Impl))]
-pub fn ModifierElementTraitImpl(struct_token_stream: TokenStream) -> TokenStream {
+pub fn ModifierElement(struct_token_stream: TokenStream) -> TokenStream {
     let mut struct_tokens = parse_macro_input!(struct_token_stream as ItemStruct);
     let struct_ident = struct_tokens.ident.clone();
 
@@ -110,16 +110,15 @@ pub fn ModifierElementTraitImpl(struct_token_stream: TokenStream) -> TokenStream
         if let Meta::List(list) = attribute.meta {
             list.tokens.into_iter().for_each(|token| {
                 if let proc_macro2::TokenTree::Ident(ident) = token {
-                    dbg!(ident.to_string().as_str());
-                    if let Some(do_convert) = mapping.get_mut(ident.to_string().as_str()) {
-                        **do_convert = true;
+                    if let Some(do_generate) = mapping.get_mut(ident.to_string().as_str()) {
+                        **do_generate = true;
                     }
                 }
             });
         } else {
             return syn::Error::new(
                 Span::call_site().into(),
-                "Compose function should own params",
+                "Wrong type on attribute Impl, expected Meta::List",
             ).to_compile_error().into();
         }
     }
@@ -134,5 +133,18 @@ pub fn ModifierElementTraitImpl(struct_token_stream: TokenStream) -> TokenStream
         #any_converter
         #layout_modifier_node_converter
         #draw_modifier_node_converter
+    }).into()
+}
+
+
+#[proc_macro_derive(AnyConverter)]
+pub fn AnyConverter(struct_token_stream: TokenStream) -> TokenStream {
+    let mut struct_tokens = parse_macro_input!(struct_token_stream as ItemStruct);
+    let struct_ident = struct_tokens.ident.clone();
+
+    let any_converter = generate_any_converter(&struct_ident);
+
+    (quote! {
+        #any_converter
     }).into()
 }

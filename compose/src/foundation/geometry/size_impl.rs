@@ -1,6 +1,6 @@
 use std::ops::{Div, Mul};
 
-use super::{Offset, Size, U64ConverterUnsigned};
+use super::{IntSize, Offset, Size, U64ConverterUnsigned};
 
 impl U64ConverterUnsigned for usize {
     fn as_u64(self) -> u64 {
@@ -87,5 +87,11 @@ impl<T> Default for Size<T>
 {
     fn default() -> Self {
         Self::new(T::default(), T::default())
+    }
+}
+
+impl IntSize {
+    pub fn as_f32_size(&self) -> Size<f32>{
+        Size::new(self.width() as f32, self.height() as f32)
     }
 }

@@ -13,11 +13,11 @@ use std::cell::RefCell;
 use std::ops::{Deref, DerefMut};
 use std::panic::panic_any;
 use std::rc::{Rc, Weak};
+use compose_foundation_macro::AnyConverter;
 use crate::foundation::canvas::Canvas;
-use crate::implement_any_by_self;
 use crate::foundation::node_coordinator::PerformMeasureHelper;
 
-#[derive(Debug, Delegate)]
+#[derive(Debug, Delegate, AnyConverter)]
 pub(crate) struct LayoutModifierNodeCoordinator {
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
     pub(crate) layout_modifier_node: Rc<RefCell<dyn ModifierNode>>,
@@ -109,7 +109,6 @@ impl Measurable for LayoutModifierNodeCoordinator {
 }
 
 
-implement_any_by_self!(LayoutModifierNodeCoordinator);
 impl PerformDrawTrait for LayoutModifierNodeCoordinator {}
 impl NodeCoordinator for LayoutModifierNodeCoordinator {
     fn draw(&mut self, canvas: &mut dyn Canvas) {

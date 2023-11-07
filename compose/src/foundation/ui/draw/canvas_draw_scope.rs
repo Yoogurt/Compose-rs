@@ -14,11 +14,15 @@ pub(crate) struct CanvasDrawScope<'a> {
 }
 
 impl<'a> CanvasDrawScope<'a> {
-    fn new(draw_context: DrawContext<'a>, layout_direction: LayoutDirection) -> Self {
+    pub(crate) fn new(draw_context: DrawContext<'a>, layout_direction: LayoutDirection) -> Self {
         Self {
             draw_context,
             layout_direction,
         }
+    }
+
+    pub(crate) fn draw(& mut self, mut block: impl FnOnce()) {
+
     }
 }
 

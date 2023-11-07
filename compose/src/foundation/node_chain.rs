@@ -15,8 +15,10 @@ use crate::impl_node_kind_any;
 use auto_delegate::Delegate;
 use std::rc::Weak;
 use std::{cell::RefCell, rc::Rc};
+use std::cell::RefMut;
 use std::ops::DerefMut;
 use compose_foundation_macro::{ModifierElement};
+use crate::foundation::node::BackwardsCompatNode;
 
 #[derive(Debug, Delegate, Default, ModifierElement)]
 pub(crate) struct TailModifierNode {
@@ -125,6 +127,9 @@ impl NodeChain {
     ) -> Rc<RefCell<dyn ModifierNode>> {
         let node = match element {
             Modifier::ModifierNodeElement { create, update } => create(),
+            Modifier::ModifierElement(element) => {
+                BackwardsCompatNode::new(element.clone()).wrap_with_rc_refcell()
+            }
             _ => {
                 todo!()
             }
@@ -168,15 +173,16 @@ impl NodeChain {
         result
     }
 
-    fn node_as_layout_modifier_node<'a>(
-        mut node_kind: NodeKind<'a>,
-    ) -> Option<&'a mut dyn LayoutModifierNode> {
+    fn node_as_layout_modifier_node<'a, 'b>(
+        mut node: &'b mut RefMut<'a, dyn ModifierNode>,
+    ) -> Option<&'b mut dyn LayoutModifierNode> where 'a: 'b {
+        let node_kind = node.get_node_kind();
         match node_kind {
-            NodeKind::LayoutModifierNode(result) => Some(result),
+            NodeKind::LayoutModifierNode => node.as_layout_modifier_node_mut(),
             _ => {
                 println!("unknown type: {:?}", node_kind);
                 None
-            },
+            }
         }
     }
 
@@ -188,7 +194,7 @@ impl NodeChain {
             let mut node_mut = node_rc.borrow_mut();
             let node_coordinator = node_mut.get_coordinator();
 
-            let layout_node = Self::node_as_layout_modifier_node(node_mut.get_node_kind());
+            let layout_node = Self::node_as_layout_modifier_node(&mut node_mut);
 
             if let Some(layout_mod) = layout_node {
                 let next = if let Some(node_coordinator) = node_coordinator {

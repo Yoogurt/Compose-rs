@@ -83,8 +83,8 @@ struct BoxChildDataNode {
 impl DelegatableNode for BoxChildDataNode {}
 
 impl NodeKindPatch for BoxChildDataNode {
-    fn get_node_kind(&mut self) -> NodeKind {
-        NodeKind::ParentDataModifierNode(self)
+    fn get_node_kind(& self) -> NodeKind {
+        NodeKind::ParentDataModifierNode
     }
 }
 

@@ -8,9 +8,9 @@ pub struct DrawContext<'a> {
 }
 
 impl<'a> DrawContext<'a> {
-    pub fn new(size: Size<f32>, canvas: &'a mut dyn Canvas) -> Self {
+    pub fn new(size: Size<f32>, density: Density, canvas: &'a mut dyn Canvas) -> Self {
         Self {
-            density: Density::default(),
+            density,
             size,
             canvas,
         }

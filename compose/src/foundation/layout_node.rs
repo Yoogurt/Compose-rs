@@ -6,6 +6,7 @@ use crate::foundation::usage_by_parent::UsageByParent;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use std::cell::RefCell;
 use std::rc::{Rc, Weak};
+use crate::foundation::node_coordinator::NodeCoordinator;
 
 use super::canvas::Canvas;
 use super::measurable::MultiChildrenMeasurePolicy;
@@ -96,6 +97,10 @@ impl LayoutNode {
             .inner_coordinator
             .borrow_mut()
             .set_measure_policy(measure_policy);
+    }
+
+    pub(crate)  fn get_outer_coordinator(&self) -> Rc<RefCell<dyn NodeCoordinator>>{
+        self.node_chain.borrow().outer_coordinator.clone()
     }
 
     fn layout(width: usize, height: usize) -> MeasureResult {

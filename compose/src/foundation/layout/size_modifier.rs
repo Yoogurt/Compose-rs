@@ -206,8 +206,8 @@ impl LayoutModifierNode for SizeNode {
 }
 
 impl NodeKindPatch for SizeNode {
-    fn get_node_kind(&mut self) -> NodeKind {
-        NodeKind::LayoutModifierNode(self)
+    fn get_node_kind(& self) -> NodeKind {
+        NodeKind::LayoutModifierNode
     }
 }
 

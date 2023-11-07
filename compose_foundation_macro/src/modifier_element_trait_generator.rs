@@ -4,7 +4,10 @@ use syn::{Ident};
 
 pub(crate) fn generate_modifier_element(struct_ident: &Ident) -> TokenStream {
     (quote! {
-          impl crate::foundation::modifier::ModifierElement for #struct_ident {}
+          impl crate::foundation::modifier::ModifierElement for #struct_ident {
+                fn as_modifier_element(&self) -> &dyn crate::foundation::modifier::ModifierElement { self }
+                fn as_modifier_element_mut(&mut self) -> &mut dyn crate::foundation::modifier::ModifierElement { self }
+        }
     }).into()
 }
 

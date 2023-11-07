@@ -13,15 +13,19 @@ use crate::foundation::utils::weak_upgrade::WeakUpdater;
 use auto_delegate::Delegate;
 use std::any::Any;
 use std::cell::RefCell;
+use std::ops::{Deref, DerefMut};
 use std::rc::{Rc, Weak};
+use compose_foundation_macro::AnyConverter;
 use crate::foundation::canvas::Canvas;
-use crate::foundation::modifier::ModifierNode;
+use crate::foundation::modifier::{ModifierNode, NodeKind};
+use crate::foundation::node::LayoutNodeDrawScope;
 use crate::foundation::node_chain::TailModifierNode;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
-use crate::implement_any_by_self;
 use crate::foundation::node_coordinator::TailModifierNodeProvider;
+use crate::foundation::ui::draw::{CanvasDrawScope, ContentDrawScope, DrawContext};
+use crate::foundation::utils::box_wrapper::WrapWithBox;
 
-#[derive(Debug, Delegate)]
+#[derive(Debug, Delegate, AnyConverter)]
 pub(crate) struct NodeCoordinatorImpl {
     #[to(Placeable, Measured, MeasureScope, LookaheadCapablePlaceable)]
     pub(crate) look_ahead_capable_placeable_impl: LookaheadCapablePlaceableImpl,
@@ -72,6 +76,19 @@ impl NodeCoordinatorImpl {
     }
 }
 
+impl DerefMut for NodeCoordinatorImpl {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.look_ahead_capable_placeable_impl
+    }
+}
+
+impl Deref for NodeCoordinatorImpl {
+    type Target = dyn LookaheadCapablePlaceable;
+    fn deref(&self) -> &Self::Target {
+        &self.look_ahead_capable_placeable_impl
+    }
+}
+
 impl NodeCoordinatorTrait for NodeCoordinatorImpl {
     fn set_wrapped(&mut self, wrapped: Option<Rc<RefCell<dyn NodeCoordinator>>>) {
         self.wrapped = wrapped
@@ -98,7 +115,6 @@ impl NodeCoordinatorTrait for NodeCoordinatorImpl {
     }
 }
 
-implement_any_by_self!(NodeCoordinatorImpl);
 impl PerformDrawTrait for NodeCoordinatorImpl {}
 
 impl NodeCoordinator for NodeCoordinatorImpl {
@@ -143,8 +159,67 @@ impl NodeCoordinatorImpl {
         self.z_index = z_index;
     }
 
+    fn head_node(&self, include_tail: bool) -> Option<Rc<RefCell<dyn ModifierNode>>> {
+        let node_chain = self.layout_node.upgrade().unwrap().borrow().node_chain.clone();
+
+
+        if std::ptr::eq(node_chain.borrow().outer_coordinator.as_ptr(), self) {
+            Some(node_chain.borrow().head.clone())
+        } else {
+            self.get_wrapped_by().and_then(|wrapped_by| {
+                let tail = wrapped_by.borrow().get_tail();
+                if include_tail {
+                    tail.borrow().get_child()
+                } else {
+                    Some(tail)
+                }
+            })
+        }
+    }
+
+    fn head(&self, node_kind: NodeKind, include_tail: bool) -> Option<Rc<RefCell<dyn ModifierNode>>> {
+        let mut stop_node = self.get_tail();
+        if !include_tail {
+            let node = match stop_node.borrow().get_parent() {
+                Some(parent) => { parent }
+                None => { return None; }
+            };
+            stop_node = node;
+        };
+
+        let mut node = self.head_node(include_tail);
+
+        while let Some(visit) = node {
+            if visit.borrow_mut().get_node_kind() == node_kind {
+                return Some(visit);
+            }
+
+            node = visit.borrow().get_child();
+        }
+
+        None
+    }
+
     fn draw_contrained_draw_modifiers(&mut self, canvas: &mut dyn Canvas) {
-        self.perform_draw(canvas);
+        let head = self.head(NodeKind::DrawModifierNode, false);
+
+        match head {
+            Some(head) => {
+                // new instance of layout draw scope
+                // todo use share instead
+                let density = self.get_density();
+                let draw_context = DrawContext::new(self.get_measured_size().as_f32_size(), density, canvas);
+
+                let layout_direction = self.get_layout_direction();
+                let canvas_draw_scope = CanvasDrawScope::new(draw_context, layout_direction);
+                let draw_scope = LayoutNodeDrawScope::new(canvas_draw_scope).wrap_with_box();
+
+                // draw_scope.draw()
+            }
+            None => {
+                self.perform_draw(canvas)
+            }
+        }
     }
 }
 

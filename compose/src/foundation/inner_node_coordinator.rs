@@ -18,13 +18,13 @@ use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 use crate::foundation::usage_by_parent::UsageByParent;
 use std::ops::DerefMut;
+use compose_foundation_macro::AnyConverter;
 use crate::foundation::canvas::Canvas;
 use crate::foundation::layout_node_layout_delegate::LayoutNodeLayoutDelegate;
 use crate::foundation::node_coordinator::PerformDrawTrait;
 use crate::foundation::oop::AnyConverter;
-use crate::implement_any_by_self;
 
-#[derive(Delegate)]
+#[derive(Delegate, AnyConverter)]
 pub(crate) struct InnerNodeCoordinator {
     #[to(
     Placeable,
@@ -133,7 +133,6 @@ impl PlaceablePlaceAt for InnerNodeCoordinator {
     }
 }
 
-implement_any_by_self!(InnerNodeCoordinator);
 impl PerformDrawTrait for InnerNodeCoordinator {
     fn perform_draw(&mut self, canvas: &mut dyn Canvas) {
         panic!("performing drawing")

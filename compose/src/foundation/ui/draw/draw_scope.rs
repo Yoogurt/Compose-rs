@@ -21,5 +21,5 @@ pub trait DrawScope<'a> {
         self.get_size().center()
     }
 
-    fn draw_rect(&mut self, color: Color, top_left: Offset<f32>, size: Option<Size<f32>>, alpha: f32);
+    fn draw_rect(& mut self, color: Color, top_left: Offset<f32>, size: Option<Size<f32>>, alpha: f32);
 }
