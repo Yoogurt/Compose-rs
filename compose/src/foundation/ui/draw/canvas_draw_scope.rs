@@ -13,19 +13,6 @@ pub(crate) struct CanvasDrawScope<'a> {
     layout_direction: LayoutDirection,
 }
 
-impl<'a> CanvasDrawScope<'a> {
-    pub(crate) fn new(draw_context: DrawContext<'a>, layout_direction: LayoutDirection) -> Self {
-        Self {
-            draw_context,
-            layout_direction,
-        }
-    }
-
-    pub(crate) fn draw(& mut self, mut block: impl FnOnce()) {
-
-    }
-}
-
 impl<'a> DrawScope<'a> for CanvasDrawScope<'a> {
     fn get_layout_direction(&self) -> LayoutDirection {
         self.layout_direction
@@ -46,5 +33,18 @@ impl<'a> DrawScope<'a> for CanvasDrawScope<'a> {
                                                            top_left.y(),
                                                            size.width(),
                                                            size.height()))
+    }
+}
+
+impl<'a> CanvasDrawScope<'a> {
+    pub(crate) fn new(draw_context: DrawContext<'a>, layout_direction: LayoutDirection) -> Self {
+        Self {
+            draw_context,
+            layout_direction,
+        }
+    }
+
+    pub(crate) fn draw<T>(&mut self, params: T, mut block: impl FnOnce(T, &mut Self))  {
+        block(params, self)
     }
 }

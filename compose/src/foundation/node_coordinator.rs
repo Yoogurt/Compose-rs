@@ -28,7 +28,7 @@ pub trait TailModifierNodeProvider {
 }
 
 pub trait PerformDrawTrait: NodeCoordinatorTrait {
-    fn perform_draw(&mut self, canvas: &mut dyn Canvas) {
+    fn perform_draw(&self, canvas: &mut dyn Canvas) {
         if let Some(wrapped) = self.get_wrapped().as_ref() {
             wrapped.borrow_mut().draw(canvas);
         }
@@ -47,8 +47,9 @@ pub trait NodeCoordinator: PerformDrawTrait
     fn on_initialize(&self) {}
     fn on_place(&self) {}
     fn on_measured(&mut self) {}
+    fn as_node_coordinator(&self) -> &dyn NodeCoordinator;
 
-    fn draw(&mut self, canvas: &mut dyn Canvas);
+    fn draw(&self, canvas: &mut dyn Canvas);
 }
 
 pub(crate) trait PerformMeasureHelper {

@@ -282,13 +282,13 @@ impl NodeChain {
                     node = Self::create_and_insert_node_as_child(&mut after[index], parent);
                     index += 1;
                 }
+
             } else if after_size == 0 {
                 todo!()
             } else {
                 todo!()
             }
 
-            // dbg!(&after);
             modifier_container.current = after;
         }
         self.head = self.trim_chain(padded_head);

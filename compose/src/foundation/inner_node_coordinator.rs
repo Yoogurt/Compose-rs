@@ -134,7 +134,7 @@ impl PlaceablePlaceAt for InnerNodeCoordinator {
 }
 
 impl PerformDrawTrait for InnerNodeCoordinator {
-    fn perform_draw(&mut self, canvas: &mut dyn Canvas) {
+    fn perform_draw(&self, canvas: &mut dyn Canvas) {
         panic!("performing drawing")
     }
 }

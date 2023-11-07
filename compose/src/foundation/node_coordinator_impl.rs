@@ -68,7 +68,7 @@ impl Measurable for NodeCoordinatorImpl {
 
 impl NodeCoordinatorImpl {
     pub(crate) fn attach(&mut self, layout_node: Weak<RefCell<LayoutNode>>) {
-        self.layout_node = Weak::new();
+        self.layout_node = layout_node;
     }
 
     pub(crate) fn layout_node(&self) -> Weak<RefCell<LayoutNode>> {
@@ -118,7 +118,11 @@ impl NodeCoordinatorTrait for NodeCoordinatorImpl {
 impl PerformDrawTrait for NodeCoordinatorImpl {}
 
 impl NodeCoordinator for NodeCoordinatorImpl {
-    fn draw(&mut self, canvas: &mut dyn Canvas) {
+    fn as_node_coordinator(&self) -> &dyn NodeCoordinator {
+        self
+    }
+    
+    fn draw(&self, canvas: &mut dyn Canvas) {
         let offset = self.get_position().as_f32_offset();
         canvas.translate(offset.x(), offset.y());
         self.draw_contrained_draw_modifiers(canvas);
@@ -160,10 +164,10 @@ impl NodeCoordinatorImpl {
     }
 
     fn head_node(&self, include_tail: bool) -> Option<Rc<RefCell<dyn ModifierNode>>> {
-        let node_chain = self.layout_node.upgrade().unwrap().borrow().node_chain.clone();
+        let node_chain = self.layout_node().upgrade().unwrap().borrow().node_chain.clone();
 
-
-        if std::ptr::eq(node_chain.borrow().outer_coordinator.as_ptr(), self) {
+        dbg!(node_chain.borrow().outer_coordinator.borrow());
+        if std::ptr::eq(node_chain.borrow().outer_coordinator.borrow().as_node_coordinator(), self) {
             Some(node_chain.borrow().head.clone())
         } else {
             self.get_wrapped_by().and_then(|wrapped_by| {
@@ -177,8 +181,15 @@ impl NodeCoordinatorImpl {
         }
     }
 
-    fn head(&self, node_kind: NodeKind, include_tail: bool) -> Option<Rc<RefCell<dyn ModifierNode>>> {
+    fn visit_nodes(mask: u32, include_tail: bool) {
+        todo!()
+    }
+
+    fn head(&self, node_kind: NodeKind) -> Option<Rc<RefCell<dyn ModifierNode>>> {
         let mut stop_node = self.get_tail();
+        let include_tail = (node_kind as u32 & NodeKind::LayoutAware as u32) != 0;
+        dbg!(&stop_node);
+
         if !include_tail {
             let node = match stop_node.borrow().get_parent() {
                 Some(parent) => { parent }
@@ -194,14 +205,18 @@ impl NodeCoordinatorImpl {
                 return Some(visit);
             }
 
+            if visit.as_ptr() == stop_node.as_ptr() {
+                return None
+            }
+
             node = visit.borrow().get_child();
         }
 
         None
     }
 
-    fn draw_contrained_draw_modifiers(&mut self, canvas: &mut dyn Canvas) {
-        let head = self.head(NodeKind::DrawModifierNode, false);
+    fn draw_contrained_draw_modifiers(&self, canvas: &mut dyn Canvas) {
+        let head = self.head(NodeKind::DrawModifierNode);
 
         match head {
             Some(head) => {

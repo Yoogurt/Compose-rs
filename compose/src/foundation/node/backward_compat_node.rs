@@ -11,7 +11,6 @@ use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::modifier::{ModifierElement, ModifierNode, ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::oop::LayoutModifierNodeConverter;
-use crate::{impl_node_kind_any};
 use crate::foundation::ui::draw::{ContentDrawScope, DrawModifierNode};
 
 #[derive(Debug, Delegate, ModifierElement)]
@@ -47,7 +46,7 @@ impl LayoutModifierNode for BackwardsCompatNode {
 }
 
 impl DrawModifierNode for BackwardsCompatNode {
-    fn draw(& self, draw_scope: &dyn ContentDrawScope) {
+    fn draw(& self, draw_scope: &mut dyn ContentDrawScope) {
         self.element.borrow_mut().as_draw_modifier_node_mut().unwrap().draw(draw_scope)
     }
 }

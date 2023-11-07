@@ -1,19 +1,16 @@
 #![allow(non_upper_case_globals)]
 
-use crate::foundation::layout_modifier_node::LayoutModifierNode;
 use crate::foundation::node_coordinator::NodeCoordinator;
 use crate::foundation::oop::{AnyConverter, DrawModifierNodeConverter};
 use crate::foundation::utils::weak_upgrade::WeakUpdater;
 use auto_delegate::delegate;
 use compose_foundation_macro::{Leak, ModifierElement};
-use std::any::Any;
 use std::cell::{RefCell, RefMut};
 use std::fmt::Debug;
 use std::fmt::{Formatter, Write};
 use std::ops::{Add, Deref};
 use std::rc::{Rc, Weak};
 use crate::foundation::oop::LayoutModifierNodeConverter;
-use crate::foundation::parent_data_modifier_node::ParentDataModifierNode;
 use crate::foundation::ui::draw::DrawModifierNode;
 
 pub const Modifier: Modifier = Modifier::Unit;
@@ -24,6 +21,7 @@ pub enum NodeKind {
     LayoutModifierNode = 2,
     ParentDataModifierNode = 4,
     DrawModifierNode = 8,
+    LayoutAware = 16,
 }
 
 #[macro_export]
@@ -38,7 +36,7 @@ macro_rules! impl_node_kind_any {
 }
 
 pub trait NodeKindPatch {
-    fn get_node_kind(& self) -> NodeKind;
+    fn get_node_kind(&self) -> NodeKind;
 }
 
 pub trait ModifierElement: AnyConverter + LayoutModifierNodeConverter + DrawModifierNodeConverter + NodeKindPatch + Debug {
@@ -59,6 +57,8 @@ pub trait ModifierNode: ModifierElement {
     fn update_coordinator(&mut self, coordinator: Option<Weak<RefCell<dyn NodeCoordinator>>>);
 
     fn get_coordinator(&self) -> Option<Weak<RefCell<dyn NodeCoordinator>>>;
+
+    fn get_agg
 }
 
 #[Leak]
@@ -70,7 +70,7 @@ pub(crate) struct ModifierNodeImpl {
 }
 
 impl NodeKindPatch for ModifierNodeImpl {
-    fn get_node_kind(& self) -> NodeKind {
+    fn get_node_kind(&self) -> NodeKind {
         todo!("implement get node kind by yourself")
     }
 }
@@ -213,9 +213,12 @@ impl Debug for Modifier {
                 right.fmt(f)
             }
             Modifier::ModifierNodeElement { create, update } => {
-                f.write_str("<modifier:element[")?;
+                f.write_str("<modifier:node_element[")?;
                 f.write_str(&format!("create:{:p}", create.deref()))?;
                 f.write_str(&format!(",update:{:p}]>", update.deref()))
+            }
+            Modifier::ModifierElement(element) => {
+                element.fmt(f)
             }
             _ => f.write_str("<unknown modifier>"),
         }
@@ -223,15 +226,15 @@ impl Debug for Modifier {
 }
 
 pub(crate) trait DispatchForKind {
-    fn dispatch_for_kind(& self, kind: NodeKind, block: impl FnMut(& dyn ModifierElement)) ;
+    fn dispatch_for_kind(&self, kind: NodeKind, block: impl FnMut(&mut dyn ModifierElement));
 }
 
 impl<T> DispatchForKind for RefCell<T> where T: ?Sized + ModifierNode {
-    fn dispatch_for_kind(&self, kind: NodeKind, mut block: impl FnMut(& dyn ModifierElement)) {
+    fn dispatch_for_kind(&self, kind: NodeKind, mut block: impl FnMut(&mut dyn ModifierElement)) {
         let node = self.borrow().get_node_kind();
 
         if node == kind {
-            block(self.borrow().as_modifier_element());
+            block(self.borrow_mut().as_modifier_element_mut());
         }
     }
 }

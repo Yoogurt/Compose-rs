@@ -111,7 +111,11 @@ impl Measurable for LayoutModifierNodeCoordinator {
 
 impl PerformDrawTrait for LayoutModifierNodeCoordinator {}
 impl NodeCoordinator for LayoutModifierNodeCoordinator {
-    fn draw(&mut self, canvas: &mut dyn Canvas) {
+    fn as_node_coordinator(&self) -> &dyn NodeCoordinator {
+        self
+    }
+    
+    fn draw(&self, canvas: &mut dyn Canvas) {
         self.node_coordinator_impl.draw(canvas);
     }
 }
