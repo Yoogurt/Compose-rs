@@ -109,3 +109,9 @@ impl<T> From<(T, T)> for Size<T> where T: U64ConverterUnsigned {
         Size::new(value.0, value.1)
     }
 }
+
+impl From<MeasureResult> for IntSize {
+    fn from(value: MeasureResult) -> Self {
+        Size::new(value.width, value.height)
+    }
+}

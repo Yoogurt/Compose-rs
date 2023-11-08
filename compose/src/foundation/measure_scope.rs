@@ -3,6 +3,11 @@ use crate::foundation::geometry::{Density, IntSize};
 use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::placement_scope::PlacementScope;
 use auto_delegate::delegate;
+use crate::foundation::utils::box_wrapper::WrapWithBox;
+
+pub(crate) fn empty_place_action() -> Box<dyn FnOnce(&dyn PlacementScope)> {
+    (|_: &dyn PlacementScope| {}).wrap_with_box()
+}
 
 #[delegate]
 pub trait MeasureScope {
@@ -12,7 +17,7 @@ pub trait MeasureScope {
     fn layout(
         &self,
         size: IntSize,
-        place_action: &mut dyn FnMut(&dyn PlacementScope),
+        place_action: Box<dyn FnOnce(&dyn PlacementScope)>,
     ) -> MeasureResult;
 }
 

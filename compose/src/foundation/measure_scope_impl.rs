@@ -27,10 +27,10 @@ impl MeasureScope for MeasureScopeImpl {
     fn layout(
         &self,
         size: IntSize,
-        place_action: &mut dyn FnMut(&dyn PlacementScope),
+        place_action: Box<dyn FnOnce(&dyn PlacementScope)>
     ) -> MeasureResult {
-        let place_scope = PlacementScopeImpl::new(size.width(), size.height(), self);
+        // let place_scope = PlacementScopeImpl::new(size.width(), size.height(), self);
         // place_action(&place_scope);
-        size.into()
+        MeasureResult::new(size, Some(place_action))
     }
 }

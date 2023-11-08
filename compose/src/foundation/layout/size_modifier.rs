@@ -78,8 +78,8 @@ fn size_measure_policy<T>(
                 ((min_width..=max_width), (min_height..=max_height)).into()
             };
 
-            let placeable = measurable.measure(&target_constraints);
-            measure_scope.layout(IntSize::zero(), &mut |scope| scope.place_relative(placeable.borrow_mut(), 0, 0))
+            let (measure_result, placeable) = measurable.measure(&target_constraints);
+            measure_scope.layout(IntSize::zero(), Box::new(move |scope| scope.place_relative(placeable.borrow_mut(), 0, 0)))
         },
     )
 }
@@ -147,7 +147,7 @@ impl SizeNode {
 
 impl LayoutModifierNode for SizeNode {
     fn measure(
-        & self,
+        &self,
         measure_scope: &mut dyn MeasureScope,
         measurable: &mut dyn Measurable,
         constraints: &Constraints,
@@ -196,17 +196,17 @@ impl LayoutModifierNode for SizeNode {
                 .into()
         };
 
-        let mut placeable = measurable.measure(&wrapped_constraints);
-        let dimension = placeable.borrow().get_size();
+        let (measure_result, placeable) = measurable.measure(&wrapped_constraints);
+
         measure_scope.layout(
-            dimension,
-            &mut |scope| scope.place_relative(placeable.borrow_mut(), 0, 0),
+            measure_result.into(),
+            Box::new(move |scope| scope.place_relative(placeable.borrow_mut(), 0, 0)),
         )
     }
 }
 
 impl NodeKindPatch for SizeNode {
-    fn get_node_kind(& self) -> NodeKind {
+    fn get_node_kind(&self) -> NodeKind {
         NodeKind::Layout
     }
 }

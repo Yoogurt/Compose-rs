@@ -16,8 +16,8 @@ use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use auto_delegate::Delegate;
 use std::any::Any;
 use std::cell::RefCell;
-use std::ops::{Deref, DerefMut};
 use std::rc::{Rc, Weak};
+use crate::foundation::measure_result::MeasureResult;
 
 #[derive(Debug, Delegate)]
 pub(crate) struct MeasurePassDelegate {
@@ -140,17 +140,14 @@ impl MeasurePassDelegate {
         *self.layout_state.as_ref().unwrap().borrow()
     }
 
-    pub(crate) fn perform_measure(&mut self, constraint: &Constraints) {
+    pub(crate) fn perform_measure(&mut self, constraint: &Constraints) -> IntSize {
         if self.get_layout_state() != LayoutState::Idle {
             panic!("layout state is not idle before measure starts")
         }
         self.set_layout_state(LayoutState::Measuring);
         self.measure_pending = false;
 
-        let outer_coordinator = self.get_outer_coordinator();
-        // dbg!("perform measure from chain {:?}", &outer_coordinator);
-
-        self.get_outer_coordinator()
+        let measure_result = self.get_outer_coordinator()
             .borrow_mut()
             .measure(constraint);
 
@@ -158,6 +155,8 @@ impl MeasurePassDelegate {
             self.mark_layout_pending();
             self.set_layout_state(LayoutState::Idle);
         }
+
+        measure_result.0
     }
 
     pub(crate) fn update_parent_data(&self) -> bool {
@@ -247,10 +246,13 @@ impl IntrinsicMeasurable for MeasurePassDelegate {
 }
 
 impl Measurable for MeasurePassDelegate {
-    fn measure(&mut self, constraint: &Constraints) -> Rc<RefCell<dyn Placeable>> {
+    fn measure(&mut self, constraint: &Constraints) -> (IntSize, Rc<RefCell<dyn Placeable>>) {
         self.track_measuremenet_by_parent();
         <Self as Remeasurable>::remeasure(self, constraint);
-        self.as_placeable()
+        let placeable = self.as_placeable();
+
+        let measure_size = placeable.borrow().get_measured_size();
+        (measure_size, placeable)
     }
 
     fn as_placeable(&mut self) -> Rc<RefCell<dyn Placeable>> {

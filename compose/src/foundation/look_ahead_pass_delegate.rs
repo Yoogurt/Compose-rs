@@ -8,6 +8,8 @@ use auto_delegate::Delegate;
 use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
+use crate::foundation::geometry::IntSize;
+use crate::foundation::measure_result::MeasureResult;
 
 #[derive(Delegate, Debug)]
 pub(crate) struct LookaheadPassDelegate {
@@ -30,7 +32,7 @@ impl Remeasurable for LookaheadPassDelegate {
 }
 
 impl Measurable for LookaheadPassDelegate {
-    fn measure(&mut self, _constraint: &Constraints) -> Rc<RefCell<dyn Placeable>> {
+    fn measure(&mut self, _constraint: &Constraints) -> (IntSize, Rc<RefCell<dyn Placeable>>) {
         todo!()
     }
 

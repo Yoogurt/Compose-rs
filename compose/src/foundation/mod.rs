@@ -47,7 +47,7 @@ pub(crate) mod node_coordinator_impl;
 pub(crate) mod oop;
 mod placeable_impl;
 mod placeable_place_at;
-mod placement_scope;
+pub(crate) mod placement_scope;
 mod placement_scope_impl;
 mod usage_by_parent;
 pub(crate) mod parent_data_modifier_node;

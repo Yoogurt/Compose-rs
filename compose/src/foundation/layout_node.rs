@@ -117,10 +117,6 @@ impl LayoutNode {
         self.node_chain.borrow().outer_coordinator.clone()
     }
 
-    fn layout(width: usize, height: usize) -> MeasureResult {
-        MeasureResult { width, height }
-    }
-
     pub(crate) fn adopt_child(
         self_: &Rc<RefCell<LayoutNode>>,
         child: &Rc<RefCell<LayoutNode>>,

@@ -18,16 +18,14 @@ use std::ops::{Deref, DerefMut};
 use std::rc::{Rc, Weak};
 use compose_foundation_macro::AnyConverter;
 use crate::foundation::canvas::Canvas;
-use crate::foundation::measure_result::MeasureResult;
+use crate::foundation::measure_result::{MeasureResult, MeasureResultProvider};
 use crate::foundation::modifier::{ModifierNode, NodeKind};
 use crate::foundation::node::LayoutNodeDrawScope;
 use crate::foundation::node_chain::TailModifierNode;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::node_coordinator::TailModifierNodeProvider;
-use crate::foundation::ui::draw::{CanvasDrawScope, ContentDrawScope, DrawContext};
+use crate::foundation::ui::draw::{CanvasDrawScope, DrawContext};
 use crate::foundation::utils::box_wrapper::WrapWithBox;
-use crate::foundation::measure_result::MeasureResultProvider;
-use crate::foundation::oop::AnyConverter;
 
 #[derive(Debug, Delegate, AnyConverter)]
 pub(crate) struct NodeCoordinatorImpl {
@@ -41,7 +39,7 @@ pub(crate) struct NodeCoordinatorImpl {
     pub(crate) tail: Rc<RefCell<dyn ModifierNode>>,
     pub(crate) parent_data: Option<Box<dyn Any>>,
 
-    pub(crate) measure_result: MeasureResult,
+    pub(crate) measure_result: Option<MeasureResult>,
 
     perform_draw_vtable: Option<Weak<RefCell<dyn PerformDrawTrait>>>,
 }
@@ -61,7 +59,7 @@ impl IntrinsicMeasurable for NodeCoordinatorImpl {
 }
 
 impl Measurable for NodeCoordinatorImpl {
-    fn measure(&mut self, _constraint: &Constraints) -> Rc<RefCell<dyn Placeable>> {
+    fn measure(&mut self, _constraint: &Constraints) -> (IntSize, Rc<RefCell<dyn Placeable>>) {
         unimplemented!("layout node wrapper should implement measure")
     }
 
@@ -141,15 +139,18 @@ impl PerformDrawTrait for NodeCoordinatorImpl {
 }
 
 impl MeasureResultProvider for NodeCoordinatorImpl {
-    fn set_measured_result(&mut self, measure_result: MeasureResult) {
+    fn set_measured_result(&mut self, measure_result: Option<MeasureResult>) {
         if self.measure_result != measure_result {
-            self.measure_result = measure_result;
             self.on_measure_result_changed(measure_result);
         }
     }
 
-    fn get_measured_result(&self) -> MeasureResult {
-        self.measure_result
+    fn get_measured_result(&mut self) -> Option<MeasureResult> {
+        self.measure_result.take()
+    }
+
+    fn has_measure_result(&self) -> bool {
+        self.measure_result.is_some()
     }
 }
 
@@ -187,7 +188,7 @@ impl NodeCoordinatorImpl {
             z_index: 0.0,
             tail: TailModifierNode::default().wrap_with_rc_refcell(),
 
-            measure_result: MeasureResult::default(),
+            measure_result: None,
             perform_draw_vtable: None,
         }
     }
@@ -303,8 +304,8 @@ impl NodeCoordinatorImpl {
         }
     }
 
-    fn on_measure_result_changed(&mut self, measure_result: MeasureResult) {
-        // self.set_measured_size(measure_result.into());
+    fn on_measure_result_changed(&mut self, measure_result: Option<MeasureResult>) {
+        self.measure_result = measure_result;
 
         // self.visit_nodes(NodeKind::Draw, true, |draw_modifier_node| {
         //     draw_modifier_node.borrow_mut().as_draw_modifier_node_mut().unwrap().on_measure_result_changed();

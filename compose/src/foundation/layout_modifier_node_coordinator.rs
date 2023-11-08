@@ -15,6 +15,8 @@ use std::panic::panic_any;
 use std::rc::{Rc, Weak};
 use compose_foundation_macro::AnyConverter;
 use crate::foundation::canvas::Canvas;
+use crate::foundation::geometry::IntSize;
+use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::node_coordinator::PerformMeasureHelper;
 
 #[derive(Debug, Delegate, AnyConverter)]
@@ -75,30 +77,33 @@ impl LayoutModifierNodeCoordinator {
 }
 
 impl Measurable for LayoutModifierNodeCoordinator {
-    fn measure(&mut self, constraint: &Constraints) -> Rc<RefCell<dyn Placeable>> {
-        self.perform_measure(constraint, move |this| {
+    fn measure(&mut self, constraint: &Constraints) -> (IntSize, Rc<RefCell<dyn Placeable>>) {
+        let measure_result = self.perform_measure(constraint, move |this| {
             let node = this.layout_modifier_node.clone();
-            if let Some(layout_node_modifier) = node
+            let measure_result = if let Some(layout_node_modifier) = node
                 .borrow_mut()
                 .as_layout_modifier_node_mut()
             {
                 let wrapped = this.get_wrapped().unwrap();
                 let mut wrapped_not_null = wrapped.borrow_mut();
-                layout_node_modifier.measure(
+                let measure_result = layout_node_modifier.measure(
                     this,
                     wrapped_not_null.as_measurable_mut(),
                     constraint,
                 );
+
+                measure_result
             } else {
                 panic!("downcast from type Node to LayoutNodeModifier failed")
-            }
+            };
 
-            this
+            measure_result
         });
 
         self.on_measured();
 
-        self.as_placeable()
+        let size: IntSize = measure_result.into();
+        (size, self.as_placeable())
     }
 
     fn as_placeable(&mut self) -> Rc<RefCell<dyn Placeable>> {
@@ -112,11 +117,12 @@ impl Measurable for LayoutModifierNodeCoordinator {
 
 
 impl PerformDrawTrait for LayoutModifierNodeCoordinator {}
+
 impl NodeCoordinator for LayoutModifierNodeCoordinator {
     fn as_node_coordinator(&self) -> &dyn NodeCoordinator {
         self
     }
-    
+
     fn draw(&self, canvas: &mut dyn Canvas) {
         self.node_coordinator_impl.draw(canvas);
     }

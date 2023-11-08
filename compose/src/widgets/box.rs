@@ -18,6 +18,7 @@ use crate::foundation::delegatable_node::DelegatableNode;
 use crate::foundation::oop::AnyConverter;
 use crate::foundation::oop::LayoutModifierNodeConverter;
 use crate::foundation::parent_data_modifier_node::ParentDataModifierNode;
+use crate::foundation::placement_scope::PlacementScope;
 use crate::foundation::ui::align::Alignment;
 
 use crate::widgets::layout::Layout;
@@ -83,7 +84,7 @@ struct BoxChildDataNode {
 impl DelegatableNode for BoxChildDataNode {}
 
 impl NodeKindPatch for BoxChildDataNode {
-    fn get_node_kind(& self) -> NodeKind {
+    fn get_node_kind(&self) -> NodeKind {
         NodeKind::ParentData
     }
 }
@@ -116,19 +117,19 @@ fn box_child_data(alignment: Alignment, match_parent_size: bool) -> Modifier {
 fn place_in_box(placeable: &mut dyn Placeable) {}
 
 fn box_measure_policy(
-    measure_scope: & dyn MeasureScope,
+    measure_scope: &dyn MeasureScope,
     measurables: &mut [&mut dyn Measurable],
     constraints: &Constraints,
 ) -> MeasureResult {
     let children_count = measurables.len();
     match children_count {
-        0 => measure_scope.layout((constraints.min_width, constraints.min_height).into(), &mut |_| {}),
+        0 => measure_scope.layout((constraints.min_width, constraints.min_height).into(), (|_: &dyn PlacementScope| {}).wrap_with_box()),
         1 => {
-            let placeable = measurables[0].measure(constraints);
-let dimension = placeable.borrow().get_size();
+            let (measure_result, placeable) = measurables[0].measure(constraints);
+            let dimension = placeable.borrow().get_size();
             measure_scope.layout(
                 dimension,
-                &mut |scope| scope.place_relative(placeable.borrow_mut(), 0, 0),
+                (move |scope: &dyn PlacementScope| scope.place_relative(placeable.borrow_mut(), 0, 0)).wrap_with_box(),
             )
         }
         _ => {
@@ -146,9 +147,9 @@ let dimension = placeable.borrow().get_size();
                         if measurable.matches_parent_size() {
                             has_match_parent_size_children = true
                         } else {
-                            let placeable = measurable.measure(&constraints).borrow().get_size();
-                            box_width = box_width.max(placeable.width());
-                            box_height = box_height.max(placeable.height());
+                            let (measure_result, placeable) = measurable.measure(&constraints);
+                            box_width = box_width.max(measure_result.width());
+                            box_height = box_height.max(measure_result.height());
                         }
                     });
             }
@@ -173,16 +174,16 @@ let dimension = placeable.borrow().get_size();
                     .for_each(|(index, measurable)| {
                         if measurable.matches_parent_size() {
                             placeables[index] =
-                                Some(measurable.measure(&match_parent_size_constraints));
+                                Some(measurable.measure(&match_parent_size_constraints).1);
                         } else {
                             placeables[index] = Some(measurable.as_placeable());
                         }
                     });
             }
 
-            measure_scope.layout((box_width, box_height).into(), &mut |scope| {
+            measure_scope.layout((box_width, box_height).into(), (move |scope: &dyn PlacementScope| {
                 placeables.iter_mut().for_each(|placeable| {})
-            })
+            }).wrap_with_box())
         }
     }
 }

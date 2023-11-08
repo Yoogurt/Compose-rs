@@ -54,23 +54,23 @@ pub trait NodeCoordinator: PerformDrawTrait
 }
 
 pub(crate) trait PerformMeasureHelper {
-    fn perform_measure<'a, F>(
-        &'a mut self,
+    fn perform_measure<F, R>(
+        &mut self,
         constraint: &Constraints,
         block: F,
-    ) -> &'a mut dyn Placeable where
-        F: FnOnce(&'a mut Self) -> &'a mut dyn Placeable,
+    ) -> R where
+        F: FnOnce(&mut Self) -> R,
         Self: Sized,;
 }
 
 impl<T> PerformMeasureHelper for T where T: NodeCoordinator {
-    fn perform_measure<'a, F>(
-        &'a mut self,
+    fn perform_measure<F, R>(
+        &mut self,
         constraint: &Constraints,
         block: F,
-    ) -> &mut dyn Placeable
+    ) -> R
         where
-            F: FnOnce(&'a mut Self) -> &'a mut dyn Placeable
+            F: FnOnce(&mut Self) -> R
     {
         self.set_measurement_constraint(constraint);
         block(self)

@@ -2,7 +2,6 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use crate::foundation::geometry::{IntOffset, IntSize};
 use crate::foundation::look_ahead_capable_placeable::LookaheadCapablePlaceable;
-use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::measure_scope::MeasureScopeImpl;
 use crate::foundation::placeable_impl::PlaceableImpl;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
@@ -17,7 +16,6 @@ pub(crate) struct LookaheadCapablePlaceableImpl {
     #[to(MeasureScope)]
     measure_scope_impl: MeasureScopeImpl,
     position: IntOffset,
-    measure_result: MeasureResult,
 }
 
 impl Measured for LookaheadCapablePlaceableImpl {
