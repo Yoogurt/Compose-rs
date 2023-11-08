@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 use super::{
     constraint::Constraints, measure_result::MeasureResult, measure_scope::MeasureScope,
     placeable::Placeable,
@@ -5,9 +7,9 @@ use super::{
 use crate::foundation::intrinsic_measurable::IntrinsicMeasurable;
 
 pub trait Measurable: IntrinsicMeasurable {
-    fn measure(&mut self, constraint: &Constraints) -> &mut dyn Placeable;
+    fn measure(&mut self, constraint: &Constraints) -> Rc<RefCell<dyn Placeable>>;
 
-    fn as_placeable_mut(&mut self) -> &mut dyn Placeable;
+    fn as_placeable(&mut self) -> Rc<RefCell<dyn Placeable>>;
     fn as_measurable_mut(&mut self) -> &mut dyn Measurable;
 }
 
@@ -18,8 +20,8 @@ pub type SingleChildMeasurePolicyUnBox =
     fn(&mut dyn MeasureScope, &mut dyn Measurable, &Constraints) -> MeasureResult;
 
 pub type MultiChildrenMeasurePolicy = Box<
-    dyn FnMut(&mut dyn MeasureScope, &mut [&mut dyn Measurable], &Constraints) -> MeasureResult,
+    dyn FnMut(& dyn MeasureScope, &mut [&mut dyn Measurable], &Constraints) -> MeasureResult,
 >;
 
 pub type MultiChildrenMeasurePolicyUnBox =
-    fn(&mut dyn MeasureScope, &mut [&mut dyn Measurable], &Constraints) -> MeasureResult;
+    fn(& dyn MeasureScope, &mut [&mut dyn Measurable], &Constraints) -> MeasureResult;

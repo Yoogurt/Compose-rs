@@ -7,7 +7,7 @@ use crate::foundation::oop::LayoutModifierNodeConverter;
 
 pub trait LayoutModifierNode: DelegatableNode + LayoutModifierNodeConverter  {
     fn measure(
-        &mut self,
+        & self,
         measure_scope: &mut dyn MeasureScope,
         measurable: &mut dyn Measurable,
         constraint: &Constraints,

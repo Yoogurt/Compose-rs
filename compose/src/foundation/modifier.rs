@@ -17,11 +17,17 @@ pub const Modifier: Modifier = Modifier::Unit;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum NodeKind {
-    Any = 1,
-    LayoutModifierNode = 2,
-    ParentDataModifierNode = 4,
-    DrawModifierNode = 8,
-    LayoutAware = 16,
+    Any = 1 << 0,
+    Layout = 1 << 1,
+    ParentData = 1 << 2,
+    Draw = 1 << 3,
+    LayoutAware = 1 << 4,
+}
+
+impl From<NodeKind> for u32 {
+    fn from(value: NodeKind) -> Self {
+        value as u32
+    }
 }
 
 #[macro_export]
@@ -58,7 +64,9 @@ pub trait ModifierNode: ModifierElement {
 
     fn get_coordinator(&self) -> Option<Weak<RefCell<dyn NodeCoordinator>>>;
 
-    fn get_agg
+    fn get_aggregate_child_kind_set(&self) -> u32;
+
+    fn set_aggregate_child_kind_set(&mut self, child_kind_set: u32);
 }
 
 #[Leak]
@@ -67,6 +75,7 @@ pub(crate) struct ModifierNodeImpl {
     parent: Option<Weak<RefCell<dyn ModifierNode>>>,
     child: Option<Rc<RefCell<dyn ModifierNode>>>,
     coordinator: Option<Weak<RefCell<dyn NodeCoordinator>>>,
+    aggregate_child_kind_set: u32,
 }
 
 impl NodeKindPatch for ModifierNodeImpl {
@@ -98,6 +107,14 @@ impl ModifierNode for ModifierNodeImpl {
 
     fn get_coordinator(&self) -> Option<Weak<RefCell<dyn NodeCoordinator>>> {
         self.coordinator.clone()
+    }
+
+    fn get_aggregate_child_kind_set(&self) -> u32 {
+        self.aggregate_child_kind_set
+    }
+
+    fn set_aggregate_child_kind_set(&mut self, child_kind_set: u32) {
+        self.aggregate_child_kind_set = child_kind_set;
     }
 }
 

@@ -7,6 +7,7 @@ use std::{cell::RefCell, rc::Rc, rc::Weak};
 use std::ops::Deref;
 use crate::foundation::canvas::Canvas;
 use crate::foundation::look_ahead_capable_placeable::LookaheadCapablePlaceable;
+use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::modifier::ModifierNode;
 use crate::foundation::oop::AnyConverter;
 
@@ -45,7 +46,7 @@ pub trait NodeCoordinator: PerformDrawTrait
 + Debug
 + Measurable {
     fn on_initialize(&self) {}
-    fn on_place(&self) {}
+    fn on_placed(&self) {}
     fn on_measured(&mut self) {}
     fn as_node_coordinator(&self) -> &dyn NodeCoordinator;
 

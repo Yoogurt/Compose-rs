@@ -13,10 +13,12 @@ use crate::foundation::utils::weak_upgrade::WeakUpdater;
 use auto_delegate::Delegate;
 use std::any::Any;
 use std::cell::RefCell;
+use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
 use std::rc::{Rc, Weak};
 use compose_foundation_macro::AnyConverter;
 use crate::foundation::canvas::Canvas;
+use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::modifier::{ModifierNode, NodeKind};
 use crate::foundation::node::LayoutNodeDrawScope;
 use crate::foundation::node_chain::TailModifierNode;
@@ -24,6 +26,8 @@ use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::node_coordinator::TailModifierNodeProvider;
 use crate::foundation::ui::draw::{CanvasDrawScope, ContentDrawScope, DrawContext};
 use crate::foundation::utils::box_wrapper::WrapWithBox;
+use crate::foundation::measure_result::MeasureResultProvider;
+use crate::foundation::oop::AnyConverter;
 
 #[derive(Debug, Delegate, AnyConverter)]
 pub(crate) struct NodeCoordinatorImpl {
@@ -36,6 +40,10 @@ pub(crate) struct NodeCoordinatorImpl {
 
     pub(crate) tail: Rc<RefCell<dyn ModifierNode>>,
     pub(crate) parent_data: Option<Box<dyn Any>>,
+
+    pub(crate) measure_result: MeasureResult,
+
+    perform_draw_vtable: Option<Weak<RefCell<dyn PerformDrawTrait>>>,
 }
 
 impl IntrinsicMeasurable for NodeCoordinatorImpl {
@@ -53,12 +61,12 @@ impl IntrinsicMeasurable for NodeCoordinatorImpl {
 }
 
 impl Measurable for NodeCoordinatorImpl {
-    fn measure(&mut self, _constraint: &Constraints) -> &mut dyn Placeable {
+    fn measure(&mut self, _constraint: &Constraints) -> Rc<RefCell<dyn Placeable>> {
         unimplemented!("layout node wrapper should implement measure")
     }
 
-    fn as_placeable_mut(&mut self) -> &mut dyn Placeable {
-        unimplemented!("layout node wrapper should implement as_placeable_mut")
+    fn as_placeable(&mut self) -> Rc<RefCell<dyn Placeable>> {
+        self.look_ahead_capable_placeable_impl.as_placeable()
     }
 
     fn as_measurable_mut(&mut self) -> &mut dyn Measurable {
@@ -67,8 +75,8 @@ impl Measurable for NodeCoordinatorImpl {
 }
 
 impl NodeCoordinatorImpl {
-    pub(crate) fn attach(&mut self, layout_node: Weak<RefCell<LayoutNode>>) {
-        self.layout_node = layout_node;
+    pub(crate) fn attach(&mut self, layout_node: &Rc<RefCell<LayoutNode>>) {
+        self.layout_node = Rc::downgrade(layout_node);
     }
 
     pub(crate) fn layout_node(&self) -> Weak<RefCell<LayoutNode>> {
@@ -115,13 +123,41 @@ impl NodeCoordinatorTrait for NodeCoordinatorImpl {
     }
 }
 
-impl PerformDrawTrait for NodeCoordinatorImpl {}
+impl PerformDrawTrait for NodeCoordinatorImpl {
+    fn perform_draw(&self, canvas: &mut dyn Canvas) {
+        match self.perform_draw_vtable.as_ref() {
+            Some(perform_draw_trait) => {
+                if let Some(vtable) = perform_draw_trait.upgrade() {
+                    vtable.borrow().perform_draw(canvas);
+                }
+            }
+            None => {
+                if let Some(wrapped) = self.get_wrapped().as_ref() {
+                    wrapped.borrow_mut().draw(canvas);
+                }
+            }
+        }
+    }
+}
+
+impl MeasureResultProvider for NodeCoordinatorImpl {
+    fn set_measured_result(&mut self, measure_result: MeasureResult) {
+        if self.measure_result != measure_result {
+            self.measure_result = measure_result;
+            self.on_measure_result_changed(measure_result);
+        }
+    }
+
+    fn get_measured_result(&self) -> MeasureResult {
+        self.measure_result
+    }
+}
 
 impl NodeCoordinator for NodeCoordinatorImpl {
     fn as_node_coordinator(&self) -> &dyn NodeCoordinator {
         self
     }
-    
+
     fn draw(&self, canvas: &mut dyn Canvas) {
         let offset = self.get_position().as_f32_offset();
         canvas.translate(offset.x(), offset.y());
@@ -150,7 +186,14 @@ impl NodeCoordinatorImpl {
             parent_data: None,
             z_index: 0.0,
             tail: TailModifierNode::default().wrap_with_rc_refcell(),
+
+            measure_result: MeasureResult::default(),
+            perform_draw_vtable: None,
         }
+    }
+
+    pub fn attach_vtable(&mut self, perform_draw_vtable: Weak<RefCell<dyn PerformDrawTrait>>) {
+        self.perform_draw_vtable = Some(perform_draw_vtable);
     }
 
     pub(crate) fn on_layout_modifier_node_changed(&self) {}
@@ -163,11 +206,10 @@ impl NodeCoordinatorImpl {
         self.z_index = z_index;
     }
 
-    fn head_node(&self, include_tail: bool) -> Option<Rc<RefCell<dyn ModifierNode>>> {
+    fn head_node(&self, include_tail: bool, self_visit: bool) -> Option<Rc<RefCell<dyn ModifierNode>>> {
         let node_chain = self.layout_node().upgrade().unwrap().borrow().node_chain.clone();
 
-        dbg!(node_chain.borrow().outer_coordinator.borrow());
-        if std::ptr::eq(node_chain.borrow().outer_coordinator.borrow().as_node_coordinator(), self) {
+        if self_visit {
             Some(node_chain.borrow().head.clone())
         } else {
             self.get_wrapped_by().and_then(|wrapped_by| {
@@ -181,14 +223,38 @@ impl NodeCoordinatorImpl {
         }
     }
 
-    fn visit_nodes(mask: u32, include_tail: bool) {
-        todo!()
+    fn visit_nodes(&self, mask: impl Into<u32>, self_visit: bool, mut block: impl FnMut(&Rc<RefCell<dyn ModifierNode>>)) {
+        let mut stop_node = self.get_tail();
+        let mask = mask.into();
+        let include_tail = mask & NodeKind::LayoutAware as u32 != 0;
+
+        if !include_tail {
+            let node = match stop_node.borrow().get_parent() {
+                Some(parent) => { parent }
+                None => { return; }
+            };
+            stop_node = node;
+        };
+
+        let mut node = self.head_node(include_tail, self_visit);
+
+        dbg!(&node);
+        while let Some(visit) = node {
+            if visit.borrow().get_node_kind() as u32 & mask != 0 {
+                block(&visit);
+            }
+
+            if visit.as_ptr() == stop_node.as_ptr() {
+                return;
+            }
+
+            node = visit.borrow().get_child();
+        }
     }
 
-    fn head(&self, node_kind: NodeKind) -> Option<Rc<RefCell<dyn ModifierNode>>> {
+    fn head(&self, node_kind: NodeKind, self_visit: bool) -> Option<Rc<RefCell<dyn ModifierNode>>> {
         let mut stop_node = self.get_tail();
         let include_tail = (node_kind as u32 & NodeKind::LayoutAware as u32) != 0;
-        dbg!(&stop_node);
 
         if !include_tail {
             let node = match stop_node.borrow().get_parent() {
@@ -198,7 +264,7 @@ impl NodeCoordinatorImpl {
             stop_node = node;
         };
 
-        let mut node = self.head_node(include_tail);
+        let mut node = self.head_node(include_tail, self_visit);
 
         while let Some(visit) = node {
             if visit.borrow_mut().get_node_kind() == node_kind {
@@ -206,7 +272,7 @@ impl NodeCoordinatorImpl {
             }
 
             if visit.as_ptr() == stop_node.as_ptr() {
-                return None
+                return None;
             }
 
             node = visit.borrow().get_child();
@@ -216,7 +282,7 @@ impl NodeCoordinatorImpl {
     }
 
     fn draw_contrained_draw_modifiers(&self, canvas: &mut dyn Canvas) {
-        let head = self.head(NodeKind::DrawModifierNode);
+        let head = self.head(NodeKind::Draw, true);
 
         match head {
             Some(head) => {
@@ -235,6 +301,14 @@ impl NodeCoordinatorImpl {
                 self.perform_draw(canvas)
             }
         }
+    }
+
+    fn on_measure_result_changed(&mut self, measure_result: MeasureResult) {
+        // self.set_measured_size(measure_result.into());
+
+        // self.visit_nodes(NodeKind::Draw, true, |draw_modifier_node| {
+        //     draw_modifier_node.borrow_mut().as_draw_modifier_node_mut().unwrap().on_measure_result_changed();
+        // });
     }
 }
 

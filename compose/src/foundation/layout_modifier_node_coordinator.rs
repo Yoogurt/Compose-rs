@@ -29,7 +29,8 @@ pub(crate) struct LayoutModifierNodeCoordinator {
     PlaceablePlaceAt,
     IntrinsicMeasurable,
     LookaheadCapablePlaceable,
-    TailModifierNodeProvider
+    TailModifierNodeProvider,
+    MeasureResultProvider
     )]
     pub(crate) node_coordinator_impl: NodeCoordinatorImpl,
 }
@@ -74,17 +75,17 @@ impl LayoutModifierNodeCoordinator {
 }
 
 impl Measurable for LayoutModifierNodeCoordinator {
-    fn measure(&mut self, constraint: &Constraints) -> &mut dyn Placeable {
-        self.perform_measure(constraint, move |self_| {
-            let node = self_.layout_modifier_node.clone();
+    fn measure(&mut self, constraint: &Constraints) -> Rc<RefCell<dyn Placeable>> {
+        self.perform_measure(constraint, move |this| {
+            let node = this.layout_modifier_node.clone();
             if let Some(layout_node_modifier) = node
                 .borrow_mut()
                 .as_layout_modifier_node_mut()
             {
-                let wrapped = self_.get_wrapped().unwrap();
+                let wrapped = this.get_wrapped().unwrap();
                 let mut wrapped_not_null = wrapped.borrow_mut();
                 layout_node_modifier.measure(
-                    self_,
+                    this,
                     wrapped_not_null.as_measurable_mut(),
                     constraint,
                 );
@@ -92,15 +93,16 @@ impl Measurable for LayoutModifierNodeCoordinator {
                 panic!("downcast from type Node to LayoutNodeModifier failed")
             }
 
-            self_
+            this
         });
 
         self.on_measured();
-        self
+
+        self.as_placeable()
     }
 
-    fn as_placeable_mut(&mut self) -> &mut dyn Placeable {
-        self
+    fn as_placeable(&mut self) -> Rc<RefCell<dyn Placeable>> {
+        self.node_coordinator_impl.as_placeable()
     }
 
     fn as_measurable_mut(&mut self) -> &mut dyn Measurable {

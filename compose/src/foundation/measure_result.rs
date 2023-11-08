@@ -1,20 +1,25 @@
-#[derive(Default, Debug, PartialEq)]
+use auto_delegate::delegate;
+
+#[derive(Default, Debug, Copy, Clone, PartialEq)]
 pub struct MeasureResult {
     pub(crate) width: usize,
     pub(crate) height: usize,
 }
 
-impl From<(usize, usize)> for MeasureResult {
-    fn from(value: (usize, usize)) -> Self {
-        MeasureResult {
-            width: value.0,
-            height: value.1,
-        }
-    }
+#[delegate]
+pub trait MeasureResultProvider {
+    fn set_measured_result(&mut self, measure_result: MeasureResult);
+
+    fn get_measured_result(&self) -> MeasureResult;
 }
 
-impl From<MeasureResult> for (usize, usize) {
-    fn from(value: MeasureResult) -> Self {
-        (value.width, value.height)
+impl<T> From<T> for MeasureResult where T: Into<(usize, usize)>{
+    fn from(value: T) -> Self {
+        let dimension = value.into();
+
+        MeasureResult {
+            width: dimension.0,
+            height: dimension.1,
+        }
     }
 }

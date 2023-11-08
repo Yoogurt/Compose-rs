@@ -2,7 +2,7 @@ use super::{
     layout_direction::LayoutDirection, measure_result::MeasureResult, measure_scope::MeasureScope,
     measure_scope::MeasureScopeImpl,
 };
-use crate::foundation::geometry::Density;
+use crate::foundation::geometry::{Density, IntSize};
 use crate::foundation::placement_scope::PlacementScope;
 use crate::foundation::placement_scope_impl::PlacementScopeImpl;
 
@@ -26,12 +26,11 @@ impl MeasureScope for MeasureScopeImpl {
 
     fn layout(
         &self,
-        width: usize,
-        height: usize,
+        size: IntSize,
         place_action: &mut dyn FnMut(&dyn PlacementScope),
     ) -> MeasureResult {
-        let place_scope = PlacementScopeImpl::new(width, height, self);
-        place_action(&place_scope);
-        (width, height).into()
+        let place_scope = PlacementScopeImpl::new(size.width(), size.height(), self);
+        // place_action(&place_scope);
+        size.into()
     }
 }

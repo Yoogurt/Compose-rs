@@ -1,4 +1,5 @@
 use std::ops::{Div, Mul};
+use crate::foundation::measure_result::MeasureResult;
 
 use super::{IntSize, Offset, Size, U64ConverterUnsigned};
 
@@ -41,8 +42,20 @@ impl<T> Size<T>
         T::from_u64(self.packed_value & 0xffffffff)
     }
 
+    pub fn width_mut(&mut self) -> &mut T {
+        unsafe {
+            &mut *(self.packed_value as *mut u32 as *mut T)
+        }
+    }
+
     pub fn height(&self) -> T {
         T::from_u64((self.packed_value & 0xffffffff00000000) >> 32)
+    }
+
+    pub fn height_mut(&mut self) -> &mut T {
+        unsafe {
+            &mut *((self.packed_value as *mut u32).add(1) as *mut T)
+        }
     }
 
     pub fn center(&self) -> Offset<T> {
@@ -70,17 +83,6 @@ impl<T> Div<T> for Size<T>
     }
 }
 
-impl<R, T> From<R> for Size<T>
-    where
-        R: Into<(T, T)>,
-        T: U64ConverterUnsigned,
-{
-    fn from(value: R) -> Self {
-        let value = value.into();
-        Self::new(value.0, value.1)
-    }
-}
-
 impl<T> Default for Size<T>
     where
         T: U64ConverterUnsigned + Default,
@@ -91,7 +93,19 @@ impl<T> Default for Size<T>
 }
 
 impl IntSize {
-    pub fn as_f32_size(&self) -> Size<f32>{
+    pub fn as_f32_size(&self) -> Size<f32> {
         Size::new(self.width() as f32, self.height() as f32)
+    }
+}
+
+impl<T> From<Size<T>> for (T, T) where T: U64ConverterUnsigned {
+    fn from(value: Size<T>) -> Self {
+        (value.width(), value.height())
+    }
+}
+
+impl<T> From<(T, T)> for Size<T> where T: U64ConverterUnsigned {
+    fn from(value: (T, T)) -> Self {
+        Size::new(value.0, value.1)
     }
 }

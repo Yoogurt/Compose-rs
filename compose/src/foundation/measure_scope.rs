@@ -1,5 +1,5 @@
 use super::layout_direction::LayoutDirection;
-use crate::foundation::geometry::Density;
+use crate::foundation::geometry::{Density, IntSize};
 use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::placement_scope::PlacementScope;
 use auto_delegate::delegate;
@@ -11,8 +11,7 @@ pub trait MeasureScope {
 
     fn layout(
         &self,
-        width: usize,
-        height: usize,
+        size: IntSize,
         place_action: &mut dyn FnMut(&dyn PlacementScope),
     ) -> MeasureResult;
 }

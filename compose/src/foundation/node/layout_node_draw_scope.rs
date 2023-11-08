@@ -27,7 +27,7 @@ impl<'a> LayoutNodeDrawScope<'a> {
     }
 
     pub(crate) fn draw(mut self: Box<Self>, draw_node: Rc<RefCell<dyn ModifierNode>>) {
-        draw_node.dispatch_for_kind(NodeKind::DrawModifierNode, |draw| {
+        draw_node.dispatch_for_kind(NodeKind::Draw, |draw| {
             self.draw_node = Some(draw_node.clone());
 
             self.canvas_draw_scope.clone().borrow_mut().draw(draw, |node, canvas_draw_scope| {

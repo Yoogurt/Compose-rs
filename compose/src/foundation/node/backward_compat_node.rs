@@ -40,7 +40,7 @@ impl NodeKindPatch for BackwardsCompatNode {
 }
 
 impl LayoutModifierNode for BackwardsCompatNode {
-    fn measure(&mut self, measure_scope: &mut dyn MeasureScope, measurable: &mut dyn Measurable, constraint: &Constraints) -> MeasureResult {
+    fn measure(& self, measure_scope: &mut dyn MeasureScope, measurable: &mut dyn Measurable, constraint: &Constraints) -> MeasureResult {
         self.element.borrow_mut().as_layout_modifier_node_mut().unwrap().measure(measure_scope, measurable, constraint)
     }
 }
@@ -48,5 +48,9 @@ impl LayoutModifierNode for BackwardsCompatNode {
 impl DrawModifierNode for BackwardsCompatNode {
     fn draw(& self, draw_scope: &mut dyn ContentDrawScope) {
         self.element.borrow_mut().as_draw_modifier_node_mut().unwrap().draw(draw_scope)
+    }
+
+    fn on_measure_result_changed(&mut self) {
+
     }
 }

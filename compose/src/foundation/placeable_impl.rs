@@ -7,8 +7,7 @@ use auto_delegate::Delegate;
 
 #[derive(Debug, Delegate, Default)]
 pub(crate) struct PlaceableImpl {
-    pub(crate) width: usize,
-    pub(crate) height: usize,
+    pub(crate) size: IntSize,
     #[to(Measured)]
     pub(crate) measured: MeasuredImpl,
     pub(crate) measured_size: IntSize,
@@ -18,8 +17,7 @@ pub(crate) struct PlaceableImpl {
 impl PlaceableImpl {
     pub(crate) fn new() -> Self {
         PlaceableImpl {
-            width: 0,
-            height: 0,
+            size: IntSize::zero(),
             measured: MeasuredImpl::new(),
             measured_size: IntSize::zero(),
             measurement_constraint: Constraints::unbounded(),
@@ -29,11 +27,11 @@ impl PlaceableImpl {
 
 impl PlaceableImpl {
     fn recalculate_width_and_height(&mut self) {
-        self.width = self
+        *self.size.width_mut() = self
             .measured_size
             .width()
             .coerce_in(self.measurement_constraint.width_range());
-        self.height = self
+        *self.size.height_mut() = self
             .measured_size
             .height()
             .coerce_in(self.measurement_constraint.height_range());
@@ -47,12 +45,8 @@ impl PlaceablePlaceAt for PlaceableImpl {
 }
 
 impl Placeable for PlaceableImpl {
-    fn get_width(&self) -> usize {
-        self.width
-    }
-
-    fn get_height(&self) -> usize {
-        self.height
+    fn get_size(&self) -> IntSize {
+        self.size
     }
 
     fn set_measured_size(&mut self, size: IntSize) {
@@ -67,7 +61,7 @@ impl Placeable for PlaceableImpl {
         self.measurement_constraint = *constraint;
     }
 
-    fn get_measurement_constraint(&self) -> &Constraints {
-        &self.measurement_constraint
+    fn get_measurement_constraint(&self) -> Constraints {
+        self.measurement_constraint
     }
 }

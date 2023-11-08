@@ -5,6 +5,8 @@ use crate::foundation::modifier_container::ModifierContainer;
 use crate::foundation::usage_by_parent::UsageByParent;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use std::cell::RefCell;
+use std::cmp::Ordering;
+use std::collections::vec_deque::IterMut;
 use std::rc::{Rc, Weak};
 use crate::foundation::node_coordinator::NodeCoordinator;
 
@@ -46,19 +48,31 @@ impl LayoutNode {
             let modifier_container = node_mut.modifier_container.clone();
             node_chain
                 .borrow_mut()
-                .attach(Rc::downgrade(&node), modifier_container.clone());
+                .attach(&node,
+                        &modifier_container,
+                &node_mut.layout_node_layout_delegate.borrow().measure_pass_delegate);
 
             let layout_state = node_mut.layout_state.clone();
             node_mut.layout_node_layout_delegate.borrow_mut().attach(
-                node_chain.clone(),
-                modifier_container,
-                layout_state,
+                &node_chain,
+                &modifier_container,
+                &layout_state,
             );
 
             node_mut.layout_node_draw_delegate.borrow_mut().attach(node_chain);
         }
 
         node
+    }
+
+    fn z_comparator(left: &Rc<RefCell<LayoutNode>>, right: &Rc<RefCell<LayoutNode>>) -> Ordering {
+        left.borrow().get_measure_pass_delegate().borrow().z_index.partial_cmp(&right.borrow().get_measure_pass_delegate().borrow().z_index).unwrap()
+    }
+
+    pub(crate) fn z_sort_children(&self) -> Vec<Rc<RefCell<LayoutNode>>> {
+        let mut result = self.children.borrow().clone();
+        result.sort_by(Self::z_comparator);
+        result
     }
 
     pub(crate) fn measure_affects_parent(&self) -> bool {
@@ -85,8 +99,8 @@ impl LayoutNode {
     }
 
     pub(crate) fn for_each_child<F>(&self, f: F)
-    where
-        F: FnMut(&Rc<RefCell<LayoutNode>>),
+        where
+            F: FnMut(&Rc<RefCell<LayoutNode>>),
     {
         self.children.borrow().iter().for_each(f);
     }
@@ -99,7 +113,7 @@ impl LayoutNode {
             .set_measure_policy(measure_policy);
     }
 
-    pub(crate)  fn get_outer_coordinator(&self) -> Rc<RefCell<dyn NodeCoordinator>>{
+    pub(crate) fn get_outer_coordinator(&self) -> Rc<RefCell<dyn NodeCoordinator>> {
         self.node_chain.borrow().outer_coordinator.clone()
     }
 

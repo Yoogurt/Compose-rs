@@ -1,4 +1,5 @@
 use crate::foundation::constraint::Constraints;
+use std::cell::Ref;
 use crate::foundation::geometry::{IntOffset, IntSize};
 use crate::foundation::intrinsic_measurable::IntrinsicMeasurable;
 use crate::foundation::layout_node::LayoutNode;
@@ -21,7 +22,7 @@ use std::rc::{Rc, Weak};
 #[derive(Debug, Delegate)]
 pub(crate) struct MeasurePassDelegate {
     #[to(Placeable, Measured)]
-    pub(crate) placeable_impl: PlaceableImpl,
+    pub(crate) placeable_impl: Rc<RefCell<PlaceableImpl>>,
     pub(crate) nodes: Option<Rc<RefCell<NodeChain>>>,
     pub(crate) remeasure_pending: bool,
     pub(crate) measure_pending: bool,
@@ -36,23 +37,12 @@ pub(crate) struct MeasurePassDelegate {
     pub(crate) parent_data: Option<Box<dyn Any>>,
 }
 
-impl Deref for MeasurePassDelegate {
-    type Target = dyn Placeable;
-
-    fn deref(&self) -> &Self::Target {
-        &self.placeable_impl
-    }
-}
-
-impl DerefMut for MeasurePassDelegate {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.placeable_impl
-    }
-}
-
 impl Remeasurable for MeasurePassDelegate {
     fn remeasure(&mut self, constraint: &Constraints) -> bool {
-        if !self.measure_pending && self.get_measurement_constraint() == constraint {
+        let placeable = self.as_placeable();
+        let mut placeable_mut = placeable.borrow_mut();
+
+        if !self.measure_pending && placeable_mut.get_measurement_constraint() == *constraint {
             return false;
         }
 
@@ -71,11 +61,13 @@ impl Remeasurable for MeasurePassDelegate {
             outer_coordinator.get_measured_size()
         };
 
-        let size_changed = previous_size != new_size
-            || self.get_width() != new_size.width()
-            || self.get_height() != new_size.height();
+        let size = placeable_mut.get_size();
 
-        self.set_measured_size(new_size);
+        let size_changed = previous_size != new_size
+            || size.width() != new_size.width()
+            || size.height() != new_size.height();
+
+        placeable_mut.set_measured_size(new_size);
         size_changed
     }
 }
@@ -99,7 +91,7 @@ impl PlaceablePlaceAt for MeasurePassDelegate {
 impl MeasurePassDelegate {
     pub(crate) fn new() -> Self {
         MeasurePassDelegate {
-            placeable_impl: PlaceableImpl::new(),
+            placeable_impl: PlaceableImpl::new().wrap_with_rc_refcell(),
             nodes: None,
             remeasure_pending: false,
             measure_pending: false,
@@ -121,11 +113,11 @@ impl MeasurePassDelegate {
 
     pub(crate) fn attach(
         &mut self,
-        node_chain: Rc<RefCell<NodeChain>>,
-        layout_state: Rc<RefCell<LayoutState>>,
+        node_chain: &Rc<RefCell<NodeChain>>,
+        layout_state: &Rc<RefCell<LayoutState>>,
     ) {
-        self.nodes = Some(node_chain);
-        self.layout_state = Some(layout_state);
+        self.nodes = Some(node_chain.clone());
+        self.layout_state = Some(layout_state.clone());
     }
 
     pub(crate) fn mark_measure_pending(&mut self) {
@@ -198,8 +190,16 @@ impl MeasurePassDelegate {
         self.get_node_chain().borrow().inner_coordinator.clone()
     }
 
+    pub(crate) fn mark_node_and_subtree_as_placed(&mut self) {
+        self.is_placed = true
+    }
+
     fn on_node_placed(&mut self) {
         let parent = self.get_parent().upgrade().unwrap();
+        if !self.is_placed {
+            self.mark_node_and_subtree_as_placed();
+        }
+
         let mut new_z_index = self.get_inner_coordinator().borrow().get_z_index();
 
         self.get_node_chain()
@@ -247,14 +247,14 @@ impl IntrinsicMeasurable for MeasurePassDelegate {
 }
 
 impl Measurable for MeasurePassDelegate {
-    fn measure(&mut self, constraint: &Constraints) -> &mut dyn Placeable {
+    fn measure(&mut self, constraint: &Constraints) -> Rc<RefCell<dyn Placeable>> {
         self.track_measuremenet_by_parent();
         <Self as Remeasurable>::remeasure(self, constraint);
-        self
+        self.as_placeable()
     }
 
-    fn as_placeable_mut(&mut self) -> &mut dyn Placeable {
-        self
+    fn as_placeable(&mut self) -> Rc<RefCell<dyn Placeable>> {
+        self.placeable_impl.clone()
     }
 
     fn as_measurable_mut(&mut self) -> &mut dyn Measurable {

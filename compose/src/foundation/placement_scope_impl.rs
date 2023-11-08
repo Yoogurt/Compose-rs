@@ -1,3 +1,4 @@
+use std::cell::RefMut;
 use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::placeable::Placeable;
@@ -22,18 +23,20 @@ impl PlacementScope for PlacementScopeImpl<'_> {
         self.measure_scope.get_layout_direction()
     }
 
-    fn place_relative(&self, placeable: &mut dyn Placeable, x: i32, y: i32) {
+    fn place_relative(&self, placeable: RefMut<dyn Placeable>, x: i32, y: i32) {
         self.place_relative_with_z(placeable, x, y, 0.0)
     }
 
-    fn place_relative_with_z(&self, placeable: &mut dyn Placeable, x: i32, y: i32, z_index: f32) {
+    fn place_relative_with_z(&self, mut placeable: RefMut<dyn Placeable>, x: i32, y: i32, z_index: f32) {
         // mirror
         if self.parent_layout_direction() == LayoutDirection::Ltr || self.parent_width() == 0 {
             placeable.place_at((x, y).into(), z_index)
         } else {
+            let x =   self.parent_width() as i32 - placeable.get_size().width() as i32 - x;
+
             placeable.place_at(
                 (
-                    self.parent_width() as i32 - placeable.get_width() as i32 - x,
+                    x,
                     y,
                 )
                     .into(),

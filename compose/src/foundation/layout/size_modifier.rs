@@ -1,6 +1,6 @@
 use crate::foundation::constraint::Constraints;
 use crate::foundation::delegatable_node::DelegatableNode;
-use crate::foundation::geometry::{CoerceAtLeast, CoerceAtMost, CoerceIn, Dp};
+use crate::foundation::geometry::{CoerceAtLeast, CoerceAtMost, CoerceIn, Dp, IntSize};
 use crate::foundation::layout_modifier_node::LayoutModifierNode;
 use crate::foundation::measurable::{Measurable, SingleChildMeasurePolicy};
 use crate::foundation::measure_result::MeasureResult;
@@ -79,7 +79,7 @@ fn size_measure_policy<T>(
             };
 
             let placeable = measurable.measure(&target_constraints);
-            measure_scope.layout(0, 0, &mut |scope| scope.place_relative(placeable, 0, 0))
+            measure_scope.layout(IntSize::zero(), &mut |scope| scope.place_relative(placeable.borrow_mut(), 0, 0))
         },
     )
 }
@@ -147,7 +147,7 @@ impl SizeNode {
 
 impl LayoutModifierNode for SizeNode {
     fn measure(
-        &mut self,
+        & self,
         measure_scope: &mut dyn MeasureScope,
         measurable: &mut dyn Measurable,
         constraints: &Constraints,
@@ -197,17 +197,17 @@ impl LayoutModifierNode for SizeNode {
         };
 
         let mut placeable = measurable.measure(&wrapped_constraints);
+        let dimension = placeable.borrow().get_size();
         measure_scope.layout(
-            placeable.get_width(),
-            placeable.get_height(),
-            &mut |scope| scope.place_relative(placeable, 0, 0),
+            dimension,
+            &mut |scope| scope.place_relative(placeable.borrow_mut(), 0, 0),
         )
     }
 }
 
 impl NodeKindPatch for SizeNode {
     fn get_node_kind(& self) -> NodeKind {
-        NodeKind::LayoutModifierNode
+        NodeKind::Layout
     }
 }
 

@@ -1,5 +1,6 @@
 use std::cell::{RefCell, RefMut};
 use std::rc::Weak;
+use std::rc::Rc;
 
 use crate::foundation::constraint::Constraints;
 use crate::foundation::layout_node::LayoutNode;
@@ -17,12 +18,15 @@ use crate::foundation::measurable::MultiChildrenMeasurePolicy;
 use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 use crate::foundation::usage_by_parent::UsageByParent;
-use std::ops::DerefMut;
+use std::ops::{Deref, DerefMut};
 use compose_foundation_macro::AnyConverter;
 use crate::foundation::canvas::Canvas;
 use crate::foundation::layout_node_layout_delegate::LayoutNodeLayoutDelegate;
+use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
 use crate::foundation::node_coordinator::PerformDrawTrait;
 use crate::foundation::oop::AnyConverter;
+use crate::foundation::measure_result::MeasureResultProvider;
+use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
 #[derive(Delegate, AnyConverter)]
 pub(crate) struct InnerNodeCoordinator {
@@ -34,15 +38,32 @@ pub(crate) struct InnerNodeCoordinator {
     MeasureScope,
     IntrinsicMeasurable,
     LookaheadCapablePlaceable,
-    TailModifierNodeProvider
+    TailModifierNodeProvider,
+    MeasureResultProvider
     )]
     pub(crate) node_coordinator_impl: NodeCoordinatorImpl,
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
     pub(crate) measure_policy: MultiChildrenMeasurePolicy,
+    pub(crate) measure_pass_delegate: Weak<RefCell<MeasurePassDelegate>>,
+    weak_this: Weak<RefCell<InnerNodeCoordinator>>,
+}
+
+impl DerefMut for InnerNodeCoordinator {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.node_coordinator_impl
+    }
+}
+
+impl Deref for InnerNodeCoordinator {
+    type Target = dyn NodeCoordinator;
+
+    fn deref(&self) -> &Self::Target {
+        &self.node_coordinator_impl
+    }
 }
 
 fn error_measure_policy(
-    _measure_scope: &mut dyn MeasureScope,
+    _measure_scope: &dyn MeasureScope,
     _children: &mut [&mut dyn Measurable],
     _constraint: &Constraints,
 ) -> MeasureResult {
@@ -50,16 +71,22 @@ fn error_measure_policy(
 }
 
 impl InnerNodeCoordinator {
-    pub(crate) fn new() -> InnerNodeCoordinator {
-        InnerNodeCoordinator {
+    pub(crate) fn new() -> Rc<RefCell<InnerNodeCoordinator>> {
+        let mut result = InnerNodeCoordinator {
             measure_policy: Box::new(error_measure_policy),
             layout_node: Weak::new(),
             node_coordinator_impl: NodeCoordinatorImpl::new(),
-        }
+            measure_pass_delegate: Weak::new(),
+        }.wrap_with_rc_refcell();
+
+        let this: Rc<RefCell<dyn PerformDrawTrait>> = result.clone();
+        result.borrow_mut().node_coordinator_impl.attach_vtable(Rc::downgrade(&this));
+        result
     }
 
-    pub(crate) fn attach(&mut self, layout_node: Weak<RefCell<LayoutNode>>) {
-        self.layout_node = layout_node.clone();
+    pub(crate) fn attach(&mut self, layout_node: &Rc<RefCell<LayoutNode>>, measure_pass_delegate: &Rc<RefCell<MeasurePassDelegate>>) {
+        self.layout_node = Rc::downgrade(layout_node);
+        self.measure_pass_delegate = Rc::downgrade(measure_pass_delegate);
         self.node_coordinator_impl.attach(layout_node);
     }
 
@@ -70,15 +97,10 @@ impl InnerNodeCoordinator {
     pub(crate) fn on_measured(&self) {
         println!("child {:p} measured {:?}\n", self, self.get_measured_size());
     }
-
-    pub(crate) fn set_measured_result(&mut self, measure_result: MeasureResult) {
-        dbg!(&measure_result);
-        // self.set_measured_size(measure_result);
-    }
 }
 
 impl Measurable for InnerNodeCoordinator {
-    fn measure(&mut self, constraint: &Constraints) -> &mut dyn Placeable {
+    fn measure(&mut self, constraint: &Constraints) -> Rc<RefCell<dyn Placeable>> {
         { self.layout_node.upgrade().unwrap().borrow() }.for_each_child(|child| {
             child
                 .borrow_mut()
@@ -109,17 +131,17 @@ impl Measurable for InnerNodeCoordinator {
                 .map(|child| { child.deref_mut() })
                 .collect::<Vec<_>>();
 
-            let measure_scope = &mut self.node_coordinator_impl;
+            let measure_scope = &self.node_coordinator_impl;
             measure_policy(measure_scope, &mut measurable_mut[..], constraint)
         };
         self.set_measured_result(measure_result);
 
         self.on_measured();
-        self
+        self.as_placeable()
     }
 
-    fn as_placeable_mut(&mut self) -> &mut dyn Placeable {
-        self
+    fn as_placeable(&mut self) -> Weak<RefCell<dyn Placeable>> {
+        self.weak_this.clone()
     }
 
     fn as_measurable_mut(&mut self) -> &mut dyn Measurable {
@@ -129,13 +151,21 @@ impl Measurable for InnerNodeCoordinator {
 
 impl PlaceablePlaceAt for InnerNodeCoordinator {
     fn place_at(&mut self, position: IntOffset, z_index: f32) {
-        self.node_coordinator_impl.place_at(position, z_index)
+        self.node_coordinator_impl.place_at(position, z_index);
+        self.on_placed();
     }
 }
 
 impl PerformDrawTrait for InnerNodeCoordinator {
     fn perform_draw(&self, canvas: &mut dyn Canvas) {
-        panic!("performing drawing")
+        let children = self.layout_node.upgrade().unwrap().borrow().z_sort_children();
+
+        children.iter().for_each(|child| {
+            let measure_pass_delegate = child.borrow().get_measure_pass_delegate();
+            if measure_pass_delegate.borrow().is_placed {
+                child.borrow().layout_node_draw_delegate.borrow_mut().draw(canvas);
+            }
+        });
     }
 }
 

@@ -18,7 +18,6 @@ pub(crate) struct LayoutNodeLayoutDelegate {
     pub(crate) nodes: Option<Rc<RefCell<NodeChain>>>,
     pub(crate) modifier_container: Rc<RefCell<ModifierContainer>>,
     pub(crate) measure_pass_delegate: Rc<RefCell<MeasurePassDelegate>>,
-    // pub(crate) lookahead_pass_delegate: Rc<RefCell<LookaheadPassDelegate>>,
     pub(crate) measure_pending: bool,
     pub(crate) layout_pending: bool,
 }
@@ -40,12 +39,12 @@ impl LayoutNodeLayoutDelegate {
 
     pub(crate) fn attach(
         &mut self,
-        node_chain: Rc<RefCell<NodeChain>>,
-        modifier_container: Rc<RefCell<ModifierContainer>>,
-        layout_state: Rc<RefCell<LayoutState>>,
+        node_chain: &Rc<RefCell<NodeChain>>,
+        modifier_container: &Rc<RefCell<ModifierContainer>>,
+        layout_state: &Rc<RefCell<LayoutState>>,
     ) {
         self.nodes = Some(node_chain.clone());
-        self.modifier_container = modifier_container;
+        self.modifier_container = modifier_container.clone();
         self.measure_pass_delegate
             .borrow_mut()
             .attach(node_chain, layout_state);

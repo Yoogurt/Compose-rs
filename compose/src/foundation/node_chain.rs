@@ -18,6 +18,7 @@ use std::{cell::RefCell, rc::Rc};
 use std::cell::RefMut;
 use std::ops::DerefMut;
 use compose_foundation_macro::{ModifierElement};
+use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
 use crate::foundation::node::BackwardsCompatNode;
 
 #[derive(Debug, Delegate, Default, ModifierElement)]
@@ -52,7 +53,7 @@ impl_node_kind_any!(SentineHeadNode);
 
 impl NodeChain {
     pub(crate) fn new() -> Rc<RefCell<Self>> {
-        let inner_node_coordinator = InnerNodeCoordinator::new().wrap_with_rc_refcell();
+        let inner_node_coordinator = InnerNodeCoordinator::new();
         let head = inner_node_coordinator.borrow().get_tail();
 
         let result = NodeChain {
@@ -83,12 +84,13 @@ impl NodeChain {
 
     pub(crate) fn attach(
         &mut self,
-        layout_node: Weak<RefCell<LayoutNode>>,
-        modifier_container: Rc<RefCell<ModifierContainer>>,
+        layout_node: &Rc<RefCell<LayoutNode>>,
+        modifier_container: &Rc<RefCell<ModifierContainer>>,
+        measure_pass_delegate: &Rc<RefCell<MeasurePassDelegate>>
     ) {
-        self.layout_node = layout_node.clone();
-        self.modifier_container = modifier_container;
-        self.inner_coordinator.borrow_mut().attach(layout_node);
+        self.layout_node = Rc::downgrade(layout_node);
+        self.modifier_container = modifier_container.clone();
+        self.inner_coordinator.borrow_mut().attach(layout_node, measure_pass_delegate);
     }
 
     fn pad_chain(&mut self) -> Rc<RefCell<dyn ModifierNode>> {
@@ -178,7 +180,7 @@ impl NodeChain {
     ) -> Option<&'b mut dyn LayoutModifierNode> where 'a: 'b {
         let node_kind = node.get_node_kind();
         match node_kind {
-            NodeKind::LayoutModifierNode => node.as_layout_modifier_node_mut(),
+            NodeKind::Layout => node.as_layout_modifier_node_mut(),
             _ => {
                 println!("unknown type: {:?}", node_kind);
                 None
@@ -295,7 +297,8 @@ impl NodeChain {
 
         if coordinator_sync_needed {
             self.sync_coordinators();
-            // dbg!("after sync coordinators {:?}", &self.outer_coordinator);
+            // dbg!(&self.head);
+            // dbg!(&self.outer_coordinator);
         }
     }
 

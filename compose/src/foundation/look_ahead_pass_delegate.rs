@@ -6,6 +6,8 @@ use crate::foundation::placeable_impl::PlaceableImpl;
 use crate::foundation::remeasurable::Remeasurable;
 use auto_delegate::Delegate;
 use std::any::Any;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 #[derive(Delegate, Debug)]
 pub(crate) struct LookaheadPassDelegate {
@@ -28,12 +30,12 @@ impl Remeasurable for LookaheadPassDelegate {
 }
 
 impl Measurable for LookaheadPassDelegate {
-    fn measure(&mut self, _constraint: &Constraints) -> &mut dyn Placeable {
-        &mut self.placeable_impl
+    fn measure(&mut self, _constraint: &Constraints) -> Rc<RefCell<dyn Placeable>> {
+        todo!()
     }
 
-    fn as_placeable_mut(&mut self) -> &mut dyn Placeable {
-        &mut self.placeable_impl
+    fn as_placeable(&mut self) -> Rc<RefCell<dyn Placeable>> {
+        todo!()
     }
 
     fn as_measurable_mut(&mut self) -> &mut dyn Measurable {

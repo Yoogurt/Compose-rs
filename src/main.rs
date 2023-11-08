@@ -19,7 +19,7 @@ use compose::widgets::r#box::BoxLayout;
 
 #[Composable]
 fn test_box_composable() {
-    BoxLayout(Modifier.background(Color::GREEN), |_| {});
+    BoxLayout(Modifier.width(100.dp()).background(Color::GREEN), |_| {});
 }
 
 fn run_skia(content: fn()) {
