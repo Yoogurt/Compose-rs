@@ -11,5 +11,4 @@ pub trait Measured {
 pub(crate) struct MeasuredImpl {
     pub(crate) measured_width: usize,
     pub(crate) measured_height: usize,
-    // pub(crate) parent_data: Option<Box<dyn Any>>
 }

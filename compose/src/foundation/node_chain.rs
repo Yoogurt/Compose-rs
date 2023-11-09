@@ -17,6 +17,7 @@ use std::rc::Weak;
 use std::{cell::RefCell, rc::Rc};
 use std::cell::RefMut;
 use std::ops::DerefMut;
+use std::process::id;
 use compose_foundation_macro::{ModifierElement};
 use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
 use crate::foundation::node::BackwardsCompatNode;
@@ -39,8 +40,10 @@ pub(crate) struct NodeChain {
     pub(crate) inner_coordinator: Rc<RefCell<InnerNodeCoordinator>>,
     pub(crate) outer_coordinator: Rc<RefCell<dyn NodeCoordinator>>,
 
-    pub(crate) parent: Weak<RefCell<LayoutNode>>,
+    pub(crate) parent: Option<Weak<RefCell<LayoutNode>>>,
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
+
+    identify: u32
 }
 impl_node_kind_any!(TailModifierNode);
 
@@ -69,28 +72,31 @@ impl NodeChain {
             parent: Default::default(),
 
             layout_node: Weak::new(),
+            identify: 0
         };
 
         result.wrap_with_rc_refcell()
     }
 
-    pub(crate) fn set_parent<T: Into<Weak<RefCell<LayoutNode>>>>(&mut self, parent: T) {
-        self.parent = parent.into();
+    pub(crate) fn set_parent(&mut self, parent: Option<Weak<RefCell<LayoutNode>>>) {
+        self.parent = parent;
     }
 
-    pub(crate) fn get_parent(&self) -> Weak<RefCell<LayoutNode>> {
+    pub(crate) fn get_parent(&self) -> Option<Weak<RefCell<LayoutNode>>> {
         self.parent.clone()
     }
 
     pub(crate) fn attach(
         &mut self,
+        identify: u32,
         layout_node: &Rc<RefCell<LayoutNode>>,
         modifier_container: &Rc<RefCell<ModifierContainer>>,
         measure_pass_delegate: &Rc<RefCell<MeasurePassDelegate>>
     ) {
+        self.identify = identify;
         self.layout_node = Rc::downgrade(layout_node);
         self.modifier_container = modifier_container.clone();
-        self.inner_coordinator.borrow_mut().attach(layout_node, measure_pass_delegate);
+        self.inner_coordinator.borrow_mut().attach(identify, layout_node, measure_pass_delegate);
     }
 
     fn pad_chain(&mut self) -> Rc<RefCell<dyn ModifierNode>> {
@@ -241,7 +247,7 @@ impl NodeChain {
 
         coordinator
             .borrow_mut()
-            .set_wrapped_by(self.parent.upgrade().and_then(|parent_layout_node| {
+            .set_wrapped_by(self.parent.as_ref().unwrap_or(&Weak::default()).upgrade().and_then(|parent_layout_node| {
                 let parent_inner_coordinator = Rc::downgrade(
                     &parent_layout_node
                         .borrow()
@@ -309,7 +315,10 @@ impl NodeChain {
         let mut coordinator = self.outer_coordinator.clone();
         let inner_coordinator = self.inner_coordinator.clone();
 
-        while coordinator.as_ptr() != inner_coordinator.as_ptr() {
+        let mut coordinator_ptr = coordinator.as_ptr() as *const ();
+        let inner_coodinator_ptr = inner_coordinator.as_ptr() as *const ();
+
+        while coordinator_ptr != inner_coodinator_ptr {
             block(
                 coordinator
                     .borrow()
@@ -319,6 +328,7 @@ impl NodeChain {
             );
             let wrapped = coordinator.borrow().get_wrapped().unwrap();
             coordinator = wrapped;
+            coordinator_ptr = coordinator.as_ptr() as *const();
         }
     }
 }

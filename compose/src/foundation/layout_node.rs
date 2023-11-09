@@ -8,6 +8,8 @@ use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::collections::vec_deque::IterMut;
 use std::rc::{Rc, Weak};
+use std::sync::atomic::AtomicU32;
+use crate::foundation::node::Owner;
 use crate::foundation::node_coordinator::NodeCoordinator;
 
 use super::canvas::Canvas;
@@ -16,6 +18,10 @@ use super::measure_result::MeasureResult;
 use super::modifier::Modifier;
 use super::remeasurable::StatefulRemeasurable;
 use super::{layout_state::LayoutState, node_chain::NodeChain};
+
+thread_local! {
+    static IDENTIFY: AtomicU32 = AtomicU32::new(0);
+}
 
 #[derive(Debug)]
 pub(crate) struct LayoutNode {
@@ -26,6 +32,9 @@ pub(crate) struct LayoutNode {
     pub(crate) layout_node_draw_delegate: Rc<RefCell<LayoutNodeDrawDelegate>>,
     pub(crate) usage_by_parent: UsageByParent,
     pub(crate) layout_state: Rc<RefCell<LayoutState>>,
+
+    pub(crate) owner: Option<Weak<RefCell<dyn Owner>>>,
+    pub(crate) identify: u32,
 }
 
 impl LayoutNode {
@@ -38,22 +47,27 @@ impl LayoutNode {
             layout_node_draw_delegate: LayoutNodeDrawDelegate::new(),
             usage_by_parent: UsageByParent::NotUsed,
             layout_state: LayoutState::Idle.wrap_with_rc_refcell(),
+
+            owner: None,
+            identify: IDENTIFY.with(|identity| identity.fetch_add(1, std::sync::atomic::Ordering::SeqCst)),
         };
 
         let node = node.wrap_with_rc_refcell();
         {
             let node_mut = node.borrow_mut();
+            let identify = node_mut.identify;
 
             let node_chain = node_mut.node_chain.clone();
             let modifier_container = node_mut.modifier_container.clone();
             node_chain
                 .borrow_mut()
-                .attach(&node,
+                .attach(identify, &node,
                         &modifier_container,
-                &node_mut.layout_node_layout_delegate.borrow().measure_pass_delegate);
+                        &node_mut.layout_node_layout_delegate.borrow().measure_pass_delegate);
 
             let layout_state = node_mut.layout_state.clone();
             node_mut.layout_node_layout_delegate.borrow_mut().attach(
+                identify,
                 &node_chain,
                 &modifier_container,
                 &layout_state,
@@ -64,6 +78,46 @@ impl LayoutNode {
 
         node
     }
+
+    pub fn attach(&mut self, owner: Weak<RefCell<dyn Owner>>) {
+        let parent = self.get_parent();
+        if parent.is_none() {
+            self.get_measure_pass_delegate().borrow_mut().is_placed = true;
+        }
+
+        self.get_outer_coordinator().borrow_mut().set_wrapped_by(parent.and_then(|parent| Some(
+            Rc::downgrade(
+                &parent
+                    .upgrade()
+                    .unwrap()
+                    .borrow().get_inner_coordinator()
+            )
+        )));
+
+        self.owner = Some(owner.clone());
+        owner.upgrade().unwrap().borrow().on_attach(self);
+
+        self.for_each_child(|child| {
+            child.borrow_mut().attach(owner.clone());
+        });
+
+        self.layout_node_layout_delegate.borrow().update_parent_data();
+    }
+
+    pub fn detach(&mut self) {
+        let owner = self.owner.take();
+        match owner {
+            None => {
+                panic!("Cannot detach node that is already detached!")
+            }
+            Some(owner) => {
+                self.for_each_child(|child| {
+                    child.borrow_mut().detach();
+                });
+            }
+        }
+    }
+
 
     fn z_comparator(left: &Rc<RefCell<LayoutNode>>, right: &Rc<RefCell<LayoutNode>>) -> Ordering {
         left.borrow().get_measure_pass_delegate().borrow().z_index.partial_cmp(&right.borrow().get_measure_pass_delegate().borrow().z_index).unwrap()
@@ -117,19 +171,33 @@ impl LayoutNode {
         self.node_chain.borrow().outer_coordinator.clone()
     }
 
+    pub(crate) fn get_inner_coordinator(&self) -> Rc<RefCell<dyn NodeCoordinator>> {
+        self.node_chain.borrow().inner_coordinator.clone()
+    }
+
     pub(crate) fn adopt_child(
-        self_: &Rc<RefCell<LayoutNode>>,
+        this: &Rc<RefCell<LayoutNode>>,
         child: &Rc<RefCell<LayoutNode>>,
         is_root: bool,
     ) {
-        self_.borrow().children.borrow_mut().push(child.clone());
+        this.borrow().children.borrow_mut().push(child.clone());
         if !is_root {
             child
                 .borrow()
                 .node_chain
                 .borrow_mut()
-                .set_parent(Rc::downgrade(self_));
+                .set_parent(Some(Rc::downgrade(this)));
         }
+
+        let owner = this.borrow().owner.clone();
+        if let Some(owner) = owner {
+            child.borrow_mut().attach(owner);
+        }
+    }
+
+    pub(crate) fn remove_child(
+        self_: &Rc<RefCell<LayoutNode>>,
+    ) {
     }
 
     pub fn as_remeasurable(&self) -> Rc<RefCell<dyn StatefulRemeasurable>> {
@@ -146,7 +214,7 @@ impl LayoutNode {
             .update_parent_data();
     }
 
-    pub(crate) fn get_parent(&self) -> Weak<RefCell<LayoutNode>> {
+    pub(crate) fn get_parent(&self) -> Option<Weak<RefCell<LayoutNode>>> {
         self.node_chain.borrow().parent.clone()
     }
 

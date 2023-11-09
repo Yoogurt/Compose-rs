@@ -46,6 +46,7 @@ pub(crate) struct InnerNodeCoordinator {
     pub(crate) measure_pass_delegate: Weak<RefCell<MeasurePassDelegate>>,
 
     weak_this: Weak<RefCell<Self>>,
+    identify: u32
 }
 
 impl DerefMut for InnerNodeCoordinator {
@@ -78,6 +79,7 @@ impl InnerNodeCoordinator {
             node_coordinator_impl: NodeCoordinatorImpl::new(),
             measure_pass_delegate: Weak::new(),
             weak_this: Weak::new(),
+            identify: 0
         }.wrap_with_rc_refcell();
 
         let this: Rc<RefCell<dyn PerformDrawTrait>> = result.clone();
@@ -91,7 +93,8 @@ impl InnerNodeCoordinator {
         result
     }
 
-    pub(crate) fn attach(&mut self, layout_node: &Rc<RefCell<LayoutNode>>, measure_pass_delegate: &Rc<RefCell<MeasurePassDelegate>>) {
+    pub(crate) fn attach(&mut self, identify: u32, layout_node: &Rc<RefCell<LayoutNode>>, measure_pass_delegate: &Rc<RefCell<MeasurePassDelegate>>) {
+        self.identify = identify;
         self.layout_node = Rc::downgrade(layout_node);
         self.measure_pass_delegate = Rc::downgrade(measure_pass_delegate);
         self.node_coordinator_impl.attach(layout_node);

@@ -272,7 +272,7 @@ impl NodeCoordinatorImpl {
                 return Some(visit);
             }
 
-            if visit.as_ptr() == stop_node.as_ptr() {
+            if visit.as_ptr() as *const () == stop_node.as_ptr() as *const () {
                 return None;
             }
 
@@ -296,7 +296,7 @@ impl NodeCoordinatorImpl {
                 let canvas_draw_scope = CanvasDrawScope::new(draw_context, layout_direction);
                 let draw_scope = LayoutNodeDrawScope::new(canvas_draw_scope).wrap_with_box();
 
-                // draw_scope.draw()
+                draw_scope.draw(head)
             }
             None => {
                 self.perform_draw(canvas)

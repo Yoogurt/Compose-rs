@@ -1,7 +1,9 @@
 use std::fmt::{Debug, Formatter};
 use auto_delegate::delegate;
 use crate::foundation::geometry::IntSize;
+use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::placement_scope::PlacementScope;
+use crate::foundation::placement_scope_impl::PlacementScopeImpl;
 
 #[derive(Default)]
 pub struct MeasureResult {
@@ -49,6 +51,14 @@ impl MeasureResult {
             width: size.width(),
             height: size.height(),
             placement_block,
+        }
+    }
+
+    pub(crate) fn place_children(&mut self, measure_scope: &dyn MeasureScope) {
+        let place_action = self.placement_block.take();
+        if let Some(place_action) = place_action {
+            let placement_scope = PlacementScopeImpl::new(self.width, self.height, measure_scope);
+            place_action(&placement_scope);
         }
     }
 

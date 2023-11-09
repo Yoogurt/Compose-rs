@@ -56,20 +56,20 @@ fn run_skia(content: fn()) {
         .unwrap();
 
     let mut canvas = new_canvas(surface.canvas());
-    let mut compose_view = MacOSComposeView::new();
+    let mut compose_view_rc = MacOSComposeView::new();
+    let mut compose_view = compose_view_rc.borrow_mut();
     compose_view.set_content(content);
-
-    // while window.is_open() && !window.is_key_down(Key::Escape) {
-    //     std::thread::sleep(Duration::from_millis(5000));
+    drop(compose_view);
 
     Composer::apply_changes();
     Composer::apply_deferred_changes();
 
+    let mut compose_view = compose_view_rc.borrow_mut();
     compose_view.dispatch_measure(800, 500);
+    compose_view.dispatch_layout();
     compose_view.dispatch_draw(&mut canvas);
 
-    std::thread::sleep(Duration::from_millis(10000));
-    // }
+    std::thread::sleep(Duration::from_secs(30));
 }
 
 fn main() {

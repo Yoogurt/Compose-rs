@@ -16,12 +16,15 @@ use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use auto_delegate::Delegate;
 use std::any::Any;
 use std::cell::RefCell;
+use std::ops::Deref;
 use std::rc::{Rc, Weak};
+use crate::foundation::inner_node_coordinator::InnerNodeCoordinator;
 use crate::foundation::measure_result::MeasureResult;
+use crate::foundation::measure_scope::MeasureScope;
+use crate::foundation::utils::self_reference::SelfReference;
 
 #[derive(Debug, Delegate)]
 pub(crate) struct MeasurePassDelegate {
-    #[to(Placeable, Measured)]
     pub(crate) placeable_impl: Rc<RefCell<PlaceableImpl>>,
     pub(crate) nodes: Option<Rc<RefCell<NodeChain>>>,
     pub(crate) remeasure_pending: bool,
@@ -35,6 +38,11 @@ pub(crate) struct MeasurePassDelegate {
     pub(crate) is_placed: bool,
     pub(crate) layout_state: Option<Rc<RefCell<LayoutState>>>,
     pub(crate) parent_data: Option<Box<dyn Any>>,
+
+    weak_self: Weak<RefCell<Self>>,
+    layingout_children: bool,
+
+    identify: u32,
 }
 
 impl Remeasurable for MeasurePassDelegate {
@@ -53,6 +61,7 @@ impl Remeasurable for MeasurePassDelegate {
             outer_coordinator.get_measured_size()
         };
 
+        placeable_mut.set_measurement_constraint(constraint);
         self.perform_measure(constraint);
 
         let new_size = {
@@ -81,7 +90,7 @@ impl StatefulRemeasurable for MeasurePassDelegate {
 impl PlaceablePlaceAt for MeasurePassDelegate {
     fn place_at(&mut self, position: IntOffset, z_index: f32) {
         if position != self.last_position {
-            self.mark_layout_pending();
+            self.last_position = position;
         }
 
         self.place_outer_coordinator(position, z_index);
@@ -89,8 +98,8 @@ impl PlaceablePlaceAt for MeasurePassDelegate {
 }
 
 impl MeasurePassDelegate {
-    pub(crate) fn new() -> Self {
-        MeasurePassDelegate {
+    pub(crate) fn new() -> Rc<RefCell<Self>> {
+        let mut result = MeasurePassDelegate {
             placeable_impl: PlaceableImpl::new().wrap_with_rc_refcell(),
             nodes: None,
             remeasure_pending: false,
@@ -104,7 +113,18 @@ impl MeasurePassDelegate {
             is_placed: false,
             layout_state: None,
             parent_data: None,
+            layingout_children: false,
+            identify: 0,
+            weak_self: Weak::default(),
+        }.wrap_with_rc_refcell();
+
+        result.borrow_mut().weak_self = Rc::downgrade(&result);
+        {
+            let this = Rc::downgrade(&result);
+            result.borrow().placeable_impl.borrow_mut().set_vtable(this);
         }
+
+        result
     }
 
     pub(crate) fn set_measured_by_parent(&mut self, measured_by_parent: UsageByParent) {
@@ -113,9 +133,11 @@ impl MeasurePassDelegate {
 
     pub(crate) fn attach(
         &mut self,
+        identify: u32,
         node_chain: &Rc<RefCell<NodeChain>>,
         layout_state: &Rc<RefCell<LayoutState>>,
     ) {
+        self.identify = identify;
         self.nodes = Some(node_chain.clone());
         self.layout_state = Some(layout_state.clone());
     }
@@ -165,7 +187,7 @@ impl MeasurePassDelegate {
 
     fn track_measuremenet_by_parent(&mut self) {
         let parent = self.nodes.clone().unwrap().borrow().get_parent();
-        if let Some(parent) = parent.upgrade() {
+        if let Some(parent) = parent.unwrap_or(Weak::default()).upgrade() {
             let layout_state = parent.borrow().get_layout_state();
             self.measured_by_parent = match layout_state {
                 LayoutState::Measuring => UsageByParent::InMeasureBlock,
@@ -181,11 +203,11 @@ impl MeasurePassDelegate {
         self.nodes.clone().unwrap()
     }
 
-    fn get_parent(&self) -> Weak<RefCell<LayoutNode>> {
+    fn get_parent(&self) -> Option<Weak<RefCell<LayoutNode>>> {
         self.get_node_chain().borrow().get_parent()
     }
 
-    fn get_inner_coordinator(&self) -> Rc<RefCell<dyn NodeCoordinator>> {
+    fn get_inner_coordinator(&self) -> Rc<RefCell<InnerNodeCoordinator>> {
         self.get_node_chain().borrow().inner_coordinator.clone()
     }
 
@@ -194,7 +216,7 @@ impl MeasurePassDelegate {
     }
 
     fn on_node_placed(&mut self) {
-        let parent = self.get_parent().upgrade().unwrap();
+        // let parent = self.get_parent().unwrap().upgrade().unwrap();
         if !self.is_placed {
             self.mark_node_and_subtree_as_placed();
         }
@@ -211,6 +233,30 @@ impl MeasurePassDelegate {
             self.z_index = new_z_index;
             // todo invalidate parent z order
         }
+
+        self.layout_children()
+    }
+
+    fn on_before_layout_children(&mut self) {}
+
+    fn layout_children(&mut self) {
+        self.layingout_children = true;
+        if self.layout_pending {
+            self.on_before_layout_children();
+        }
+        self.layout_pending = false;
+        let layout_state = self.layout_state.as_ref().unwrap().clone();
+        let old_layout_state = *layout_state.borrow_mut();
+        *layout_state.borrow_mut() = LayoutState::LayingOut;
+
+        {
+            let inner_coordinator = self.get_inner_coordinator();
+            let mut inner_coordinator_mut = inner_coordinator.borrow_mut();
+            inner_coordinator_mut.get_measured_result().unwrap().place_children(inner_coordinator_mut.deref());
+        }
+
+        *layout_state.borrow_mut() = old_layout_state;
+        self.layingout_children = false;
     }
 
     fn place_outer_coordinator(&mut self, position: IntOffset, z_index: f32) {
@@ -226,6 +272,7 @@ impl MeasurePassDelegate {
 
             let outer_coordinator = self.get_outer_coordinator();
             outer_coordinator.borrow_mut().place_at(position, z_index);
+            self.on_node_placed();
         }
         self.set_layout_state(LayoutState::Idle);
     }
@@ -261,5 +308,11 @@ impl Measurable for MeasurePassDelegate {
 
     fn as_measurable_mut(&mut self) -> &mut dyn Measurable {
         self
+    }
+}
+
+impl SelfReference for MeasurePassDelegate {
+    fn get_self(&self) -> Weak<RefCell<Self>> {
+        self.weak_self.clone()
     }
 }

@@ -18,8 +18,7 @@ pub(crate) struct LayoutNodeLayoutDelegate {
     pub(crate) nodes: Option<Rc<RefCell<NodeChain>>>,
     pub(crate) modifier_container: Rc<RefCell<ModifierContainer>>,
     pub(crate) measure_pass_delegate: Rc<RefCell<MeasurePassDelegate>>,
-    pub(crate) measure_pending: bool,
-    pub(crate) layout_pending: bool,
+    identify: u32
 }
 
 impl LayoutNodeLayoutDelegate {
@@ -29,25 +28,24 @@ impl LayoutNodeLayoutDelegate {
             last_constraints: None,
             modifier_container: ModifierContainer::new().wrap_with_rc_refcell(),
             nodes: None,
-            measure_pass_delegate: MeasurePassDelegate::new().wrap_with_rc_refcell(),
-            // lookahead_pass_delegate: LookaheadPassDelegate::new().wrap_with_rc_refcell(),
-            measure_pending: false,
-            layout_pending: false,
-        }
-            .wrap_with_rc_refcell()
+            measure_pass_delegate: MeasurePassDelegate::new(),
+            identify: 0
+        }.wrap_with_rc_refcell()
     }
 
     pub(crate) fn attach(
         &mut self,
+        identify: u32,
         node_chain: &Rc<RefCell<NodeChain>>,
         modifier_container: &Rc<RefCell<ModifierContainer>>,
         layout_state: &Rc<RefCell<LayoutState>>,
     ) {
+        self.identify = identify;
         self.nodes = Some(node_chain.clone());
         self.modifier_container = modifier_container.clone();
         self.measure_pass_delegate
             .borrow_mut()
-            .attach(node_chain, layout_state);
+            .attach(identify, node_chain, layout_state);
     }
 
     pub(crate) fn as_measurable(&self) -> Ref<dyn Measurable> {
@@ -77,7 +75,7 @@ impl LayoutNodeLayoutDelegate {
 
         if size_changed {
             let parent = self.nodes.clone().unwrap().borrow().get_parent();
-            if parent.strong_count() > 0 {
+            if parent.is_some() {
                 match self.measure_pass_delegate.borrow().measured_by_parent {
                     UsageByParent::InMeasureBlock => {}
                     UsageByParent::InLayoutBlock => {}

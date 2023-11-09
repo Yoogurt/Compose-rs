@@ -38,6 +38,7 @@ impl BackgroundModifier for Modifier {
 }
 
 #[derive(Debug, ModifierElement, Delegate)]
+#[Impl(DrawModifierNodeConverter)]
 struct BackgroundNode {
     color: Color,
     alpha: f32,
@@ -48,7 +49,7 @@ struct BackgroundNode {
 
 impl BackgroundNode {
     fn draw_rect(&self, draw_scope: &mut dyn ContentDrawScope) {
-        draw_scope.draw_rect(self.color, Offset::zero(), None, 1.0);
+        draw_scope.draw_rect(self.color, Offset::zero(), Some(draw_scope.get_size()), 1.0);
     }
 }
 

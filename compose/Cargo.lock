@@ -18,6 +18,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "auto-delegate"
+version = "0.0.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "101e9976877d8a1d8e5ff7a59b2414660b9019ccf11e51c998f7147472a2e02e"
+dependencies = [
+ "auto-delegate-impl",
+]
+
+[[package]]
+name = "auto-delegate-impl"
+version = "0.0.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9fe82819c55fbdd3684a77c74aae1c6a897580550da9270133f12c5b4221137d"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "base64"
 version = "0.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -103,9 +123,22 @@ dependencies = [
 name = "compose"
 version = "0.1.0"
 dependencies = [
+ "auto-delegate",
+ "compose_foundation_macro",
  "compose_macro",
  "lazy_static",
  "skia-safe",
+]
+
+[[package]]
+name = "compose_foundation_macro"
+version = "0.1.0"
+dependencies = [
+ "lazy_static",
+ "proc-macro2",
+ "quote",
+ "rand",
+ "syn",
 ]
 
 [[package]]

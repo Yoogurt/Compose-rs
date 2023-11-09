@@ -10,14 +10,14 @@ use crate::foundation::ui::graphics::color::Color;
 
 #[derive(Delegate)]
 pub(crate) struct LayoutNodeDrawScope<'a> {
-    canvas_draw_scope: Rc<RefCell<CanvasDrawScope<'a>>>,
+    canvas_draw_scope: CanvasDrawScope<'a>,
     draw_node: Option<Rc<RefCell<dyn ModifierNode>>>
 }
 
 impl<'a> LayoutNodeDrawScope<'a> {
     pub(crate) fn new(canvas_draw_scope: CanvasDrawScope<'a>) -> Self {
         Self {
-            canvas_draw_scope: Rc::new(RefCell::new(canvas_draw_scope)),
+            canvas_draw_scope: canvas_draw_scope,
             draw_node: None,
         }
     }
@@ -27,13 +27,9 @@ impl<'a> LayoutNodeDrawScope<'a> {
     }
 
     pub(crate) fn draw(mut self: Box<Self>, draw_node: Rc<RefCell<dyn ModifierNode>>) {
-        draw_node.dispatch_for_kind(NodeKind::Draw, |draw| {
+        draw_node.dispatch_for_kind(NodeKind::Draw, |element| {
             self.draw_node = Some(draw_node.clone());
-
-            self.canvas_draw_scope.clone().borrow_mut().draw(draw, |node, canvas_draw_scope| {
-                node.as_draw_modifier_node().unwrap().draw(self.deref_mut())
-            });
-
+            element.as_draw_modifier_node().unwrap().draw(self.deref_mut());
             self.draw_node = None;
         });
     }
@@ -41,8 +37,7 @@ impl<'a> LayoutNodeDrawScope<'a> {
 
 impl<'a> DrawScope<'a> for LayoutNodeDrawScope<'a> {
     fn get_draw_context(&self) -> &DrawContext<'a> {
-        // self.canvas_draw_scope.borrow().get_draw_context()
-        todo!()
+        self.canvas_draw_scope.get_draw_context()
     }
 
     fn get_layout_direction(&self) -> LayoutDirection {
@@ -51,8 +46,7 @@ impl<'a> DrawScope<'a> for LayoutNodeDrawScope<'a> {
     }
 
     fn draw_rect(&mut self, color: Color, top_left: Offset<f32>, size: Option<Size<f32>>, alpha: f32) {
-        // self.canvas_draw_scope.borrow_mut().draw_rect(color, top_left, size, alpha)
-        todo!()
+        self.canvas_draw_scope.draw_rect(color, top_left, size, alpha)
     }
 }
 

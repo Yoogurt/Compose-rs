@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+use std::rc::Weak;
 use crate::foundation::constraint::Constraints;
 use crate::foundation::geometry::{CoerceIn, IntOffset, IntSize};
 use crate::foundation::measured::MeasuredImpl;
@@ -13,7 +15,7 @@ pub(crate) struct PlaceableImpl {
     pub(crate) measured_size: IntSize,
     pub(crate) measurement_constraint: Constraints,
 
-
+    place_at_vtable: Option<Weak<RefCell<dyn PlaceablePlaceAt>>>
 }
 
 impl PlaceableImpl {
@@ -23,7 +25,12 @@ impl PlaceableImpl {
             measured: MeasuredImpl::new(),
             measured_size: IntSize::zero(),
             measurement_constraint: Constraints::unbounded(),
+            place_at_vtable: None
         }
+    }
+
+    pub(crate) fn set_vtable(&mut self, place_at: Weak<RefCell<dyn PlaceablePlaceAt>>) {
+        self.place_at_vtable = Some(place_at);
     }
 }
 
@@ -41,7 +48,11 @@ impl PlaceableImpl {
 }
 
 impl PlaceablePlaceAt for PlaceableImpl {
-    fn place_at(&mut self, _position: IntOffset, _z_index: f32) {
+    fn place_at(&mut self, position: IntOffset, z_index: f32) {
+        if let Some(vtable) = self.place_at_vtable.clone() {
+            vtable.upgrade().unwrap().borrow_mut().place_at(position, z_index);
+            return
+        }
         unimplemented!("place_at to PlaceableImpl should implement by yourself");
     }
 }

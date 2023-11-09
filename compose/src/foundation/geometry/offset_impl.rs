@@ -58,6 +58,14 @@ impl<T> Offset<T>
     pub fn y(&self) -> T {
         T::from_u64((self.packed_value & 0xffffffff00000000) >> 32)
     }
+
+    pub fn x_mut(&mut self) -> &mut T {
+        unsafe { &mut *(&mut self.packed_value as *mut u64 as *mut T) }
+    }
+
+    pub fn y_mut(&mut self) -> &mut T {
+        unsafe { &mut *(&mut self.packed_value as *mut u64 as *mut T).add(1) }
+    }
 }
 
 impl<T> Neg for Offset<T>
@@ -188,9 +196,14 @@ impl IntOffset {
 #[test]
 fn test_offset() {
     let mut offset = IntOffset::new(1, 2);
-    dbg!(offset);
-    dbg!(offset.x());
-    dbg!(offset.y());
-    dbg!(Offset::<f32>::infinite());
-    dbg!(Offset::<f32>::unspecified());
+    {
+        let mut width_mut = offset.x_mut();
+        *width_mut = 123;
+    }
+    assert_eq!(offset.x() , 123);
+    {
+        let mut height_mut = offset.y_mut();
+        *height_mut = 321;
+    }
+    assert_eq!(offset.y() , 321);
 }
