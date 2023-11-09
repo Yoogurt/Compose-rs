@@ -14,8 +14,9 @@ pub(crate) struct PlaceableImpl {
     pub(crate) measured: MeasuredImpl,
     pub(crate) measured_size: IntSize,
     pub(crate) measurement_constraint: Constraints,
+    pub(crate) apparent_to_real_offset: IntOffset,
 
-    place_at_vtable: Option<Weak<RefCell<dyn PlaceablePlaceAt>>>
+    place_at_vtable: Option<Weak<RefCell<dyn PlaceablePlaceAt>>>,
 }
 
 impl PlaceableImpl {
@@ -25,7 +26,9 @@ impl PlaceableImpl {
             measured: MeasuredImpl::new(),
             measured_size: IntSize::zero(),
             measurement_constraint: Constraints::unbounded(),
-            place_at_vtable: None
+            apparent_to_real_offset: IntOffset::zero(),
+
+            place_at_vtable: None,
         }
     }
 
@@ -44,6 +47,10 @@ impl PlaceableImpl {
             .measured_size
             .height()
             .coerce_in(self.measurement_constraint.height_range());
+
+        self.apparent_to_real_offset =
+            IntOffset::new((self.size.width() as i32 - self.measured_size.width() as i32) / 2,
+                           (self.size.height() as i32 - self.measured_size.height() as i32) / 2)
     }
 }
 
@@ -51,7 +58,7 @@ impl PlaceablePlaceAt for PlaceableImpl {
     fn place_at(&mut self, position: IntOffset, z_index: f32) {
         if let Some(vtable) = self.place_at_vtable.clone() {
             vtable.upgrade().unwrap().borrow_mut().place_at(position, z_index);
-            return
+            return;
         }
         unimplemented!("place_at to PlaceableImpl should implement by yourself");
     }
@@ -64,6 +71,7 @@ impl Placeable for PlaceableImpl {
 
     fn set_measured_size(&mut self, size: IntSize) {
         self.measured_size = size;
+        self.recalculate_width_and_height();
     }
 
     fn get_measured_size(&self) -> IntSize {
@@ -72,6 +80,7 @@ impl Placeable for PlaceableImpl {
 
     fn set_measurement_constraint(&mut self, constraint: &Constraints) {
         self.measurement_constraint = *constraint;
+        self.recalculate_width_and_height()
     }
 
     fn get_measurement_constraint(&self) -> Constraints {

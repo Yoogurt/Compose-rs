@@ -94,13 +94,13 @@ impl Owner for MacOSComposeView {
         todo!()
     }
 
+    fn on_request_relayout(&mut self, layout_node: Weak<RefCell<LayoutNode>>) {
+        todo!()
+    }
+
     fn on_attach(&self, layout_node: &LayoutNode) {
     }
 
     fn on_detach(&self, layout_node: &LayoutNode) {
-    }
-
-    fn on_request_relayout(&mut self, layout_node: Weak<RefCell<LayoutNode>>) {
-        todo!()
     }
 }

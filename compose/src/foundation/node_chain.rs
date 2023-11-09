@@ -290,7 +290,6 @@ impl NodeChain {
                     node = Self::create_and_insert_node_as_child(&mut after[index], parent);
                     index += 1;
                 }
-
             } else if after_size == 0 {
                 todo!()
             } else {
@@ -303,8 +302,6 @@ impl NodeChain {
 
         if coordinator_sync_needed {
             self.sync_coordinators();
-            // dbg!(&self.head);
-            // dbg!(&self.outer_coordinator);
         }
     }
 
@@ -316,9 +313,9 @@ impl NodeChain {
         let inner_coordinator = self.inner_coordinator.clone();
 
         let mut coordinator_ptr = coordinator.as_ptr() as *const ();
-        let inner_coodinator_ptr = inner_coordinator.as_ptr() as *const ();
+        let inner_coordinator_ptr = inner_coordinator.as_ptr() as *const ();
 
-        while coordinator_ptr != inner_coodinator_ptr {
+        while coordinator_ptr != inner_coordinator_ptr {
             block(
                 coordinator
                     .borrow()

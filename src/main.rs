@@ -7,7 +7,7 @@ use compose::foundation::geometry::IntoDp;
 use compose::foundation::layout::size_modifier::SizeModifier;
 use compose::foundation::modifier::Modifier;
 use compose_macro::Composable;
-use minifb::{Scale, ScaleMode, Window, WindowOptions};
+use minifb::{Key, KeyRepeat, Scale, ScaleMode, Window, WindowOptions};
 use skia_safe::{surfaces, AlphaType, ColorSpace, ColorType, ImageInfo, Rect, Surface,
 };
 use std::default::Default as STDefault;
@@ -19,11 +19,11 @@ use compose::widgets::r#box::BoxLayout;
 
 #[Composable]
 fn test_box_composable() {
-    BoxLayout(Modifier.width(100.dp()).background(Color::GREEN), |_| {});
+    BoxLayout(Modifier.width(100.dp()).height(100.dp()).background(Color::GREEN), |_| {});
 }
 
 fn run_skia(content: fn()) {
-    let mut window = Window::new(
+    let mut windows = Window::new(
         "Compose",
         800,
         500,
@@ -32,8 +32,7 @@ fn run_skia(content: fn()) {
             scale_mode: ScaleMode::AspectRatioStretch,
             ..STDefault::default()
         },
-    )
-        .unwrap();
+    ).unwrap();
 
     let mut buffer = vec![0; 800 * 500];
     const BYTE_PER_PIXEL: usize = 4;
@@ -67,9 +66,12 @@ fn run_skia(content: fn()) {
     let mut compose_view = compose_view_rc.borrow_mut();
     compose_view.dispatch_measure(800, 500);
     compose_view.dispatch_layout();
-    compose_view.dispatch_draw(&mut canvas);
 
-    std::thread::sleep(Duration::from_secs(30));
+    // while windows.is_open() && !windows.is_key_pressed(Key::Escape, KeyRepeat::No) {
+        compose_view.dispatch_draw(&mut canvas);
+        windows.update_with_buffer(buffer.as_slice(), 800,500).unwrap();
+        std::thread::sleep(Duration::from_millis(100));
+    // }
 }
 
 fn main() {
@@ -78,8 +80,6 @@ fn main() {
     });
 
     Composer::validate_group();
-
     Composer::destroy();
-
     compose::foundation::memory::leak_token::validate_leak();
 }

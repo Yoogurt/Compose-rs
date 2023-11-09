@@ -16,7 +16,6 @@ use crate::foundation::{
 use crate::{self as compose};
 use crate::foundation::delegatable_node::DelegatableNode;
 use crate::foundation::oop::AnyConverter;
-use crate::foundation::oop::LayoutModifierNodeConverter;
 use crate::foundation::parent_data_modifier_node::ParentDataModifierNode;
 use crate::foundation::placement_scope::PlacementScope;
 use crate::foundation::ui::align::Alignment;
@@ -126,9 +125,8 @@ fn box_measure_policy(
         0 => measure_scope.layout((constraints.min_width, constraints.min_height).into(), (|_: &dyn PlacementScope| {}).wrap_with_box()),
         1 => {
             let (measure_result, placeable) = measurables[0].measure(constraints);
-            let dimension = placeable.borrow().get_size();
             measure_scope.layout(
-                dimension,
+                measure_result,
                 (move |scope: &dyn PlacementScope| scope.place_relative(placeable.borrow_mut(), 0, 0)).wrap_with_box(),
             )
         }
@@ -147,7 +145,7 @@ fn box_measure_policy(
                         if measurable.matches_parent_size() {
                             has_match_parent_size_children = true
                         } else {
-                            let (measure_result, placeable) = measurable.measure(&constraints);
+                            let (measure_result, _) = measurable.measure(&constraints);
                             box_width = box_width.max(measure_result.width());
                             box_height = box_height.max(measure_result.height());
                         }

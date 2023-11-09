@@ -139,10 +139,20 @@ impl PerformDrawTrait for NodeCoordinatorImpl {
 }
 
 impl MeasureResultProvider for NodeCoordinatorImpl {
-    fn set_measured_result(&mut self, measure_result: Option<MeasureResult>) {
-        if self.measure_result != measure_result {
-            self.on_measure_result_changed(measure_result);
+    fn set_measured_result(&mut self, measure_result: MeasureResult) {
+        match self.measure_result.as_ref() {
+            Some(old_measure_result) => {
+                if old_measure_result == &measure_result {
+                    return;
+                }
+            }
+            None => {}
         }
+
+        let size = measure_result.as_int_size();
+        self.measure_result = Some(measure_result);
+
+        self.on_measure_result_changed(size)
     }
 
     fn get_measured_result(&mut self) -> Option<MeasureResult> {
@@ -290,7 +300,7 @@ impl NodeCoordinatorImpl {
                 // new instance of layout draw scope
                 // todo use share instead
                 let density = self.get_density();
-                let draw_context = DrawContext::new(self.get_measured_size().as_f32_size(), density, canvas);
+                let draw_context = DrawContext::new(self.get_size().as_f32_size(), density, canvas);
 
                 let layout_direction = self.get_layout_direction();
                 let canvas_draw_scope = CanvasDrawScope::new(draw_context, layout_direction);
@@ -304,9 +314,8 @@ impl NodeCoordinatorImpl {
         }
     }
 
-    fn on_measure_result_changed(&mut self, measure_result: Option<MeasureResult>) {
-        self.measure_result = measure_result;
-
+    fn on_measure_result_changed(&mut self, size: IntSize) {
+        self.set_measured_size(size);
         // self.visit_nodes(NodeKind::Draw, true, |draw_modifier_node| {
         //     draw_modifier_node.borrow_mut().as_draw_modifier_node_mut().unwrap().on_measure_result_changed();
         // });

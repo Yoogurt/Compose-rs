@@ -18,10 +18,8 @@ pub(crate) fn root_measure_policy() -> MultiChildrenMeasurePolicy {
                     .layout((constraint.min_width, constraint.min_height).into(), empty_place_action()),
                 1 => {
                     let (measure_result, placeable) = measurables[0].measure(constraint);
-
-                    let dimension = placeable.borrow().get_size();
                     measure_scope.layout(
-                        dimension,
+                        measure_result,
                         (move |place_scope: &dyn PlacementScope| {
                             place_scope.place_relative(placeable.borrow_mut(), 0, 0);
                         }).wrap_with_box(),

@@ -9,7 +9,6 @@ use crate::foundation::modifier::{Modifier, ModifierNode, ModifierNodeImpl, Node
 use crate::foundation::oop::AnyConverter;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
 use auto_delegate::Delegate;
-use std::any::Any;
 use std::cell::{RefCell, RefMut};
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
@@ -18,6 +17,7 @@ use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
 pub trait SizeModifier {
     fn width(self, width: Dp) -> Modifier;
+    fn height(self, height: Dp) -> Modifier;
 }
 
 fn size_measure_policy<T>(
@@ -195,7 +195,6 @@ impl LayoutModifierNode for SizeNode {
             )
                 .into()
         };
-
         let (measure_result, placeable) = measurable.measure(&wrapped_constraints);
 
         measure_scope.layout(
@@ -276,7 +275,17 @@ impl SizeModifier for Modifier {
             width,
             Dp::UNSPECIFIC,
             Dp::UNSPECIFIC,
-            false,
+            true,
+        ))
+    }
+
+    fn height(self, height: Dp) -> Modifier {
+        self.then(size_element(
+            Dp::UNSPECIFIC,
+            Dp::UNSPECIFIC,
+            height,
+            height,
+            true,
         ))
     }
 }

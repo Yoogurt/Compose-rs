@@ -1,5 +1,4 @@
 use crate::foundation::constraint::Constraints;
-use std::cell::Ref;
 use crate::foundation::geometry::{IntOffset, IntSize};
 use crate::foundation::intrinsic_measurable::IntrinsicMeasurable;
 use crate::foundation::layout_node::LayoutNode;
@@ -19,8 +18,6 @@ use std::cell::RefCell;
 use std::ops::Deref;
 use std::rc::{Rc, Weak};
 use crate::foundation::inner_node_coordinator::InnerNodeCoordinator;
-use crate::foundation::measure_result::MeasureResult;
-use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::utils::self_reference::SelfReference;
 
 #[derive(Debug, Delegate)]
@@ -38,19 +35,17 @@ pub(crate) struct MeasurePassDelegate {
     pub(crate) is_placed: bool,
     pub(crate) layout_state: Option<Rc<RefCell<LayoutState>>>,
     pub(crate) parent_data: Option<Box<dyn Any>>,
-
     weak_self: Weak<RefCell<Self>>,
-    layingout_children: bool,
+    laying_out_children: bool,
 
     identify: u32,
 }
 
 impl Remeasurable for MeasurePassDelegate {
     fn remeasure(&mut self, constraint: &Constraints) -> bool {
-        let placeable = self.as_placeable();
-        let mut placeable_mut = placeable.borrow_mut();
+        let mut placeable = self.placeable_impl.borrow_mut();
 
-        if !self.measure_pending && placeable_mut.get_measurement_constraint() == *constraint {
+        if !self.measure_pending && placeable.get_measurement_constraint() == *constraint {
             return false;
         }
 
@@ -61,22 +56,25 @@ impl Remeasurable for MeasurePassDelegate {
             outer_coordinator.get_measured_size()
         };
 
-        placeable_mut.set_measurement_constraint(constraint);
+        placeable.set_measurement_constraint(constraint);
+        drop(placeable);
+
         self.perform_measure(constraint);
 
+        let mut placeable = self.placeable_impl.borrow_mut();
         let new_size = {
             let outer_node_ref = unsafe { self.nodes.as_ref().unwrap().borrow() };
             let outer_coordinator = outer_node_ref.outer_coordinator.borrow_mut();
             outer_coordinator.get_measured_size()
         };
 
-        let size = placeable_mut.get_size();
+        let size = placeable.get_size();
 
         let size_changed = previous_size != new_size
             || size.width() != new_size.width()
             || size.height() != new_size.height();
 
-        placeable_mut.set_measured_size(new_size);
+        placeable.set_measured_size(new_size);
         size_changed
     }
 }
@@ -113,7 +111,7 @@ impl MeasurePassDelegate {
             is_placed: false,
             layout_state: None,
             parent_data: None,
-            layingout_children: false,
+            laying_out_children: false,
             identify: 0,
             weak_self: Weak::default(),
         }.wrap_with_rc_refcell();
@@ -240,7 +238,7 @@ impl MeasurePassDelegate {
     fn on_before_layout_children(&mut self) {}
 
     fn layout_children(&mut self) {
-        self.layingout_children = true;
+        self.laying_out_children = true;
         if self.layout_pending {
             self.on_before_layout_children();
         }
@@ -256,7 +254,7 @@ impl MeasurePassDelegate {
         }
 
         *layout_state.borrow_mut() = old_layout_state;
-        self.layingout_children = false;
+        self.laying_out_children = false;
     }
 
     fn place_outer_coordinator(&mut self, position: IntOffset, z_index: f32) {

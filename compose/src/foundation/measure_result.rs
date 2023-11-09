@@ -40,7 +40,7 @@ impl PartialEq for MeasureResult {
 
 #[delegate]
 pub trait MeasureResultProvider {
-    fn set_measured_result(&mut self, measure_result: Option<MeasureResult>);
+    fn set_measured_result(&mut self, measure_result: MeasureResult);
     fn get_measured_result(&mut self) -> Option<MeasureResult>;
     fn has_measure_result(&self) -> bool;
 }

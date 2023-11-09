@@ -146,7 +146,7 @@ impl Measurable for InnerNodeCoordinator {
         };
 
         let size: IntSize = measure_result.as_int_size();
-        self.set_measured_result(Some(measure_result));
+        self.set_measured_result(measure_result);
         self.on_measured();
 
         (size, self.as_placeable())

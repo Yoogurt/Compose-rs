@@ -44,7 +44,7 @@ impl<T> Size<T>
 
     pub fn width_mut(&mut self) -> &mut T {
         unsafe {
-            &mut *(self.packed_value as *mut u32 as *mut T)
+            &mut *(&mut self.packed_value as *mut u64 as *mut T)
         }
     }
 
@@ -54,7 +54,7 @@ impl<T> Size<T>
 
     pub fn height_mut(&mut self) -> &mut T {
         unsafe {
-            &mut *((self.packed_value as *mut u32).add(1) as *mut T)
+            &mut *((&mut self.packed_value as *mut u64 as *mut T).add(1))
         }
     }
 
