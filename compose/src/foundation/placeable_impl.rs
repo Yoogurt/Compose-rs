@@ -39,18 +39,20 @@ impl PlaceableImpl {
 
 impl PlaceableImpl {
     fn recalculate_width_and_height(&mut self) {
-        *self.size.width_mut() = self
+        let width_mut = &mut self.size.width;
+        *width_mut = self
             .measured_size
-            .width()
+            .width
             .coerce_in(self.measurement_constraint.width_range());
-        *self.size.height_mut() = self
+        let height_mut = &mut self.size.height;
+        *height_mut = self
             .measured_size
-            .height()
+            .height
             .coerce_in(self.measurement_constraint.height_range());
 
         self.apparent_to_real_offset =
-            IntOffset::new((self.size.width() as i32 - self.measured_size.width() as i32) / 2,
-                           (self.size.height() as i32 - self.measured_size.height() as i32) / 2)
+            IntOffset::new((self.size.width as i32 - self.measured_size.width as i32) / 2,
+                           (self.size.height as i32 - self.measured_size.height as i32) / 2)
     }
 }
 

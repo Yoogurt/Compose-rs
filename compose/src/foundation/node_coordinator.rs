@@ -32,7 +32,7 @@ pub trait TailModifierNodeProvider {
 pub trait PerformDrawTrait: NodeCoordinatorTrait {
     fn perform_draw(&self, canvas: &mut dyn Canvas) {
         if let Some(wrapped) = self.get_wrapped().as_ref() {
-            wrapped.borrow_mut().draw(canvas);
+            wrapped.borrow().draw(canvas);
         }
     }
 }

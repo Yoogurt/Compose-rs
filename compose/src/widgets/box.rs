@@ -146,8 +146,8 @@ fn box_measure_policy(
                             has_match_parent_size_children = true
                         } else {
                             let (measure_result, _) = measurable.measure(&constraints);
-                            box_width = box_width.max(measure_result.width());
-                            box_height = box_height.max(measure_result.height());
+                            box_width = box_width.max(measure_result.width);
+                            box_height = box_height.max(measure_result.height);
                         }
                     });
             }

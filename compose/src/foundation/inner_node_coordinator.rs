@@ -23,7 +23,7 @@ use compose_foundation_macro::AnyConverter;
 use crate::foundation::canvas::Canvas;
 use crate::foundation::layout_node_layout_delegate::LayoutNodeLayoutDelegate;
 use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
-use crate::foundation::node_coordinator::PerformDrawTrait;
+use crate::foundation::node_coordinator::{PerformDrawTrait, PerformMeasureHelper};
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::utils::self_reference::SelfReference;
 
@@ -111,45 +111,47 @@ impl InnerNodeCoordinator {
 
 impl Measurable for InnerNodeCoordinator {
     fn measure(&mut self, constraint: &Constraints) -> (IntSize, Rc<RefCell<dyn Placeable>>) {
-        { self.layout_node.upgrade().unwrap().borrow() }.for_each_child(|child| {
-            child
-                .borrow_mut()
-                .get_measure_pass_delegate()
-                .borrow_mut()
-                .set_measured_by_parent(UsageByParent::NotUsed)
-        });
+        self.perform_measure(constraint, move |this| {
+            { this.layout_node.upgrade().unwrap().borrow() }.for_each_child(|child| {
+                child
+                    .borrow_mut()
+                    .get_measure_pass_delegate()
+                    .borrow_mut()
+                    .set_measured_by_parent(UsageByParent::NotUsed)
+            });
 
-        let measure_policy = &mut self.measure_policy;
-        let measure_result = {
-            let children_rc = self.layout_node.upgrade().unwrap().borrow().get_children();
-            let children = children_rc.borrow_mut();
+            let measure_policy = &mut this.measure_policy;
+            let measure_result = {
+                let children_rc = this.layout_node.upgrade().unwrap().borrow().get_children();
+                let children = children_rc.borrow_mut();
 
-            let layout_node_layout_delegate_rc = children
-                .iter()
-                .map(|child| child.borrow_mut().layout_node_layout_delegate.clone())
-                .collect::<Vec<_>>();
-            let mut layout_node_layout_delegate_ref_mut: Vec<RefMut<LayoutNodeLayoutDelegate>> = layout_node_layout_delegate_rc
-                .iter()
-                .map(|child| child.borrow_mut())
-                .collect::<Vec<_>>();
-            let mut measurable_ref_mut: Vec<RefMut<dyn Measurable>> = layout_node_layout_delegate_ref_mut
-                .iter_mut()
-                .map(|child| child.deref_mut().as_measurable_mut())
-                .collect::<Vec<_>>();
-            let mut measurable_mut: Vec<&mut dyn Measurable> = measurable_ref_mut
-                .iter_mut()
-                .map(|child| { child.deref_mut() })
-                .collect::<Vec<_>>();
+                let layout_node_layout_delegate_rc = children
+                    .iter()
+                    .map(|child| child.borrow_mut().layout_node_layout_delegate.clone())
+                    .collect::<Vec<_>>();
+                let mut layout_node_layout_delegate_ref_mut: Vec<RefMut<LayoutNodeLayoutDelegate>> = layout_node_layout_delegate_rc
+                    .iter()
+                    .map(|child| child.borrow_mut())
+                    .collect::<Vec<_>>();
+                let mut measurable_ref_mut: Vec<RefMut<dyn Measurable>> = layout_node_layout_delegate_ref_mut
+                    .iter_mut()
+                    .map(|child| child.deref_mut().as_measurable_mut())
+                    .collect::<Vec<_>>();
+                let mut measurable_mut: Vec<&mut dyn Measurable> = measurable_ref_mut
+                    .iter_mut()
+                    .map(|child| { child.deref_mut() })
+                    .collect::<Vec<_>>();
 
-            let measure_scope = &self.node_coordinator_impl;
-            measure_policy(measure_scope, &mut measurable_mut[..], constraint)
-        };
+                let measure_scope = &this.node_coordinator_impl;
+                measure_policy(measure_scope, &mut measurable_mut[..], constraint)
+            };
 
-        let size: IntSize = measure_result.as_int_size();
-        self.set_measured_result(measure_result);
-        self.on_measured();
+            let size: IntSize = measure_result.as_int_size();
+            this.set_measured_result(measure_result);
+            this.on_measured();
 
-        (size, self.as_placeable())
+            (size, this.as_placeable())
+        })
     }
 
     fn as_placeable(&mut self) -> Rc<RefCell<dyn Placeable>> {

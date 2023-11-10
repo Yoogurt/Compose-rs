@@ -8,7 +8,7 @@ use compose_foundation_macro::{Leak, ModifierElement};
 use std::cell::{RefCell, RefMut};
 use std::fmt::Debug;
 use std::fmt::{Formatter, Write};
-use std::ops::{Add, Deref};
+use std::ops::{Add, BitAnd, Deref};
 use std::rc::{Rc, Weak};
 use crate::foundation::oop::LayoutModifierNodeConverter;
 use crate::foundation::ui::draw::DrawModifierNode;
@@ -24,9 +24,26 @@ pub enum NodeKind {
     LayoutAware = 1 << 4,
 }
 
+impl NodeKind {
+    pub fn mask(&self) -> u32 {
+        *self as u32
+    }
+
+    pub(crate) fn include_self_in_traversal(&self) -> bool {
+         NodeKind::LayoutAware & self.mask() != 0
+    }
+}
+
 impl From<NodeKind> for u32 {
     fn from(value: NodeKind) -> Self {
         value as u32
+    }
+}
+
+impl BitAnd<u32> for NodeKind {
+    type Output = u32;
+    fn bitand(self, rhs: u32) -> Self::Output {
+        u32::from(self) & rhs
     }
 }
 
@@ -242,16 +259,53 @@ impl Debug for Modifier {
     }
 }
 
-pub(crate) trait DispatchForKind {
-    fn dispatch_for_kind(&self, kind: NodeKind, block: impl FnMut(&mut dyn ModifierElement));
+pub(crate) trait ModifierNodeExtension {
+    fn dispatch_for_kind(&self, kind: NodeKind, block: impl FnMut(&dyn ModifierElement));
+    fn next_draw_node(&self) -> Option<Rc<RefCell<dyn ModifierNode>>>;
+    fn require_coordinator(&self, node_kind: NodeKind) -> Rc<RefCell<dyn NodeCoordinator>>;
 }
 
-impl<T> DispatchForKind for RefCell<T> where T: ?Sized + ModifierNode {
-    fn dispatch_for_kind(&self, kind: NodeKind, mut block: impl FnMut(&mut dyn ModifierElement)) {
-        let node = self.borrow().get_node_kind();
+impl<T> ModifierNodeExtension for T where T: ?Sized + ModifierNode {
+    fn dispatch_for_kind(&self, kind: NodeKind, mut block: impl FnMut(&dyn ModifierElement)) {
+        let node = self.get_node_kind();
 
         if node == kind {
-            block(self.borrow_mut().as_modifier_element_mut());
+            block(self.as_modifier_element());
+        }
+    }
+
+    fn next_draw_node(&self) -> Option<Rc<RefCell<dyn ModifierNode>>> {
+        let draw_mask = NodeKind::Draw.mask();
+        let measure_mask = NodeKind::Layout.mask();
+
+        let child = self.get_child();
+        let mut next = child;
+        
+        while let Some(next_node) = next.clone() {
+            let next_node_ref = next_node.borrow();
+            let node_kind_set = next_node_ref.get_node_kind();
+            if node_kind_set & measure_mask!= 0{
+                return  None
+            }
+            if node_kind_set & draw_mask != 0{
+                return next
+            }
+
+            next = next_node_ref.get_child();
+        }
+
+        None
+    }
+
+    fn require_coordinator(&self, node_kind: NodeKind) -> Rc<RefCell<dyn NodeCoordinator>> {
+        let coordinator = self.get_coordinator().unwrap().upgrade().unwrap();
+        let coordinator_ref = coordinator.borrow();
+        if coordinator_ref.get_tail().as_ptr() as *const () != self as *const T as *const() {
+            coordinator.clone()
+        } else if node_kind.include_self_in_traversal() {
+            coordinator_ref.get_wrapped().unwrap()
+        } else {
+            coordinator.clone()
         }
     }
 }

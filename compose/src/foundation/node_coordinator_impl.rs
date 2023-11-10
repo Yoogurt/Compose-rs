@@ -131,7 +131,7 @@ impl PerformDrawTrait for NodeCoordinatorImpl {
             }
             None => {
                 if let Some(wrapped) = self.get_wrapped().as_ref() {
-                    wrapped.borrow_mut().draw(canvas);
+                    wrapped.borrow().draw(canvas);
                 }
             }
         }
@@ -171,9 +171,9 @@ impl NodeCoordinator for NodeCoordinatorImpl {
 
     fn draw(&self, canvas: &mut dyn Canvas) {
         let offset = self.get_position().as_f32_offset();
-        canvas.translate(offset.x(), offset.y());
+        canvas.translate(offset.x, offset.y);
         self.draw_contrained_draw_modifiers(canvas);
-        canvas.translate(-offset.x(), -offset.y());
+        canvas.translate(-offset.x, -offset.y);
     }
 }
 
@@ -217,10 +217,10 @@ impl NodeCoordinatorImpl {
         self.z_index = z_index;
     }
 
-    fn head_node(&self, include_tail: bool, self_visit: bool) -> Option<Rc<RefCell<dyn ModifierNode>>> {
+    fn head_node(&self, include_tail: bool) -> Option<Rc<RefCell<dyn ModifierNode>>> {
         let node_chain = self.layout_node().upgrade().unwrap().borrow().node_chain.clone();
 
-        if self_visit {
+        if node_chain.borrow().outer_coordinator.as_ptr() as *const() == self  as *const NodeCoordinatorImpl as *const() {
             Some(node_chain.borrow().head.clone())
         } else {
             self.get_wrapped_by().and_then(|wrapped_by| {
@@ -234,7 +234,7 @@ impl NodeCoordinatorImpl {
         }
     }
 
-    fn visit_nodes(&self, mask: impl Into<u32>, self_visit: bool, mut block: impl FnMut(&Rc<RefCell<dyn ModifierNode>>)) {
+    fn visit_nodes(&self, mask: impl Into<u32>,  mut block: impl FnMut(&Rc<RefCell<dyn ModifierNode>>)) {
         let mut stop_node = self.get_tail();
         let mask = mask.into();
         let include_tail = mask & NodeKind::LayoutAware as u32 != 0;
@@ -247,7 +247,7 @@ impl NodeCoordinatorImpl {
             stop_node = node;
         };
 
-        let mut node = self.head_node(include_tail, self_visit);
+        let mut node = self.head_node(include_tail);
 
         dbg!(&node);
         while let Some(visit) = node {
@@ -263,7 +263,7 @@ impl NodeCoordinatorImpl {
         }
     }
 
-    fn head(&self, node_kind: NodeKind, self_visit: bool) -> Option<Rc<RefCell<dyn ModifierNode>>> {
+    fn head(&self, node_kind: NodeKind) -> Option<Rc<RefCell<dyn ModifierNode>>> {
         let mut stop_node = self.get_tail();
         let include_tail = (node_kind as u32 & NodeKind::LayoutAware as u32) != 0;
 
@@ -275,10 +275,10 @@ impl NodeCoordinatorImpl {
             stop_node = node;
         };
 
-        let mut node = self.head_node(include_tail, self_visit);
+        let mut node = self.head_node(include_tail);
 
         while let Some(visit) = node {
-            if visit.borrow_mut().get_node_kind() == node_kind {
+            if visit.borrow().get_node_kind() == node_kind {
                 return Some(visit);
             }
 
@@ -293,7 +293,8 @@ impl NodeCoordinatorImpl {
     }
 
     fn draw_contrained_draw_modifiers(&self, canvas: &mut dyn Canvas) {
-        let head = self.head(NodeKind::Draw, true);
+        // dbg!(self);
+        let head = self.head(NodeKind::Draw);
 
         match head {
             Some(head) => {

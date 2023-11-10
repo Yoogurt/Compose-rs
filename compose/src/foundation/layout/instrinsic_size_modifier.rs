@@ -1,7 +1,7 @@
 use crate::foundation::measurable::SingleChildMeasurePolicy;
 use crate::foundation::modifier::Modifier;
 
-pub trait IntrinsicSizeModifier {
+pub(crate) trait IntrinsicSizeModifier {
     fn width(self) -> Modifier;
     fn height(self) -> Modifier;
 }

@@ -174,7 +174,7 @@ impl NodeChain {
             sentine_head_mut.update_coordinator(None)
         }
 
-        if result.as_ptr() == self.sentine_head.as_ptr() {
+        if result.as_ptr() as *const () == self.sentine_head.as_ptr() as *const() {
             panic!("trim_chain did not update the head")
         }
 
@@ -302,6 +302,7 @@ impl NodeChain {
 
         if coordinator_sync_needed {
             self.sync_coordinators();
+            // dbg!(self.pad_chain());
         }
     }
 

@@ -48,8 +48,8 @@ pub trait MeasureResultProvider {
 impl MeasureResult {
     pub(crate) fn new(size: IntSize, placement_block: Option<Box<dyn FnOnce(&dyn PlacementScope)>>) -> Self {
         MeasureResult {
-            width: size.width(),
-            height: size.height(),
+            width: size.width,
+            height: size.height,
             placement_block,
         }
     }

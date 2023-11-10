@@ -165,13 +165,13 @@ impl AligmentTrait for BiasAlignment {
                     (horizontal_bias, vertical_bias): (f32, f32),
                     layout_direction: LayoutDirection) -> IntOffset {
         IntOffset::new(Self::static_horizontal_align(
-            size.width(),
-            space.width(),
+            size.width,
+            space.width,
             layout_direction,
             horizontal_bias,
         ), Self::static_vertical_align(
-            size.height(),
-            space.height(),
+            size.height,
+            space.height,
             vertical_bias,
         ), )
     }

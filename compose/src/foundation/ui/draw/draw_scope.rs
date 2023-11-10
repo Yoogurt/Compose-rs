@@ -7,6 +7,7 @@ use crate::foundation::ui::graphics::color::Color;
 #[delegate]
 pub trait DrawScope<'a> {
     fn get_draw_context(&self) -> &DrawContext<'a>;
+    fn get_draw_context_mut(&mut self) -> &mut DrawContext<'a>;
     fn get_layout_direction(&self) -> LayoutDirection;
 
     fn get_density(&self) -> Density {

@@ -84,8 +84,8 @@ impl Constraints {
 
     pub fn constrain_size(&self, size: IntSize) -> IntSize {
         (
-            size.width().coerce_in(self.width_range()),
-            size.height().coerce_in(self.height_range()),
+            size.width.coerce_in(self.width_range()),
+            size.height.coerce_in(self.height_range()),
         )
             .into()
     }

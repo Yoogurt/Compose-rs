@@ -22,6 +22,10 @@ impl<'a> DrawScope<'a> for CanvasDrawScope<'a> {
         &self.draw_context
     }
 
+    fn get_draw_context_mut(&mut self) -> &mut DrawContext<'a> {
+        &mut self.draw_context
+    }
+
     fn draw_rect(&mut self, color: Color, top_left: Offset<f32>, size: Option<Size<f32>>, alpha: f32) {
         let size = match size {
             Some(size) => size,
@@ -29,10 +33,10 @@ impl<'a> DrawScope<'a> for CanvasDrawScope<'a> {
         };
 
         self.draw_context.get_canvas().draw_rect(color,
-                                                 Rect::new(top_left.x(),
-                                                           top_left.y(),
-                                                           size.width(),
-                                                           size.height()))
+                                                 Rect::new(top_left.x,
+                                                           top_left.y,
+                                                           size.width,
+                                                           size.height))
     }
 }
 

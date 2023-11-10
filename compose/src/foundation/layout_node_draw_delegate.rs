@@ -23,7 +23,7 @@ impl LayoutNodeDrawDelegate {
 
     pub(crate) fn draw(&mut self, canvas: &mut dyn Canvas) {
         let outer_coordinator = self.node_chain.as_ref().unwrap().borrow().outer_coordinator.clone();
-        dbg!(&outer_coordinator);
+        dbg!(&self.node_chain);
         outer_coordinator.borrow().draw(canvas);
     }
 }

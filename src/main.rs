@@ -19,7 +19,8 @@ use compose::widgets::r#box::BoxLayout;
 
 #[Composable]
 fn test_box_composable() {
-    BoxLayout(Modifier.width(100.dp()).height(100.dp()).background(Color::GREEN), |_| {});
+    BoxLayout(Modifier.background(Color::BLUE), |_| {
+    });
 }
 
 fn run_skia(content: fn()) {
@@ -69,7 +70,7 @@ fn run_skia(content: fn()) {
 
     // while windows.is_open() && !windows.is_key_pressed(Key::Escape, KeyRepeat::No) {
         compose_view.dispatch_draw(&mut canvas);
-        windows.update_with_buffer(buffer.as_slice(), 800,500).unwrap();
+        windows.update_with_buffer(buffer.as_slice(), 800, 500).unwrap();
         std::thread::sleep(Duration::from_millis(100));
     // }
 }

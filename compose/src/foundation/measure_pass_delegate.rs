@@ -71,8 +71,8 @@ impl Remeasurable for MeasurePassDelegate {
         let size = placeable.get_size();
 
         let size_changed = previous_size != new_size
-            || size.width() != new_size.width()
-            || size.height() != new_size.height();
+            || size.width != new_size.width
+            || size.height != new_size.height;
 
         placeable.set_measured_size(new_size);
         size_changed
