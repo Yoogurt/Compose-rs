@@ -1,8 +1,9 @@
-use lazy_static::lazy_static;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::Mutex;
+
+use lazy_static::lazy_static;
 
 pub(crate) trait LeakableObject {
     fn tag() -> &'static str;

@@ -1,7 +1,8 @@
-use auto_delegate::delegate;
 use std::any::Any;
 use std::cell::RefCell;
 use std::rc::Rc;
+
+use auto_delegate::delegate;
 
 #[delegate]
 pub trait IntrinsicMeasurable {

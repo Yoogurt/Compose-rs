@@ -1,5 +1,3 @@
-use std::default;
-
 use super::{Density, Dp};
 
 impl Density {

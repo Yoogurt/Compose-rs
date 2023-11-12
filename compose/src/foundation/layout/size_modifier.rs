@@ -1,3 +1,10 @@
+use std::cell::{RefCell, RefMut};
+use std::hash::{Hash, Hasher};
+use std::rc::Rc;
+
+use auto_delegate::Delegate;
+use compose_foundation_macro::ModifierElement;
+
 use crate::foundation::constraint::Constraints;
 use crate::foundation::delegatable_node::DelegatableNode;
 use crate::foundation::geometry::{CoerceAtLeast, CoerceAtMost, CoerceIn, Dp, IntSize};
@@ -5,14 +12,9 @@ use crate::foundation::measurable::{Measurable, SingleChildMeasurePolicy};
 use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::modifier::{Modifier, ModifierNode, ModifierNodeImpl, NodeKind, NodeKindPatch};
+use crate::foundation::modifier_node::LayoutModifierNode;
 use crate::foundation::oop::AnyConverter;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
-use auto_delegate::Delegate;
-use std::cell::{RefCell, RefMut};
-use std::hash::{Hash, Hasher};
-use std::rc::{Rc, Weak};
-use compose_foundation_macro::ModifierElement;
-use crate::foundation::modifier_node::LayoutModifierNode;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
 pub trait SizeModifier {

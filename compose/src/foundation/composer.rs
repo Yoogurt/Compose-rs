@@ -1,7 +1,8 @@
+use std::{cell::RefCell, rc::Rc};
+
 use crate::foundation::composer_inner::ComposerInner;
 use crate::foundation::constraint::Constraints;
 use crate::foundation::layout_node::LayoutNode;
-use std::{cell::RefCell, rc::Rc};
 
 pub struct Composer {
     pub(crate) inner: RefCell<ComposerInner>,

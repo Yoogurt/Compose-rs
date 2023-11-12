@@ -1,13 +1,15 @@
-use super::slot_table_type::{GroupKind, GroupKindIndex};
-use crate::foundation::layout_node::LayoutNode;
-use crate::foundation::slot_table_type::SlotTableType;
-use std::cell::Ref;
 use std::cell::{RefCell, RefMut};
+use std::cell::Ref;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::ops::Deref;
 use std::ops::Index;
 use std::rc::Rc;
+
+use crate::foundation::layout_node::LayoutNode;
+use crate::foundation::slot_table_type::SlotTableType;
+
+use super::slot_table_type::{GroupKind, GroupKindIndex};
 
 #[derive(Debug, Default)]
 pub(crate) struct SlotTable {

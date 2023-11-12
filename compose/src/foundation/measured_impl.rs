@@ -1,5 +1,4 @@
 use super::measured::{Measured, MeasuredImpl};
-use std::any::Any;
 
 impl MeasuredImpl {
     pub(crate) fn new() -> MeasuredImpl {

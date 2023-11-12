@@ -1,13 +1,15 @@
-use crate::foundation::canvas::Canvas;
-use std::rc::{Rc, Weak};
 use std::cell::RefCell;
-use std::ops::{Deref, DerefMut};
+use std::ops::DerefMut;
+use std::rc::Rc;
+
 use auto_delegate::Delegate;
+
+use crate::foundation::canvas::Canvas;
 use crate::foundation::geometry::{Offset, Size};
 use crate::foundation::layout_direction::LayoutDirection;
-use crate::foundation::modifier::{ModifierNode, NodeKind, ModifierNodeExtension, ModifierElement};
+use crate::foundation::modifier::{ModifierNode, ModifierNodeExtension, NodeKind};
 use crate::foundation::modifier_node::DrawModifierNode;
-use crate::foundation::node_coordinator::{DrawableNodeCoordinator, NodeCoordinator, NodeCoordinatorTrait, PerformDrawTrait};
+use crate::foundation::node_coordinator::{DrawableNodeCoordinator, NodeCoordinatorTrait, PerformDrawTrait};
 use crate::foundation::ui::draw::{CanvasDrawScope, ContentDrawScope, DrawContext, DrawScope};
 use crate::foundation::ui::graphics::color::Color;
 

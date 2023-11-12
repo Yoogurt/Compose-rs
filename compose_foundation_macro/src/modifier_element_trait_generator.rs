@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
-use syn::{Ident};
+use syn::Ident;
 
 pub(crate) fn generate_modifier_element(struct_ident: &Ident) -> TokenStream {
     (quote! {
@@ -25,12 +25,12 @@ pub(crate) fn generate_any_converter(struct_ident: &Ident) -> TokenStream {
     }).into()
 }
 
-pub(crate) fn generate_ident_converter(struct_ident: &Ident,
-                                       converter_ident: Ident,
-                                       as_ref: Ident,
-                                       as_mut: Ident,
-                                       ret_ident: Ident,
-                                       generate: bool) -> TokenStream {
+pub(crate) fn generate_converter(struct_ident: &Ident,
+                                 converter_ident: Ident,
+                                 as_ref: Ident,
+                                 as_mut: Ident,
+                                 ret_ident: Ident,
+                                 generate: bool) -> TokenStream {
     if !generate {
         (quote! {
           impl crate::foundation::oop::#converter_ident for #struct_ident {}

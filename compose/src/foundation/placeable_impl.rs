@@ -1,11 +1,13 @@
 use std::cell::RefCell;
 use std::rc::Weak;
+
+use auto_delegate::Delegate;
+
 use crate::foundation::constraint::Constraints;
 use crate::foundation::geometry::{CoerceIn, IntOffset, IntSize};
 use crate::foundation::measured::MeasuredImpl;
 use crate::foundation::placeable::Placeable;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
-use auto_delegate::Delegate;
 
 #[derive(Debug, Delegate, Default)]
 pub(crate) struct PlaceableImpl {

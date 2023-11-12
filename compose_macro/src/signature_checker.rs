@@ -1,4 +1,5 @@
 use proc_macro::TokenStream;
+
 use syn::*;
 
 pub(crate) fn verify_signature(signature: &Signature) -> std::result::Result<(), TokenStream> {

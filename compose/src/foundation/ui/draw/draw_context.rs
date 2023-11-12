@@ -1,5 +1,5 @@
-use crate::foundation::geometry::{Density, Size};
 use crate::foundation::canvas::Canvas;
+use crate::foundation::geometry::{Density, Size};
 
 pub struct DrawContext<'a> {
     density: Density,

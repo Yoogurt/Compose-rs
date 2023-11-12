@@ -1,7 +1,7 @@
 use proc_macro::{TokenStream, TokenTree};
-use quote::quote;
 use std::collections::HashSet;
-use syn::*;
+
+use quote::quote;
 
 pub(crate) struct ComposeAttribute {
     pub(crate) mutable: bool,

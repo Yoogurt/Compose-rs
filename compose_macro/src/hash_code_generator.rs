@@ -1,7 +1,8 @@
-use lazy_static::lazy_static;
-use rand::random;
 use std::collections::HashSet;
 use std::sync::RwLock;
+
+use lazy_static::lazy_static;
+use rand::random;
 
 lazy_static! {
     static ref COMPOSER_HASH: RwLock<HashSet<i64>> = RwLock::new(HashSet::new());

@@ -1,9 +1,10 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::rc::Weak;
+
 use crate::foundation::geometry::Density;
-use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::layout_direction::LayoutDirection;
+use crate::foundation::layout_node::LayoutNode;
 
 pub(crate) trait Owner {
     fn get_root(&self) -> Rc<RefCell<LayoutNode>>;

@@ -1,8 +1,7 @@
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::ops::DerefMut;
+
 use crate::foundation::composer::Composer;
 use crate::foundation::layout_node::LayoutNode;
-use std::ops::DerefMut;
 
 pub(crate) fn ComposeNode(mut update: impl FnOnce(&mut LayoutNode) + 'static, mut content: impl FnMut()) {
     Composer::start_node();

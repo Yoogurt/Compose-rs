@@ -1,6 +1,7 @@
-use crate::foundation::geometry::{Dp, IntoDp};
 use std::hash::{Hash, Hasher};
 use std::ops::{Add, Sub};
+
+use crate::foundation::geometry::{Dp, IntoDp};
 
 impl IntoDp for f32 {
     fn dp(self) -> Dp {

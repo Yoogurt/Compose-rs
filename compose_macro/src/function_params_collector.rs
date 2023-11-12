@@ -1,9 +1,9 @@
 use proc_macro::TokenStream;
-use std::env::Args;
 use std::result::Result as STDResult;
+
+use syn::*;
 use syn::punctuated::Punctuated;
 use syn::token::Comma;
-use syn::*;
 
 pub(crate) fn collect_function_params(
     function_input: &Punctuated<FnArg, Comma>,

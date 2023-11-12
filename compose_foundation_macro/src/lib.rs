@@ -1,14 +1,15 @@
-mod modifier_element_trait_generator;
-
-use modifier_element_trait_generator::*;
 use proc_macro::{Span, TokenStream};
 use std::collections::HashMap;
+
+use modifier_element_trait_generator::*;
 use proc_macro2::Ident;
 use quote::{quote, TokenStreamExt, ToTokens};
+use syn::{AngleBracketedGenericArguments, FieldMutability, Fields, GenericArgument, Meta, parse_macro_input, Path, PathArguments, PathSegment, Token, TypePath, Visibility};
+use syn::ItemStruct;
 use syn::punctuated::Punctuated;
 use syn::token::Colon;
-use syn::{parse_macro_input, AngleBracketedGenericArguments, FieldMutability, Fields, GenericArgument, Path, PathArguments, PathSegment, Token, TypePath, Visibility, Meta};
-use syn::ItemStruct;
+
+mod modifier_element_trait_generator;
 
 #[proc_macro_attribute]
 pub fn Leak(attribute: TokenStream, struct_token_stream: TokenStream) -> TokenStream {
@@ -96,12 +97,14 @@ pub fn Leak(attribute: TokenStream, struct_token_stream: TokenStream) -> TokenSt
 
 #[proc_macro_derive(ModifierElement, attributes(Impl))]
 pub fn ModifierElement(struct_token_stream: TokenStream) -> TokenStream {
-    let mut struct_tokens = parse_macro_input!(struct_token_stream as ItemStruct);
+    let struct_tokens = parse_macro_input!(struct_token_stream as ItemStruct);
     let struct_ident = struct_tokens.ident.clone();
 
-    let converter = [("LayoutModifierNodeConverter", "as_layout_modifier_node", "as_layout_modifier_node_mut", "LayoutModifierNode"),
+    let converter = [
+        ("LayoutModifierNodeConverter", "as_layout_modifier_node", "as_layout_modifier_node_mut", "LayoutModifierNode"),
         ("DrawModifierNodeConverter", "as_draw_modifier_node", "as_draw_modifier_node_mut", "DrawModifierNode"),
-        ("ParentDataModifierNodeConverter", "as_parent_data_modifier_node", "as_parent_data_modifier_node_mut", "ParentDataModifierNode")];
+        ("ParentDataModifierNodeConverter", "as_parent_data_modifier_node", "as_parent_data_modifier_node_mut", "ParentDataModifierNode"),
+    ];
 
     let mut mapping = converter.into_iter().map(|value| (value.0, (value.1, value.2, value.3, false))).collect::<HashMap<&str, (&str, &str, &str, bool)>>();
 
@@ -125,10 +128,10 @@ pub fn ModifierElement(struct_token_stream: TokenStream) -> TokenStream {
     let any_converter = generate_any_converter(&struct_ident);
     let modifier_element = generate_modifier_element(&struct_ident);
 
-    let mut token_stream = (quote! {
+    let mut token_stream = quote! {
         #any_converter
         #modifier_element
-    });
+    };
 
     _ = mapping.into_iter().for_each(|converter| {
         let converter_ident = Ident::new(converter.0, Span::call_site().into());
@@ -136,7 +139,7 @@ pub fn ModifierElement(struct_token_stream: TokenStream) -> TokenStream {
         let as_mut = Ident::new(converter.1.1, Span::call_site().into());
         let ret_ident = Ident::new(converter.1.2, Span::call_site().into());
 
-        generate_ident_converter(&struct_ident, converter_ident, as_ref, as_mut, ret_ident, converter.1.3).to_tokens(&mut token_stream)
+        generate_converter(&struct_ident, converter_ident, as_ref, as_mut, ret_ident, converter.1.3).to_tokens(&mut token_stream)
     });
 
 

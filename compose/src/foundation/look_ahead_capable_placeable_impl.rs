@@ -1,14 +1,16 @@
 use std::cell::RefCell;
 use std::rc::Rc;
+
+use auto_delegate::Delegate;
+
+use crate::foundation::constraint::Constraints;
 use crate::foundation::geometry::{IntOffset, IntSize};
 use crate::foundation::look_ahead_capable_placeable::LookaheadCapablePlaceable;
 use crate::foundation::measure_scope::MeasureScopeImpl;
-use crate::foundation::placeable_impl::PlaceableImpl;
-use crate::foundation::placeable_place_at::PlaceablePlaceAt;
-use auto_delegate::Delegate;
-use crate::foundation::constraint::Constraints;
 use crate::foundation::measured::Measured;
 use crate::foundation::placeable::Placeable;
+use crate::foundation::placeable_impl::PlaceableImpl;
+use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 
 #[derive(Default, Debug, Delegate)]
 pub(crate) struct LookaheadCapablePlaceableImpl {

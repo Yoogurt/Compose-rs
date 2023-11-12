@@ -1,3 +1,7 @@
+use std::ops::RangeInclusive;
+
+use crate::foundation::geometry::{CoerceIn, IntSize};
+
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Constraints {
     pub min_width: usize,
@@ -5,9 +9,6 @@ pub struct Constraints {
     pub min_height: usize,
     pub max_height: usize,
 }
-
-use crate::foundation::geometry::{CoerceIn, IntSize};
-use std::ops::RangeInclusive;
 
 impl Constraints {
     pub const INFINITE: usize = usize::MAX;

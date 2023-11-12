@@ -1,8 +1,8 @@
-use std::rc::Rc;
 use std::cell::RefCell;
+use std::rc::Rc;
+
 use crate::foundation::canvas::Canvas;
 use crate::foundation::node_chain::NodeChain;
-use crate::foundation::node_coordinator::NodeCoordinator;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
 #[derive(Debug, Default)]

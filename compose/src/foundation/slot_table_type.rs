@@ -1,7 +1,7 @@
-use std::hash::{Hash, Hasher};
 use std::{any::Any, cell::RefCell, rc::Rc};
+use std::hash::Hash;
 
-use super::{layout_node::LayoutNode, slot_table::SlotTable};
+use super::layout_node::LayoutNode;
 
 #[derive(Debug, Hash, PartialEq, Eq)]
 pub(crate) enum GroupKindIndex {

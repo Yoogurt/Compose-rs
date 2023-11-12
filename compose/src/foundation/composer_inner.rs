@@ -1,7 +1,8 @@
+use std::{cell::RefCell, rc::Rc};
+use std::any::Any;
+
 use crate::foundation::slot_table::{SlotReader, SlotTable, SlotWriter};
 use crate::foundation::slot_table_type::GroupKindIndex;
-use std::any::Any;
-use std::{cell::RefCell, rc::Rc};
 
 use super::{constraint::Constraints, layout_node::LayoutNode, slot_table_type::GroupKind};
 

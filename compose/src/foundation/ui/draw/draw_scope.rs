@@ -1,7 +1,8 @@
 use auto_delegate::delegate;
-use crate::foundation::ui::draw::DrawContext;
-use crate::foundation::geometry::{Density, IntOffset, Offset, Size};
+
+use crate::foundation::geometry::{Density, Offset, Size};
 use crate::foundation::layout_direction::LayoutDirection;
+use crate::foundation::ui::draw::DrawContext;
 use crate::foundation::ui::graphics::color::Color;
 
 #[delegate]

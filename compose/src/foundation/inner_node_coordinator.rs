@@ -1,32 +1,32 @@
 use std::cell::{RefCell, RefMut};
-use std::rc::Weak;
+use std::fmt::{Debug, Formatter};
+use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
+use std::rc::Weak;
 
+use auto_delegate::Delegate;
+use compose_foundation_macro::AnyConverter;
+
+use crate::foundation::canvas::Canvas;
 use crate::foundation::constraint::Constraints;
+use crate::foundation::geometry::{IntOffset, IntSize};
 use crate::foundation::layout_node::LayoutNode;
+use crate::foundation::layout_node_layout_delegate::LayoutNodeLayoutDelegate;
 use crate::foundation::measurable::Measurable;
+use crate::foundation::measurable::MultiChildrenMeasurePolicy;
+use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
 use crate::foundation::measure_result::{MeasureResult, MeasureResultProvider};
 use crate::foundation::measure_scope::MeasureScope;
-use auto_delegate::Delegate;
-use std::any::Any;
-use std::fmt::{format, Debug, Formatter};
-
-use super::node_coordinator::NodeCoordinator;
-use super::placeable::Placeable;
-use crate::foundation::geometry::{IntOffset, IntSize};
-use crate::foundation::measurable::MultiChildrenMeasurePolicy;
+use crate::foundation::node_chain::NodeChain;
+use crate::foundation::node_coordinator::{PerformDrawTrait, PerformMeasureHelper};
 use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 use crate::foundation::usage_by_parent::UsageByParent;
-use std::ops::{Deref, DerefMut};
-use compose_foundation_macro::AnyConverter;
-use crate::foundation::canvas::Canvas;
-use crate::foundation::layout_node_layout_delegate::LayoutNodeLayoutDelegate;
-use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
-use crate::foundation::node_chain::NodeChain;
-use crate::foundation::node_coordinator::{PerformDrawTrait, PerformMeasureHelper};
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::utils::self_reference::SelfReference;
+
+use super::node_coordinator::NodeCoordinator;
+use super::placeable::Placeable;
 
 #[derive(Delegate, AnyConverter)]
 pub(crate) struct InnerNodeCoordinator {

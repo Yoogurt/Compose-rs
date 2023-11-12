@@ -1,8 +1,7 @@
-use std::rc::Rc;
-use std::cell::RefCell;
 use skia_safe::Rect;
+
 use crate::foundation::canvas::Canvas;
-use crate::foundation::geometry::{Density, IntOffset, Offset};
+use crate::foundation::geometry::Offset;
 use crate::foundation::geometry::Size;
 use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::ui::draw::{DrawContext, DrawScope};

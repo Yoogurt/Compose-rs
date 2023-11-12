@@ -1,6 +1,8 @@
-use super::{IntOffset, Offset, Signed32Bit, Unsigned32Bit};
+use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
+
 use lazy_static::lazy_static;
-use std::ops::{Add, Deref, Div, Mul, Neg, Rem, Sub};
+
+use super::{IntOffset, Offset};
 
 impl<T> Offset<T>
 {

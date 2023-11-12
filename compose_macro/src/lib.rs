@@ -1,29 +1,26 @@
 #![allow(warnings)]
 
-mod attribute_parser;
-mod function_params_collector;
-mod hash_code_generator;
-mod signature_checker;
+use proc_macro::{Span, TokenStream};
+
+use proc_macro2::Ident;
+use quote::quote;
+use syn::parse_macro_input;
+use syn::ItemFn;
+use syn::spanned::Spanned;
 
 use crate::attribute_parser::parse_attribute;
 use crate::function_params_collector::collect_function_params;
 use crate::hash_code_generator::generate_hash_code;
 use crate::signature_checker::verify_signature;
-use proc_macro::{Span, TokenStream, TokenTree};
-use std::collections::HashMap;
-use std::fmt::format;
-use proc_macro2::Ident;
-use quote::quote;
-use syn::parse::ParseStream;
-use syn::punctuated::Punctuated;
-use syn::spanned::Spanned;
-use syn::token::Colon;
-use syn::{parse_macro_input, AngleBracketedGenericArguments, FieldMutability, Fields, GenericArgument, Path, PathArguments, PathSegment, Token, TypePath, Visibility, Meta};
-use syn::{ItemFn, ItemStruct};
+
+mod attribute_parser;
+mod function_params_collector;
+mod hash_code_generator;
+mod signature_checker;
 
 #[proc_macro_attribute]
-pub fn Composable(attribute: TokenStream, funtion: TokenStream) -> TokenStream {
-    let function = parse_macro_input!(funtion as ItemFn);
+pub fn Composable(attribute: TokenStream, function: TokenStream) -> TokenStream {
+    let function = parse_macro_input!(function as ItemFn);
     let attribute = parse_attribute(attribute);
 
     let mutable_composer_export = attribute.compose_mutable_descriptor();

@@ -1,5 +1,4 @@
 use auto_delegate::delegate;
-use std::any::Any;
 
 #[delegate]
 pub trait Measured {

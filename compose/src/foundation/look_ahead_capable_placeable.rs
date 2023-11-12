@@ -1,6 +1,7 @@
-use super::placeable::Placeable;
-use super::{geometry::IntOffset, measure_scope::MeasureScope};
 use auto_delegate::delegate;
+
+use super::{geometry::IntOffset, measure_scope::MeasureScope};
+use super::placeable::Placeable;
 
 #[delegate]
 pub trait LookaheadCapablePlaceable: Placeable + MeasureScope {

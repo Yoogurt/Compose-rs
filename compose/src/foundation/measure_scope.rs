@@ -1,9 +1,11 @@
-use super::layout_direction::LayoutDirection;
+use auto_delegate::delegate;
+
 use crate::foundation::geometry::{Density, IntSize};
 use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::placement_scope::PlacementScope;
-use auto_delegate::delegate;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
+
+use super::layout_direction::LayoutDirection;
 
 pub(crate) fn empty_place_action() -> Box<dyn FnOnce(&dyn PlacementScope)> {
     (|_: &dyn PlacementScope| {}).wrap_with_box()

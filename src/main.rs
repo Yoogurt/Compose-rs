@@ -1,22 +1,23 @@
 #![allow(warnings)]
 
+use std::default::Default as STDefault;
+use std::hash::Hash;
+use std::time::Duration;
+
+use compose::foundation::background::BackgroundModifier;
 use compose::foundation::bridge::platform_compose_view::MacOSComposeView;
 use compose::foundation::composer::Composer;
 use compose::foundation::drawing::canvas_impl::new_canvas;
 use compose::foundation::geometry::IntoDp;
 use compose::foundation::layout::size_modifier::SizeModifier;
 use compose::foundation::modifier::Modifier;
-use compose_macro::Composable;
-use minifb::{Key, KeyRepeat, Scale, ScaleMode, Window, WindowOptions};
-use skia_safe::{surfaces, AlphaType, ColorSpace, ColorType, ImageInfo, Rect, Surface,
-};
-use std::default::Default as STDefault;
-use std::hash::Hash;
-use std::time::Duration;
-use compose::foundation::background::BackgroundModifier;
 use compose::foundation::ui::align::Alignment;
 use compose::foundation::ui::graphics::color::Color;
 use compose::widgets::r#box::BoxLayout;
+use compose_macro::Composable;
+use minifb::{Key, KeyRepeat, Scale, ScaleMode, Window, WindowOptions};
+use skia_safe::{AlphaType, ColorSpace, ColorType, ImageInfo, surfaces,
+};
 
 #[Composable]
 fn test_box_composable() {

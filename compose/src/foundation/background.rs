@@ -1,12 +1,13 @@
 use auto_delegate::Delegate;
-use crate::foundation::modifier::{Modifier, ModifierNodeImpl, NodeKind, NodeKindPatch};
-use crate::foundation::canvas::Canvas;
-use crate::foundation::ui::draw::{ContentDrawScope, DrawScope};
-use crate::foundation::ui::graphics::color::Color;
 use compose_foundation_macro::ModifierElement;
+
+use crate::foundation::canvas::Canvas;
 use crate::foundation::delegatable_node::DelegatableNode;
 use crate::foundation::geometry::Offset;
+use crate::foundation::modifier::{Modifier, ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::modifier_node::DrawModifierNode;
+use crate::foundation::ui::draw::{ContentDrawScope, DrawScope};
+use crate::foundation::ui::graphics::color::Color;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
 pub trait BackgroundModifier {

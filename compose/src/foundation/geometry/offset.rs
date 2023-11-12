@@ -1,5 +1,3 @@
-use std::marker::PhantomData;
-
 #[derive(Copy, Debug, Clone)]
 pub struct Offset<T> {
     pub x: T,

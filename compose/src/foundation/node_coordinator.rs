@@ -1,16 +1,16 @@
-use super::{measurable::Measurable, placeable::Placeable};
-use crate::foundation::constraint::Constraints;
-use auto_delegate::delegate;
-use core::any::Any;
 use core::fmt::Debug;
 use std::{cell::RefCell, rc::Rc, rc::Weak};
-use std::ops::Deref;
+
+use auto_delegate::delegate;
+
 use crate::foundation::canvas::Canvas;
+use crate::foundation::constraint::Constraints;
 use crate::foundation::look_ahead_capable_placeable::LookaheadCapablePlaceable;
-use crate::foundation::measure_result::MeasureResult;
+use crate::foundation::measure_result::MeasureResultProvider;
 use crate::foundation::modifier::ModifierNode;
 use crate::foundation::oop::AnyConverter;
-use crate::foundation::measure_result::MeasureResultProvider;
+
+use super::{measurable::Measurable, placeable::Placeable};
 
 #[delegate]
 pub trait NodeCoordinatorTrait {

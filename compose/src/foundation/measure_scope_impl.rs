@@ -1,10 +1,10 @@
+use crate::foundation::geometry::{Density, IntSize};
+use crate::foundation::placement_scope::PlacementScope;
+
 use super::{
     layout_direction::LayoutDirection, measure_result::MeasureResult, measure_scope::MeasureScope,
     measure_scope::MeasureScopeImpl,
 };
-use crate::foundation::geometry::{Density, IntSize};
-use crate::foundation::placement_scope::PlacementScope;
-use crate::foundation::placement_scope_impl::PlacementScopeImpl;
 
 impl MeasureScopeImpl {
     pub(crate) fn new() -> Self {

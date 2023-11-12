@@ -1,6 +1,8 @@
 use std::ops::{Div, Mul};
+
 use crate::foundation::measure_result::MeasureResult;
-use super::{IntOffset, IntSize, Offset, Size, Unsigned32Bit};
+
+use super::{IntSize, Offset, Size};
 
 impl<T> Size<T> {
     pub fn new(x: T, y: T) -> Size<T> {
