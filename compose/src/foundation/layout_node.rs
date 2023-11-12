@@ -54,26 +54,27 @@ impl LayoutNode {
 
         let node = node.wrap_with_rc_refcell();
         {
-            let node_mut = node.borrow_mut();
-            let identify = node_mut.identify;
+            let node_ref = node.borrow();
+            let identify = node_ref.identify;
 
-            let node_chain = node_mut.node_chain.clone();
-            let modifier_container = node_mut.modifier_container.clone();
+            let node_chain = node_ref.node_chain.clone();
+            let modifier_container = node_ref.modifier_container.clone();
             node_chain
                 .borrow_mut()
                 .attach(identify, &node,
                         &modifier_container,
-                        &node_mut.layout_node_layout_delegate.borrow().measure_pass_delegate);
+                        &node_ref.layout_node_layout_delegate.borrow().measure_pass_delegate,
+                        &node_ref.node_chain);
 
-            let layout_state = node_mut.layout_state.clone();
-            node_mut.layout_node_layout_delegate.borrow_mut().attach(
+            let layout_state = node_ref.layout_state.clone();
+            node_ref.layout_node_layout_delegate.borrow_mut().attach(
                 identify,
                 &node_chain,
                 &modifier_container,
                 &layout_state,
             );
 
-            node_mut.layout_node_draw_delegate.borrow_mut().attach(node_chain);
+            node_ref.layout_node_draw_delegate.borrow_mut().attach(node_chain);
         }
 
         node
@@ -197,8 +198,7 @@ impl LayoutNode {
 
     pub(crate) fn remove_child(
         self_: &Rc<RefCell<LayoutNode>>,
-    ) {
-    }
+    ) {}
 
     pub fn as_remeasurable(&self) -> Rc<RefCell<dyn StatefulRemeasurable>> {
         self.layout_node_layout_delegate
@@ -217,6 +217,8 @@ impl LayoutNode {
     pub(crate) fn get_parent(&self) -> Option<Weak<RefCell<LayoutNode>>> {
         self.node_chain.borrow().parent.clone()
     }
+
+    pub(crate) fn request_remeasure(&self) {}
 
     fn draw(_canvas: &dyn Canvas) {}
 }

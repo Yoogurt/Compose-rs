@@ -6,8 +6,9 @@ use auto_delegate::Delegate;
 use crate::foundation::geometry::{Offset, Size};
 use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::modifier::{ModifierNode, NodeKind, ModifierNodeExtension, ModifierElement};
-use crate::foundation::node_coordinator::{NodeCoordinator, NodeCoordinatorTrait, PerformDrawTrait};
-use crate::foundation::ui::draw::{CanvasDrawScope, ContentDrawScope, DrawContext, DrawModifierNode, DrawScope};
+use crate::foundation::modifier_node::DrawModifierNode;
+use crate::foundation::node_coordinator::{DrawableNodeCoordinator, NodeCoordinator, NodeCoordinatorTrait, PerformDrawTrait};
+use crate::foundation::ui::draw::{CanvasDrawScope, ContentDrawScope, DrawContext, DrawScope};
 use crate::foundation::ui::graphics::color::Color;
 
 #[derive(Delegate)]

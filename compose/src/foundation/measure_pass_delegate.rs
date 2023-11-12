@@ -34,11 +34,19 @@ pub(crate) struct MeasurePassDelegate {
     pub(crate) place_once: bool,
     pub(crate) is_placed: bool,
     pub(crate) layout_state: Option<Rc<RefCell<LayoutState>>>,
-    pub(crate) parent_data: Option<Box<dyn Any>>,
+    pub(crate) parent_data: Option<Rc<RefCell<dyn Any>>>,
+
+    parent_data_dirty: bool,
     weak_self: Weak<RefCell<Self>>,
     laying_out_children: bool,
 
     identify: u32,
+}
+
+impl StatefulRemeasurable for MeasurePassDelegate {
+    fn mark_remeasure_pending(&mut self) {
+        self.remeasure_pending = true;
+    }
 }
 
 impl Remeasurable for MeasurePassDelegate {
@@ -79,12 +87,6 @@ impl Remeasurable for MeasurePassDelegate {
     }
 }
 
-impl StatefulRemeasurable for MeasurePassDelegate {
-    fn mark_remeasure_pending(&mut self) {
-        self.remeasure_pending = true;
-    }
-}
-
 impl PlaceablePlaceAt for MeasurePassDelegate {
     fn place_at(&mut self, position: IntOffset, z_index: f32) {
         if position != self.last_position {
@@ -111,6 +113,7 @@ impl MeasurePassDelegate {
             is_placed: false,
             layout_state: None,
             parent_data: None,
+            parent_data_dirty: false,
             laying_out_children: false,
             identify: 0,
             weak_self: Weak::default(),
@@ -179,7 +182,18 @@ impl MeasurePassDelegate {
         measure_result.0
     }
 
-    pub(crate) fn update_parent_data(&self) -> bool {
+    pub(crate) fn update_parent_data(&mut self) -> bool {
+        if self.get_parent_data().is_none()
+            && self.get_outer_coordinator().borrow().get_parent_data().is_none() {
+            return false;
+        }
+
+        if !self.parent_data_dirty {
+            return false;
+        }
+        self.parent_data_dirty = false;
+        self.parent_data = self.get_outer_coordinator().borrow().get_parent_data();
+
         true
     }
 
@@ -277,16 +291,16 @@ impl MeasurePassDelegate {
 }
 
 impl IntrinsicMeasurable for MeasurePassDelegate {
-    fn set_parent_data(&mut self, parent_data: Option<Box<dyn Any>>) {
+    fn set_parent_data(&mut self, parent_data: Option<Rc<RefCell<dyn Any>>>) {
         self.parent_data = parent_data;
     }
 
-    fn get_parent_data(&self) -> Option<&Box<dyn Any>> {
-        self.parent_data.as_ref()
+    fn get_parent_data(&self) -> Option<Rc<RefCell<dyn Any>>> {
+        self.parent_data.clone()
     }
 
-    fn get_parent_data_mut(&mut self) -> Option<&mut Box<dyn Any>> {
-        self.parent_data.as_mut()
+    fn get_parent_data_ref(&self) -> Option<&Rc<RefCell<dyn Any>>> {
+        self.parent_data.as_ref()
     }
 }
 

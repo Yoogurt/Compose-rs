@@ -10,6 +10,7 @@ use crate::foundation::usage_by_parent::UsageByParent;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use std::cell::{Ref, RefCell, RefMut};
 use std::rc::Rc;
+use crate::foundation::utils::option_extension::OptionThen;
 
 #[derive(Debug)]
 pub(crate) struct LayoutNodeLayoutDelegate {
@@ -88,6 +89,10 @@ impl LayoutNodeLayoutDelegate {
     }
 
     pub(crate) fn update_parent_data(&self) {
-        if self.measure_pass_delegate.borrow_mut().update_parent_data() {}
+        if self.measure_pass_delegate.borrow_mut().update_parent_data() {
+            _ = self.nodes.as_ref().unwrap().borrow().get_parent()
+                .and_then(|parent| parent.upgrade())
+                .then(|parent| parent.borrow().request_remeasure());
+        }
     }
 }

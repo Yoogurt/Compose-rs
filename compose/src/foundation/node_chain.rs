@@ -3,7 +3,6 @@ use super::{
     inner_node_coordinator::InnerNodeCoordinator, measure_result::MeasureResult,
     node_coordinator::NodeCoordinator, parent_data::ParentData,
 };
-use crate::foundation::layout_modifier_node::LayoutModifierNode;
 use crate::foundation::layout_modifier_node_coordinator::LayoutModifierNodeCoordinator;
 use crate::foundation::node_coordinator::TailModifierNodeProvider;
 use crate::foundation::layout_node::LayoutNode;
@@ -20,7 +19,9 @@ use std::ops::DerefMut;
 use std::process::id;
 use compose_foundation_macro::{ModifierElement};
 use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
+use crate::foundation::modifier_node::LayoutModifierNode;
 use crate::foundation::node::BackwardsCompatNode;
+use crate::foundation::utils::self_reference::SelfReference;
 
 #[derive(Debug, Delegate, Default, ModifierElement)]
 pub(crate) struct TailModifierNode {
@@ -43,7 +44,8 @@ pub(crate) struct NodeChain {
     pub(crate) parent: Option<Weak<RefCell<LayoutNode>>>,
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
 
-    identify: u32
+    weak_self: Weak<RefCell<NodeChain>>,
+    identify: u32,
 }
 impl_node_kind_any!(TailModifierNode);
 
@@ -53,6 +55,12 @@ struct SentineHeadNode {
     node_impl: ModifierNodeImpl,
 }
 impl_node_kind_any!(SentineHeadNode);
+
+impl SelfReference for NodeChain {
+    fn get_self(&self) -> Weak<RefCell<Self>> {
+        self.weak_self.clone()
+    }
+}
 
 impl NodeChain {
     pub(crate) fn new() -> Rc<RefCell<Self>> {
@@ -72,10 +80,13 @@ impl NodeChain {
             parent: Default::default(),
 
             layout_node: Weak::new(),
-            identify: 0
-        };
+            weak_self: Weak::new(),
 
-        result.wrap_with_rc_refcell()
+            identify: 0,
+        }.wrap_with_rc_refcell();
+
+        result.borrow_mut().weak_self = Rc::downgrade(&result);
+        result
     }
 
     pub(crate) fn set_parent(&mut self, parent: Option<Weak<RefCell<LayoutNode>>>) {
@@ -91,12 +102,13 @@ impl NodeChain {
         identify: u32,
         layout_node: &Rc<RefCell<LayoutNode>>,
         modifier_container: &Rc<RefCell<ModifierContainer>>,
-        measure_pass_delegate: &Rc<RefCell<MeasurePassDelegate>>
+        measure_pass_delegate: &Rc<RefCell<MeasurePassDelegate>>,
+        node_chain: &Rc<RefCell<NodeChain>>,
     ) {
         self.identify = identify;
         self.layout_node = Rc::downgrade(layout_node);
         self.modifier_container = modifier_container.clone();
-        self.inner_coordinator.borrow_mut().attach(identify, layout_node, measure_pass_delegate);
+        self.inner_coordinator.borrow_mut().attach(identify, layout_node, measure_pass_delegate, node_chain);
     }
 
     fn pad_chain(&mut self) -> Rc<RefCell<dyn ModifierNode>> {
@@ -174,7 +186,7 @@ impl NodeChain {
             sentine_head_mut.update_coordinator(None)
         }
 
-        if result.as_ptr() as *const () == self.sentine_head.as_ptr() as *const() {
+        if result.as_ptr() as *const () == self.sentine_head.as_ptr() as *const () {
             panic!("trim_chain did not update the head")
         }
 
@@ -220,8 +232,9 @@ impl NodeChain {
                     node_coordinator.clone()
                 } else {
                     let c = LayoutModifierNodeCoordinator::new(
-                        self.layout_node.clone(),
-                        node_rc.clone(),
+                        &self.layout_node.upgrade().unwrap(),
+                        &node_rc,
+                        &self.get_self().upgrade().unwrap(),
                     )
                         .wrap_with_rc_refcell();
                     let weak_layout_modifier_node_coordinator = Rc::downgrade(&c);
@@ -325,7 +338,7 @@ impl NodeChain {
             );
             let wrapped = coordinator.borrow().get_wrapped().unwrap();
             coordinator = wrapped;
-            coordinator_ptr = coordinator.as_ptr() as *const();
+            coordinator_ptr = coordinator.as_ptr() as *const ();
         }
     }
 }

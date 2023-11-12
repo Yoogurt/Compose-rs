@@ -1,4 +1,3 @@
-use crate::foundation::canvas::Canvas;
 use crate::foundation::delegatable_node::DelegatableNode;
 use crate::foundation::ui::draw::ContentDrawScope;
 

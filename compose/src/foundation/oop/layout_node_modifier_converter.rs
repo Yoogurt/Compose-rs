@@ -1,5 +1,5 @@
 use auto_delegate::delegate;
-use crate::foundation::layout_modifier_node::LayoutModifierNode;
+use crate::foundation::modifier_node::LayoutModifierNode;
 
 #[delegate]
 pub trait LayoutModifierNodeConverter {

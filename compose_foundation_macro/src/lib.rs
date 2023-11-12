@@ -4,7 +4,7 @@ use modifier_element_trait_generator::*;
 use proc_macro::{Span, TokenStream};
 use std::collections::HashMap;
 use proc_macro2::Ident;
-use quote::quote;
+use quote::{quote, TokenStreamExt, ToTokens};
 use syn::punctuated::Punctuated;
 use syn::token::Colon;
 use syn::{parse_macro_input, AngleBracketedGenericArguments, FieldMutability, Fields, GenericArgument, Path, PathArguments, PathSegment, Token, TypePath, Visibility, Meta};
@@ -99,19 +99,18 @@ pub fn ModifierElement(struct_token_stream: TokenStream) -> TokenStream {
     let mut struct_tokens = parse_macro_input!(struct_token_stream as ItemStruct);
     let struct_ident = struct_tokens.ident.clone();
 
-    let mut do_generate_layout_modifier_node_converter = false;
-    let mut do_generate_draw_modifier_node_converter = false;
+    let converter = [("LayoutModifierNodeConverter", "as_layout_modifier_node", "as_layout_modifier_node_mut", "LayoutModifierNode"),
+        ("DrawModifierNodeConverter", "as_draw_modifier_node", "as_draw_modifier_node_mut", "DrawModifierNode"),
+        ("ParentDataModifierNodeConverter", "as_parent_data_modifier_node", "as_parent_data_modifier_node_mut", "ParentDataModifierNode")];
 
-    let mut mapping: HashMap<&'static str, &mut bool> = HashMap::new();
-    mapping.insert("LayoutModifierNodeConverter", &mut do_generate_layout_modifier_node_converter);
-    mapping.insert("DrawModifierNodeConverter", &mut do_generate_draw_modifier_node_converter);
+    let mut mapping = converter.into_iter().map(|value| (value.0, (value.1, value.2, value.3, false))).collect::<HashMap<&str, (&str, &str, &str, bool)>>();
 
     for attribute in struct_tokens.attrs {
         if let Meta::List(list) = attribute.meta {
             list.tokens.into_iter().for_each(|token| {
                 if let proc_macro2::TokenTree::Ident(ident) = token {
                     if let Some(do_generate) = mapping.get_mut(ident.to_string().as_str()) {
-                        **do_generate = true;
+                        do_generate.3 = true;
                     }
                 }
             });
@@ -125,15 +124,23 @@ pub fn ModifierElement(struct_token_stream: TokenStream) -> TokenStream {
 
     let any_converter = generate_any_converter(&struct_ident);
     let modifier_element = generate_modifier_element(&struct_ident);
-    let layout_modifier_node_converter = generate_layout_modifier_node_converter(&struct_ident, do_generate_layout_modifier_node_converter);
-    let draw_modifier_node_converter = generate_draw_modifier_node_converter(&struct_ident, do_generate_draw_modifier_node_converter);
 
-    (quote! {
-        #modifier_element
+    let mut token_stream = (quote! {
         #any_converter
-        #layout_modifier_node_converter
-        #draw_modifier_node_converter
-    }).into()
+        #modifier_element
+    });
+
+    _ = mapping.into_iter().for_each(|converter| {
+        let converter_ident = Ident::new(converter.0, Span::call_site().into());
+        let as_ref = Ident::new(converter.1.0, Span::call_site().into());
+        let as_mut = Ident::new(converter.1.1, Span::call_site().into());
+        let ret_ident = Ident::new(converter.1.2, Span::call_site().into());
+
+        generate_ident_converter(&struct_ident, converter_ident, as_ref, as_mut, ret_ident, converter.1.3).to_tokens(&mut token_stream)
+    });
+
+
+    token_stream.into()
 }
 
 

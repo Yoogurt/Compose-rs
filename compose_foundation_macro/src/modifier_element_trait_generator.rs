@@ -25,45 +25,28 @@ pub(crate) fn generate_any_converter(struct_ident: &Ident) -> TokenStream {
     }).into()
 }
 
-pub(crate) fn generate_layout_modifier_node_converter(struct_ident: &Ident, generate: bool) -> TokenStream {
+pub(crate) fn generate_ident_converter(struct_ident: &Ident,
+                                       converter_ident: Ident,
+                                       as_ref: Ident,
+                                       as_mut: Ident,
+                                       ret_ident: Ident,
+                                       generate: bool) -> TokenStream {
     if !generate {
         (quote! {
-          impl crate::foundation::oop::LayoutModifierNodeConverter for #struct_ident {}
+          impl crate::foundation::oop::#converter_ident for #struct_ident {}
         }).into()
     } else {
-        dbg!(format!("LayoutModifierNodeConverter is impl for {}", struct_ident.to_string()).as_str());
+        dbg!(format!("{:?} is impl for {}", converter_ident, struct_ident.to_string()).as_str());
 
         (quote! {
-            impl crate::foundation::oop::LayoutModifierNodeConverter for #struct_ident {
-                fn as_layout_modifier_node(&self) -> Option<&dyn crate::foundation::layout_modifier_node::LayoutModifierNode> {
+            impl crate::foundation::oop::#converter_ident for #struct_ident {
+                fn #as_ref(&self) -> Option<&dyn crate::foundation::modifier_node::#ret_ident> {
                     Some(self)
                 }
 
-                fn as_layout_modifier_node_mut(&mut self) -> Option<&mut dyn crate::foundation::layout_modifier_node::LayoutModifierNode> {
+                fn #as_mut(&mut self) -> Option<&mut dyn crate::foundation::modifier_node::#ret_ident> {
                     Some(self)
                 }
-        }
-    }).into()
-    }
-}
-
-pub(crate) fn generate_draw_modifier_node_converter(struct_ident: &Ident, generate: bool) -> TokenStream {
-    if !generate {
-        (quote! {
-            impl crate::foundation::oop::DrawModifierNodeConverter for #struct_ident {}
-        }).into()
-    } else {
-        dbg!(format!("DrawModifierNodeConverter is impl for {}", struct_ident.to_string()).as_str());
-
-        (quote! {
-          impl crate::foundation::oop::DrawModifierNodeConverter for #struct_ident {
-            fn as_draw_modifier_node(&self) -> Option<&dyn crate::foundation::ui::draw::DrawModifierNode> {
-                Some(self)
-            }
-
-            fn as_draw_modifier_node_mut(&mut self) -> Option<&mut dyn crate::foundation::ui::draw::DrawModifierNode> {
-                Some(self)
-            }
         }
     }).into()
     }

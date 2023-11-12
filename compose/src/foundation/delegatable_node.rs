@@ -22,7 +22,7 @@ pub(crate) trait ToDelegatedNode {
 
 impl ToDelegatedNode for Rc<RefCell<dyn ModifierNode>> {
     fn to_delegated_node(&self) -> Rc<RefCell<dyn ModifierNode>> {
-        match  self.borrow().get_node() {
+        match self.borrow().get_node() {
             DelegatableKind::This => {
                 self.clone()
             }

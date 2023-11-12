@@ -1,7 +1,7 @@
 #![allow(non_upper_case_globals)]
 
 use crate::foundation::node_coordinator::NodeCoordinator;
-use crate::foundation::oop::{AnyConverter, DrawModifierNodeConverter};
+use crate::foundation::oop::{AnyConverter, DrawModifierNodeConverter, ParentDataModifierNodeConverter};
 use crate::foundation::utils::weak_upgrade::WeakUpdater;
 use auto_delegate::delegate;
 use compose_foundation_macro::{Leak, ModifierElement};
@@ -12,8 +12,6 @@ use std::ops::{Add, BitAnd, Deref};
 use std::rc::{Rc, Weak};
 use crate::foundation::delegatable_node::{DelegatableKind, DelegatableNode};
 use crate::foundation::oop::LayoutModifierNodeConverter;
-use crate::foundation::ui::draw::DrawModifierNode;
-use crate::foundation::utils::self_reference::SelfReference;
 
 pub const Modifier: Modifier = Modifier::Unit;
 
@@ -32,7 +30,7 @@ impl NodeKind {
     }
 
     pub(crate) fn include_self_in_traversal(&self) -> bool {
-         NodeKind::LayoutAware & self.mask() != 0
+        NodeKind::LayoutAware & self.mask() != 0
     }
 }
 
@@ -64,7 +62,7 @@ pub trait NodeKindPatch {
     fn get_node_kind(&self) -> NodeKind;
 }
 
-pub trait ModifierElement: AnyConverter + LayoutModifierNodeConverter + DrawModifierNodeConverter + NodeKindPatch + Debug {
+pub trait ModifierElement: AnyConverter + LayoutModifierNodeConverter + DrawModifierNodeConverter + ParentDataModifierNodeConverter + NodeKindPatch + Debug {
     fn as_modifier_element(&self) -> &dyn ModifierElement;
     fn as_modifier_element_mut(&mut self) -> &mut dyn ModifierElement;
 }
@@ -288,15 +286,15 @@ impl<T> ModifierNodeExtension for T where T: ?Sized + ModifierNode {
 
         let child = self.get_child();
         let mut next = child;
-        
+
         while let Some(next_node) = next.clone() {
             let next_node_ref = next_node.borrow();
             let node_kind_set = next_node_ref.get_node_kind();
-            if node_kind_set & measure_mask!= 0{
-                return  None
+            if node_kind_set & measure_mask != 0 {
+                return None;
             }
-            if node_kind_set & draw_mask != 0{
-                return next
+            if node_kind_set & draw_mask != 0 {
+                return next;
             }
 
             next = next_node_ref.get_child();
@@ -308,7 +306,7 @@ impl<T> ModifierNodeExtension for T where T: ?Sized + ModifierNode {
     fn require_coordinator(&self, node_kind: NodeKind) -> Rc<RefCell<dyn NodeCoordinator>> {
         let coordinator = self.get_coordinator().unwrap().upgrade().unwrap();
         let coordinator_ref = coordinator.borrow();
-        if coordinator_ref.get_tail().as_ptr() as *const () != self as *const T as *const() {
+        if coordinator_ref.get_tail().as_ptr() as *const () != self as *const T as *const () {
             coordinator.clone()
         } else if node_kind.include_self_in_traversal() {
             coordinator_ref.get_wrapped().unwrap()

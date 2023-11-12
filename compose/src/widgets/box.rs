@@ -1,32 +1,32 @@
 use std::any::Any;
-use std::cell::{RefCell, RefMut};
+use std::cell::{Ref, RefCell, RefMut};
 use std::ops::DerefMut;
 use std::rc::Rc;
 use auto_delegate::Delegate;
 use compose_macro::Composable;
 use compose_foundation_macro::ModifierElement;
-use skia_safe::font::Edging::Alias;
 
 use crate::foundation::modifier::{ModifierNode, ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::placeable::Placeable;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::{
-    constraint::Constraints, measurable::Measurable, measure_result::MeasureResult,
+    constraint::Constraints, measurable::Measurable,
     measure_scope::MeasureScope, modifier::Modifier,
 };
 use crate::{self as compose};
 use crate::foundation::delegatable_node::DelegatableNode;
 use crate::foundation::layout_direction::LayoutDirection;
-use crate::foundation::measurable::{MultiChildrenMeasurePolicy, MultiChildrenMeasurePolicyUnBox};
+use crate::foundation::measurable::{MultiChildrenMeasurePolicy};
 use crate::foundation::oop::AnyConverter;
-use crate::foundation::parent_data_modifier_node::ParentDataModifierNode;
 use crate::foundation::placement_scope::PlacementScope;
 use crate::foundation::ui::align::Alignment;
+use crate::foundation::modifier_node::ParentDataModifierNode;
 
 use crate::widgets::layout::Layout;
 
 trait BoxMeasurableTrait {
+    fn box_child_data_node(&self) -> Option<Ref<BoxChildDataNode>>;
     fn matches_parent_size(&self) -> bool;
 }
 
@@ -57,9 +57,16 @@ impl BoxScope for BoxScopeInstance {}
 const INSTANCE: &dyn BoxScope = &BoxScopeInstance {};
 
 impl BoxMeasurableTrait for &mut dyn Measurable {
+    fn box_child_data_node(&self) -> Option<Ref<BoxChildDataNode>> {
+        self.get_parent_data_ref()
+            .and_then(|parent_data| Ref::filter_map(parent_data.borrow(), |parent_data| {
+                parent_data.downcast_ref::<BoxChildDataNode>()
+            }).ok())
+    }
+
     fn matches_parent_size(&self) -> bool {
         if let Some(parent_data) = self.get_parent_data() {
-            let box_child_data_node = parent_data.downcast_ref::<BoxChildDataNode>();
+            let box_child_data_node = self.box_child_data_node();
 
             return if let Some(node) = box_child_data_node {
                 node.match_parent_size
@@ -197,10 +204,8 @@ fn remember_box_measure_policy(alignment: Alignment, propagate_min_constraint: b
 
                 let layout_direction = measure_scope.get_layout_direction();
                 let box_child_data = measurables.iter().map(|child| {
-                    alignment
+                    child.box_child_data_node().map(|box_child_data_node| box_child_data_node.alignment).unwrap_or(alignment)
                 }).collect::<Vec<Alignment>>();
-
-                dbg!(&placeables);
 
                 measure_scope.layout((box_width, box_height).into(), (move |scope: &dyn PlacementScope| {
                     placeables.iter_mut().enumerate().for_each(|(index, placeable)| {
@@ -220,7 +225,7 @@ fn remember_box_measure_policy(alignment: Alignment, propagate_min_constraint: b
 
 #[Composable]
 pub fn BoxLayout(modifier: Modifier, mut content: impl FnMut(&dyn BoxScope)) {
-    Layout(modifier, remember_box_measure_policy(Alignment::CENTER, false), || {
+    Layout(modifier, remember_box_measure_policy(Alignment::TOP_START, false), || {
         let box_scope = BoxScopeInstance {};
         content(&box_scope);
     });

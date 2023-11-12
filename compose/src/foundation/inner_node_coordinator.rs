@@ -23,6 +23,7 @@ use compose_foundation_macro::AnyConverter;
 use crate::foundation::canvas::Canvas;
 use crate::foundation::layout_node_layout_delegate::LayoutNodeLayoutDelegate;
 use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
+use crate::foundation::node_chain::NodeChain;
 use crate::foundation::node_coordinator::{PerformDrawTrait, PerformMeasureHelper};
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::utils::self_reference::SelfReference;
@@ -47,7 +48,7 @@ pub(crate) struct InnerNodeCoordinator {
     pub(crate) measure_pass_delegate: Weak<RefCell<MeasurePassDelegate>>,
 
     weak_this: Weak<RefCell<Self>>,
-    identify: u32
+    identify: u32,
 }
 
 impl DerefMut for InnerNodeCoordinator {
@@ -80,7 +81,7 @@ impl InnerNodeCoordinator {
             node_coordinator_impl: NodeCoordinatorImpl::new(),
             measure_pass_delegate: Weak::new(),
             weak_this: Weak::new(),
-            identify: 0
+            identify: 0,
         }.wrap_with_rc_refcell();
 
         let this: Rc<RefCell<dyn PerformDrawTrait>> = result.clone();
@@ -94,11 +95,14 @@ impl InnerNodeCoordinator {
         result
     }
 
-    pub(crate) fn attach(&mut self, identify: u32, layout_node: &Rc<RefCell<LayoutNode>>, measure_pass_delegate: &Rc<RefCell<MeasurePassDelegate>>) {
+    pub(crate) fn attach(&mut self, identify: u32,
+                         layout_node: &Rc<RefCell<LayoutNode>>,
+                         measure_pass_delegate: &Rc<RefCell<MeasurePassDelegate>>,
+                         node_chain: &Rc<RefCell<NodeChain>>) {
         self.identify = identify;
         self.layout_node = Rc::downgrade(layout_node);
         self.measure_pass_delegate = Rc::downgrade(measure_pass_delegate);
-        self.node_coordinator_impl.attach(layout_node);
+        self.node_coordinator_impl.attach(layout_node, node_chain);
     }
 
     pub(crate) fn set_measure_policy(&mut self, measure_policy: MultiChildrenMeasurePolicy) {

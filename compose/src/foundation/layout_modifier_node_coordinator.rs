@@ -1,6 +1,4 @@
 use crate::foundation::constraint::Constraints;
-use crate::foundation::layout_modifier_node::LayoutModifierNode;
-// use crate::foundation::layout_modifier_node_impl::LayoutModifierNodeImpl;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::measurable::Measurable;
 use crate::foundation::modifier::ModifierNode;
@@ -18,6 +16,7 @@ use crate::foundation::canvas::Canvas;
 use crate::foundation::delegatable_node::ToDelegatedNode;
 use crate::foundation::geometry::IntSize;
 use crate::foundation::measure_result::MeasureResult;
+use crate::foundation::node_chain::NodeChain;
 use crate::foundation::node_coordinator::PerformMeasureHelper;
 
 #[derive(Debug, Delegate, AnyConverter)]
@@ -60,14 +59,18 @@ impl Deref for LayoutModifierNodeCoordinator {
 
 impl LayoutModifierNodeCoordinator {
     pub(crate) fn new(
-        layout_node: Weak<RefCell<LayoutNode>>,
-        measure_node: Rc<RefCell<dyn ModifierNode>>,
+        layout_node: &Rc<RefCell<LayoutNode>>,
+        measure_node: &Rc<RefCell<dyn ModifierNode>>,
+        node_chain: &Rc<RefCell<NodeChain>>
     ) -> Self {
-        Self {
-            layout_node,
+        let mut result = Self {
+            layout_node: Rc::downgrade(layout_node),
             node_coordinator_impl: NodeCoordinatorImpl::new(),
-            layout_modifier_node: measure_node,
-        }
+            layout_modifier_node: measure_node.clone(),
+        };
+
+        result.node_coordinator_impl.attach(layout_node, node_chain);
+        result
     }
 
     pub(crate) fn set_layout_modifier_node(

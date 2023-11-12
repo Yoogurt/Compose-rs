@@ -23,7 +23,7 @@ fn test_box_composable() {
     BoxLayout(Modifier.width(100.dp()).height(100.dp()).background(Color::BLUE), |box_scope| {
         BoxLayout(Modifier.align(box_scope, Alignment::CENTER).width(50.dp()).height(50.dp()).background(Color::GREEN), |_| {});
 
-        BoxLayout(Modifier.align(box_scope, Alignment::CENTER).width(80.dp()).height(80.dp()).background(Color::YELLOW), |_| {})
+        BoxLayout(Modifier.align(box_scope, Alignment::CENTER).width(75.dp()).height(75.dp()).background(Color::YELLOW), |_| {})
     });
 }
 

@@ -1,4 +1,4 @@
-use crate::foundation::ui::draw::DrawModifierNode;
+use crate::foundation::modifier_node::DrawModifierNode;
 
 pub trait DrawModifierNodeConverter {
     fn as_draw_modifier_node(&self) -> Option<&dyn DrawModifierNode> {

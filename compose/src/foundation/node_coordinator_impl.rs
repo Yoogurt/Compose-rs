@@ -19,9 +19,10 @@ use std::rc::{Rc, Weak};
 use compose_foundation_macro::AnyConverter;
 use crate::foundation::canvas::Canvas;
 use crate::foundation::measure_result::{MeasureResult, MeasureResultProvider};
-use crate::foundation::modifier::{ModifierNode, NodeKind};
+use crate::foundation::measure_scope::MeasureScope;
+use crate::foundation::modifier::{ModifierNode, ModifierNodeExtension, NodeKind};
 use crate::foundation::node::LayoutNodeDrawScope;
-use crate::foundation::node_chain::TailModifierNode;
+use crate::foundation::node_chain::{NodeChain, TailModifierNode};
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::node_coordinator::TailModifierNodeProvider;
 use crate::foundation::ui::draw::{CanvasDrawScope, DrawContext};
@@ -34,10 +35,12 @@ pub(crate) struct NodeCoordinatorImpl {
     pub(crate) wrapped: Option<Rc<RefCell<dyn NodeCoordinator>>>,
     pub(crate) wrapped_by: Option<Weak<RefCell<dyn NodeCoordinator>>>,
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
+    pub(crate) node_chain: Weak<RefCell<NodeChain>>,
+
     pub(crate) z_index: f32,
 
     pub(crate) tail: Rc<RefCell<dyn ModifierNode>>,
-    pub(crate) parent_data: Option<Box<dyn Any>>,
+    pub(crate) parent_data: Option<Rc<RefCell<dyn Any>>>,
 
     pub(crate) measure_result: Option<MeasureResult>,
 
@@ -45,16 +48,27 @@ pub(crate) struct NodeCoordinatorImpl {
 }
 
 impl IntrinsicMeasurable for NodeCoordinatorImpl {
-    fn set_parent_data(&mut self, parent_data: Option<Box<dyn Any>>) {
+    fn set_parent_data(&mut self, parent_data: Option<Rc<RefCell<dyn Any>>>) {
         self.parent_data = parent_data;
     }
 
-    fn get_parent_data(&self) -> Option<&Box<dyn Any>> {
-        self.parent_data.as_ref()
+    fn get_parent_data(&self) -> Option<Rc<RefCell<dyn Any>>> {
+        let mut data = None;
+        // let density = self.layout_node().upgrade().unwrap().borrow().get_density();
+
+        self.node_chain.upgrade().unwrap().borrow_mut().tail_to_head(|node| {
+            if node.get_node_kind() == NodeKind::ParentData {
+                node.dispatch_for_kind(NodeKind::ParentData, |it| {
+                    // it.as_draw_modifier_node()
+                });
+            }
+        });
+
+        data
     }
 
-    fn get_parent_data_mut(&mut self) -> Option<&mut Box<dyn Any>> {
-        self.parent_data.as_mut()
+    fn get_parent_data_ref(&self) -> Option<&Rc<RefCell<dyn Any>>> {
+        self.parent_data.as_ref()
     }
 }
 
@@ -73,8 +87,9 @@ impl Measurable for NodeCoordinatorImpl {
 }
 
 impl NodeCoordinatorImpl {
-    pub(crate) fn attach(&mut self, layout_node: &Rc<RefCell<LayoutNode>>) {
+    pub(crate) fn attach(&mut self, layout_node: &Rc<RefCell<LayoutNode>>, node_chain: &Rc<RefCell<NodeChain>>) {
         self.layout_node = Rc::downgrade(layout_node);
+        self.node_chain = Rc::downgrade(node_chain);
     }
 
     pub(crate) fn layout_node(&self) -> Weak<RefCell<LayoutNode>> {
@@ -192,6 +207,7 @@ impl NodeCoordinatorImpl {
             wrapped: None,
             wrapped_by: None,
             layout_node: Weak::new(),
+            node_chain: Weak::new(),
             parent_data: None,
             z_index: 0.0,
             tail: TailModifierNode::default().wrap_with_rc_refcell(),
