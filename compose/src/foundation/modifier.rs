@@ -10,8 +10,10 @@ use std::fmt::Debug;
 use std::fmt::{Formatter, Write};
 use std::ops::{Add, BitAnd, Deref};
 use std::rc::{Rc, Weak};
+use crate::foundation::delegatable_node::{DelegatableKind, DelegatableNode};
 use crate::foundation::oop::LayoutModifierNodeConverter;
 use crate::foundation::ui::draw::DrawModifierNode;
+use crate::foundation::utils::self_reference::SelfReference;
 
 pub const Modifier: Modifier = Modifier::Unit;
 
@@ -68,7 +70,7 @@ pub trait ModifierElement: AnyConverter + LayoutModifierNodeConverter + DrawModi
 }
 
 #[delegate]
-pub trait ModifierNode: ModifierElement {
+pub trait ModifierNode: ModifierElement + DelegatableNode {
     fn set_parent(&mut self, parent: Option<Weak<RefCell<dyn ModifierNode>>>);
 
     fn get_parent(&self) -> Option<Rc<RefCell<dyn ModifierNode>>>;
@@ -98,6 +100,12 @@ pub(crate) struct ModifierNodeImpl {
 impl NodeKindPatch for ModifierNodeImpl {
     fn get_node_kind(&self) -> NodeKind {
         todo!("implement get node kind by yourself")
+    }
+}
+
+impl DelegatableNode for ModifierNodeImpl {
+    fn get_node(&self) -> DelegatableKind {
+        DelegatableKind::This
     }
 }
 

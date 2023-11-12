@@ -24,7 +24,7 @@ use crate::foundation::node::BackwardsCompatNode;
 
 #[derive(Debug, Delegate, Default, ModifierElement)]
 pub(crate) struct TailModifierNode {
-    #[to(ModifierNode)]
+    #[to(ModifierNode, DelegatableNode)]
     node_impl: ModifierNodeImpl,
 }
 
@@ -49,7 +49,7 @@ impl_node_kind_any!(TailModifierNode);
 
 #[derive(Debug, Default, Delegate, ModifierElement)]
 struct SentineHeadNode {
-    #[to(ModifierNode)]
+    #[to(ModifierNode, DelegatableNode)]
     node_impl: ModifierNodeImpl,
 }
 impl_node_kind_any!(SentineHeadNode);
@@ -302,7 +302,6 @@ impl NodeChain {
 
         if coordinator_sync_needed {
             self.sync_coordinators();
-            // dbg!(self.pad_chain());
         }
     }
 

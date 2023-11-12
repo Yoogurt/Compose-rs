@@ -18,7 +18,7 @@ use crate::foundation::ui::draw::{ContentDrawScope, DrawModifierNode};
 pub(crate) struct BackwardsCompatNode {
     element: Rc<RefCell<dyn ModifierElement>>,
 
-    #[to(ModifierNode)]
+    #[to(ModifierNode, DelegatableNode)]
     modifier_node_impl: ModifierNodeImpl,
 }
 
@@ -30,8 +30,6 @@ impl BackwardsCompatNode {
         }
     }
 }
-
-impl DelegatableNode for BackwardsCompatNode {}
 
 impl NodeKindPatch for BackwardsCompatNode {
     fn get_node_kind(& self) -> NodeKind {

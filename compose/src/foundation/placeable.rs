@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use super::{
     constraint::Constraints, geometry::IntSize, measure_result::MeasureResult, measured::Measured,
 };
@@ -7,7 +8,7 @@ use auto_delegate::delegate;
 pub type MeasureAction = Box<dyn FnOnce() -> MeasureResult>;
 
 #[delegate]
-pub trait Placeable: Measured + PlaceablePlaceAt {
+pub trait Placeable: Measured + PlaceablePlaceAt + Debug {
     fn get_size(&self) -> IntSize;
 
     fn set_measured_size(&mut self, size: IntSize);

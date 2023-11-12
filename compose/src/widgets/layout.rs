@@ -12,12 +12,12 @@ use crate::foundation::utils::box_wrapper::WrapWithBox;
 #[Composable]
 pub fn Layout(
     modifier: Modifier,
-    measure_policy: MultiChildrenMeasurePolicyUnBox,
+    measure_policy: MultiChildrenMeasurePolicy,
     content: impl FnMut(),
 ) {
     ComposeNode(
         move |node| {
-            node.set_measure_policy(measure_policy.wrap_with_box());
+            node.set_measure_policy(measure_policy);
             node.set_modifier(modifier);
         },
         content,

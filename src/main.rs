@@ -14,16 +14,20 @@ use std::default::Default as STDefault;
 use std::hash::Hash;
 use std::time::Duration;
 use compose::foundation::background::BackgroundModifier;
+use compose::foundation::ui::align::Alignment;
 use compose::foundation::ui::graphics::color::Color;
 use compose::widgets::r#box::BoxLayout;
 
 #[Composable]
 fn test_box_composable() {
-    BoxLayout(Modifier.background(Color::BLUE), |_| {
+    BoxLayout(Modifier.width(100.dp()).height(100.dp()).background(Color::BLUE), |box_scope| {
+        BoxLayout(Modifier.align(box_scope, Alignment::CENTER).width(50.dp()).height(50.dp()).background(Color::GREEN), |_| {});
+
+        BoxLayout(Modifier.align(box_scope, Alignment::CENTER).width(80.dp()).height(80.dp()).background(Color::YELLOW), |_| {})
     });
 }
 
-fn run_skia(content: fn()) {
+fn run_skia_render_engine(content: fn()) {
     let mut windows = Window::new(
         "Compose",
         800,
@@ -68,15 +72,15 @@ fn run_skia(content: fn()) {
     compose_view.dispatch_measure(800, 500);
     compose_view.dispatch_layout();
 
-    // while windows.is_open() && !windows.is_key_pressed(Key::Escape, KeyRepeat::No) {
+    while windows.is_open() && !windows.is_key_pressed(Key::Escape, KeyRepeat::No) {
         compose_view.dispatch_draw(&mut canvas);
         windows.update_with_buffer(buffer.as_slice(), 800, 500).unwrap();
         std::thread::sleep(Duration::from_millis(100));
-    // }
+    }
 }
 
 fn main() {
-    run_skia(|| {
+    run_skia_render_engine(|| {
         test_box_composable();
     });
 

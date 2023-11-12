@@ -7,7 +7,7 @@ use crate::foundation::geometry::{IntOffset, IntSize};
 use crate::foundation::intrinsic_measurable::IntrinsicMeasurable;
 use crate::foundation::look_ahead_capable_placeable::LookaheadCapablePlaceable;
 use crate::foundation::look_ahead_capable_placeable_impl::LookaheadCapablePlaceableImpl;
-use crate::foundation::node_coordinator::{NodeCoordinatorTrait, PerformDrawTrait};
+use crate::foundation::node_coordinator::{DrawableNodeCoordinator, NodeCoordinatorTrait, PerformDrawTrait};
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 use crate::foundation::utils::weak_upgrade::WeakUpdater;
 use auto_delegate::Delegate;
@@ -168,7 +168,9 @@ impl NodeCoordinator for NodeCoordinatorImpl {
     fn as_node_coordinator(&self) -> &dyn NodeCoordinator {
         self
     }
+}
 
+impl DrawableNodeCoordinator for NodeCoordinatorImpl {
     fn draw(&self, canvas: &mut dyn Canvas) {
         let offset = self.get_position().as_f32_offset();
         canvas.translate(offset.x, offset.y);
@@ -178,10 +180,6 @@ impl NodeCoordinator for NodeCoordinatorImpl {
 }
 
 impl TailModifierNodeProvider for NodeCoordinatorImpl {
-    fn set_tail(&mut self, tail: Rc<RefCell<dyn ModifierNode>>) {
-        self.tail = tail;
-    }
-
     fn get_tail(&self) -> Rc<RefCell<dyn ModifierNode>> {
         self.tail.clone()
     }
@@ -266,7 +264,7 @@ impl NodeCoordinatorImpl {
     fn head(&self, node_kind: NodeKind) -> Option<Rc<RefCell<dyn ModifierNode>>> {
         let mut stop_node = self.get_tail();
         let include_tail = (node_kind as u32 & NodeKind::LayoutAware as u32) != 0;
-
+        // dbg!(&stop_node);
         if !include_tail {
             let node = match stop_node.borrow().get_parent() {
                 Some(parent) => { parent }

@@ -33,6 +33,7 @@ pub(crate) struct InnerNodeCoordinator {
     Placeable,
     Measured,
     NodeCoordinator,
+    DrawableNodeCoordinator,
     NodeCoordinatorTrait,
     MeasureScope,
     IntrinsicMeasurable,

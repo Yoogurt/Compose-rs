@@ -4,7 +4,7 @@ use crate::foundation::layout_modifier_node::LayoutModifierNode;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::measurable::Measurable;
 use crate::foundation::modifier::ModifierNode;
-use crate::foundation::node_coordinator::{NodeCoordinator, NodeCoordinatorTrait, PerformDrawTrait};
+use crate::foundation::node_coordinator::{NodeCoordinator, NodeCoordinatorTrait, PerformDrawTrait, TailModifierNodeProvider};
 use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
 use crate::foundation::placeable::Placeable;
 use auto_delegate::Delegate;
@@ -15,6 +15,7 @@ use std::panic::panic_any;
 use std::rc::{Rc, Weak};
 use compose_foundation_macro::AnyConverter;
 use crate::foundation::canvas::Canvas;
+use crate::foundation::delegatable_node::ToDelegatedNode;
 use crate::foundation::geometry::IntSize;
 use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::node_coordinator::PerformMeasureHelper;
@@ -26,15 +27,21 @@ pub(crate) struct LayoutModifierNodeCoordinator {
     #[to(
     Placeable,
     Measured,
+    DrawableNodeCoordinator,
     NodeCoordinatorTrait,
     MeasureScope,
     PlaceablePlaceAt,
     IntrinsicMeasurable,
     LookaheadCapablePlaceable,
-    TailModifierNodeProvider,
     MeasureResultProvider
     )]
     pub(crate) node_coordinator_impl: NodeCoordinatorImpl,
+}
+
+impl TailModifierNodeProvider for LayoutModifierNodeCoordinator {
+    fn get_tail(&self) -> Rc<RefCell<dyn ModifierNode>> {
+        self.layout_modifier_node.to_delegated_node()
+    }
 }
 
 impl DerefMut for LayoutModifierNodeCoordinator {
@@ -99,10 +106,11 @@ impl Measurable for LayoutModifierNodeCoordinator {
 
             measure_result
         });
+        let size: IntSize = measure_result.as_int_size();
 
+        self.set_measured_result(measure_result);
         self.on_measured();
 
-        let size: IntSize = measure_result.into();
         (size, self.as_placeable())
     }
 
@@ -121,9 +129,5 @@ impl PerformDrawTrait for LayoutModifierNodeCoordinator {}
 impl NodeCoordinator for LayoutModifierNodeCoordinator {
     fn as_node_coordinator(&self) -> &dyn NodeCoordinator {
         self
-    }
-
-    fn draw(&self, canvas: &mut dyn Canvas) {
-        self.node_coordinator_impl.draw(canvas);
     }
 }

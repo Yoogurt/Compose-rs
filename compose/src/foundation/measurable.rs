@@ -25,4 +25,4 @@ pub type MultiChildrenMeasurePolicy = Box<
 >;
 
 pub type MultiChildrenMeasurePolicyUnBox =
-    fn(& dyn MeasureScope, &mut [&mut dyn Measurable], &Constraints) -> MeasureResult;
+    dyn FnMut(& dyn MeasureScope, &mut [&mut dyn Measurable], &Constraints) -> MeasureResult;

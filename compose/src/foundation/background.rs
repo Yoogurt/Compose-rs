@@ -43,7 +43,7 @@ struct BackgroundNode {
     color: Color,
     alpha: f32,
 
-    #[to(ModifierNode)]
+    #[to(ModifierNode, DelegatableNode)]
     node_impl: ModifierNodeImpl,
 }
 
@@ -58,8 +58,6 @@ impl NodeKindPatch for BackgroundNode {
         NodeKind::Draw
     }
 }
-
-impl DelegatableNode for BackgroundNode {}
 
 impl DrawModifierNode for BackgroundNode {
     fn draw(&self, draw_scope: &mut dyn ContentDrawScope) {

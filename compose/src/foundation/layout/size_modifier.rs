@@ -11,7 +11,7 @@ use crate::foundation::utils::box_wrapper::WrapWithBox;
 use auto_delegate::Delegate;
 use std::cell::{RefCell, RefMut};
 use std::hash::{Hash, Hasher};
-use std::rc::Rc;
+use std::rc::{Rc, Weak};
 use compose_foundation_macro::ModifierElement;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
@@ -93,11 +93,9 @@ struct SizeNode {
     max_height: Dp,
     enforce_incoming: bool,
 
-    #[to(ModifierNode)]
+    #[to(ModifierNode, DelegatableNode)]
     node_impl: ModifierNodeImpl,
 }
-
-impl DelegatableNode for SizeNode {}
 
 impl SizeNode {
     fn get_target_constraint(&self, measure_scope: &dyn MeasureScope) -> Constraints {

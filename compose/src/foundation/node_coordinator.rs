@@ -25,7 +25,6 @@ pub trait NodeCoordinatorTrait {
 
 #[delegate]
 pub trait TailModifierNodeProvider {
-    fn set_tail(&mut self, tail: Rc<RefCell<dyn ModifierNode>>);
     fn get_tail(&self) -> Rc<RefCell<dyn ModifierNode>>;
 }
 
@@ -38,6 +37,11 @@ pub trait PerformDrawTrait: NodeCoordinatorTrait {
 }
 
 #[delegate]
+pub trait DrawableNodeCoordinator {
+    fn draw(&self, canvas: &mut dyn Canvas);
+}
+
+#[delegate]
 pub trait NodeCoordinator: PerformDrawTrait
 + NodeCoordinatorTrait
 + LookaheadCapablePlaceable
@@ -46,13 +50,12 @@ pub trait NodeCoordinator: PerformDrawTrait
 + Placeable
 + Debug
 + MeasureResultProvider
++ DrawableNodeCoordinator
 + Measurable {
     fn on_initialize(&self) {}
     fn on_placed(&self) {}
     fn on_measured(&mut self) {}
     fn as_node_coordinator(&self) -> &dyn NodeCoordinator;
-
-    fn draw(&self, canvas: &mut dyn Canvas);
 }
 
 pub(crate) trait PerformMeasureHelper {
