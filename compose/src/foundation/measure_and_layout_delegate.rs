@@ -22,7 +22,6 @@ impl MeasureAndLayoutDelegate {
 
     pub(crate) fn update_root_constraints(&mut self, constraint: Constraints) {
         if constraint == self.root_constraint {
-            dbg!("constraint the same, skip measuring");
             return;
         }
 

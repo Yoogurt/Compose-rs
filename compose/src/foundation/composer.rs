@@ -1,5 +1,5 @@
 use std::{cell::RefCell, rc::Rc};
-
+use std::any::Any;
 use crate::foundation::composer_inner::ComposerInner;
 use crate::foundation::constraint::Constraints;
 use crate::foundation::layout_node::LayoutNode;
@@ -59,8 +59,8 @@ impl Composer {
         COMPOSER.with(|local_composer| local_composer.inner.borrow_mut().start_node())
     }
 
-    pub(crate) fn create_node() -> Rc<RefCell<LayoutNode>> {
-        COMPOSER.with(|local_composer| local_composer.inner.borrow_mut().create_node())
+    pub(crate) fn create_node(factory: Box<dyn FnOnce(Rc<RefCell<LayoutNode>>)>) -> Rc<RefCell<LayoutNode>> {
+        COMPOSER.with(move |local_composer| local_composer.inner.borrow_mut().create_node(factory))
     }
 
     pub(crate) fn use_node() -> Rc<RefCell<LayoutNode>> {
@@ -87,6 +87,10 @@ impl Composer {
                 .borrow_mut()
                 .record_deferred_change(derred_change)
         })
+    }
+
+    pub(crate) fn cache<R, T>(keys: &R, calculation: impl FnOnce() -> T) -> &'static T where R: Sized + PartialEq<R> + 'static {
+        COMPOSER.with(move |local_composer| local_composer.inner.borrow_mut().cache(keys, calculation))
     }
 
     pub fn apply_changes() {

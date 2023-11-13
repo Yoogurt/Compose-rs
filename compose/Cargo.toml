@@ -11,3 +11,4 @@ compose_foundation_macro = {version = "0.1.0", path = "../compose_foundation_mac
 skia-safe = "0.66.2"
 lazy_static = "1.4.0"
 auto-delegate = "0.0.9"
+log = "0.4.20"

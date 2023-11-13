@@ -184,7 +184,6 @@ impl PlaceablePlaceAt for InnerNodeCoordinator {
 impl PerformDrawTrait for InnerNodeCoordinator {
     fn perform_draw(&self, canvas: &mut dyn Canvas) {
         let children = self.layout_node.upgrade().unwrap().borrow().z_sort_children();
-
         children.iter().for_each(|child| {
             let measure_pass_delegate = child.borrow().get_measure_pass_delegate();
             if measure_pass_delegate.borrow().is_placed {

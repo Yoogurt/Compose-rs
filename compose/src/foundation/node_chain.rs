@@ -11,7 +11,7 @@ use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
 use crate::foundation::modifier::{ModifierElement, ModifierNode};
 use crate::foundation::modifier::{ModifierNodeImpl, NodeKind, NodeKindPatch};
-use crate::foundation::modifier_container::ModifierContainer;
+use crate::foundation::layout_node_container::LayoutNodeContainer;
 use crate::foundation::modifier_node::LayoutModifierNode;
 use crate::foundation::node::BackwardsCompatNode;
 use crate::foundation::node_coordinator::TailModifierNodeProvider;
@@ -37,7 +37,7 @@ pub(crate) struct NodeChain {
 
     pub(crate) head: Rc<RefCell<dyn ModifierNode>>,
 
-    pub(crate) modifier_container: Rc<RefCell<ModifierContainer>>,
+    pub(crate) modifier_container: Rc<RefCell<LayoutNodeContainer>>,
     pub(crate) parent_data: Option<Box<dyn ParentData>>,
     pub(crate) measure_result: MeasureResult,
     pub(crate) inner_coordinator: Rc<RefCell<InnerNodeCoordinator>>,
@@ -74,7 +74,7 @@ impl NodeChain {
 
             head,
             parent_data: None,
-            modifier_container: ModifierContainer::new().wrap_with_rc_refcell(),
+            modifier_container: LayoutNodeContainer::new().wrap_with_rc_refcell(),
             measure_result: Default::default(),
             inner_coordinator: inner_node_coordinator.clone(),
             outer_coordinator: inner_node_coordinator,
@@ -103,7 +103,7 @@ impl NodeChain {
         &mut self,
         identify: u32,
         layout_node: &Rc<RefCell<LayoutNode>>,
-        modifier_container: &Rc<RefCell<ModifierContainer>>,
+        modifier_container: &Rc<RefCell<LayoutNodeContainer>>,
         measure_pass_delegate: &Rc<RefCell<MeasurePassDelegate>>,
         node_chain: &Rc<RefCell<NodeChain>>,
     ) {

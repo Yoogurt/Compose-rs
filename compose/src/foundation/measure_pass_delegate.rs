@@ -6,12 +6,13 @@ use std::rc::{Rc, Weak};
 use auto_delegate::Delegate;
 
 use crate::foundation::constraint::Constraints;
-use crate::foundation::geometry::{IntOffset, IntSize};
+use crate::foundation::geometry::{Density, IntOffset, IntSize};
 use crate::foundation::inner_node_coordinator::InnerNodeCoordinator;
 use crate::foundation::intrinsic_measurable::IntrinsicMeasurable;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::layout_state::LayoutState;
 use crate::foundation::measurable::Measurable;
+use crate::foundation::layout_node_container::LayoutNodeContainer;
 use crate::foundation::node_chain::NodeChain;
 use crate::foundation::node_coordinator::NodeCoordinator;
 use crate::foundation::placeable::Placeable;
@@ -36,6 +37,7 @@ pub(crate) struct MeasurePassDelegate {
     pub(crate) place_once: bool,
     pub(crate) is_placed: bool,
     pub(crate) layout_state: Option<Rc<RefCell<LayoutState>>>,
+    pub(crate) layout_node_container: Option<Rc<RefCell<LayoutNodeContainer>>>,
     pub(crate) parent_data: Option<Rc<RefCell<dyn Any>>>,
 
     parent_data_dirty: bool,
@@ -107,6 +109,7 @@ impl MeasurePassDelegate {
             remeasure_pending: false,
             measure_pending: false,
             layout_pending: false,
+            layout_node_container: None,
             measured_by_parent: UsageByParent::NotUsed,
             last_position: IntOffset::new(0, 0),
             last_z_index: 0f32,
@@ -115,7 +118,7 @@ impl MeasurePassDelegate {
             is_placed: false,
             layout_state: None,
             parent_data: None,
-            parent_data_dirty: false,
+            parent_data_dirty: true,
             laying_out_children: false,
             identify: 0,
             weak_self: Weak::default(),
@@ -139,10 +142,12 @@ impl MeasurePassDelegate {
         identify: u32,
         node_chain: &Rc<RefCell<NodeChain>>,
         layout_state: &Rc<RefCell<LayoutState>>,
+        layout_node_container: &Rc<RefCell<LayoutNodeContainer>>,
     ) {
         self.identify = identify;
         self.nodes = Some(node_chain.clone());
         self.layout_state = Some(layout_state.clone());
+        self.layout_node_container = Some(layout_node_container.clone());
     }
 
     pub(crate) fn mark_measure_pending(&mut self) {
@@ -289,6 +294,10 @@ impl MeasurePassDelegate {
             self.on_node_placed();
         }
         self.set_layout_state(LayoutState::Idle);
+    }
+
+    pub(crate) fn invalidate_parent_data(&mut self) {
+        self.parent_data_dirty = true
     }
 }
 

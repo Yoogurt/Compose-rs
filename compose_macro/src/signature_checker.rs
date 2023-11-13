@@ -8,13 +8,6 @@ pub(crate) fn verify_signature(signature: &Signature) -> std::result::Result<(),
             syn::Error::new_spanned(&signature.asyncness, "Compose function can not be async");
         return Err(error.to_compile_error().into());
     }
-    if !signature.generics.params.is_empty() {
-        let error = syn::Error::new_spanned(
-            &signature.generics,
-            "Compose function can not have generics types",
-        );
-        return Err(error.to_compile_error().into());
-    }
     if signature.receiver().is_some() {
         let error = syn::Error::new_spanned(
             &signature.receiver(),
@@ -23,12 +16,12 @@ pub(crate) fn verify_signature(signature: &Signature) -> std::result::Result<(),
         return Err(error.to_compile_error().into());
     }
 
-    let function_return = &signature.output;
-    if function_return != &ReturnType::Default {
-        let error =
-            syn::Error::new_spanned(function_return, "Compose function should be return nothing");
-        return Err(error.to_compile_error().into());
-    }
+    // let function_return = &signature.output;
+    // if function_return != &ReturnType::Default {
+    //     let error =
+    //         syn::Error::new_spanned(function_return, "Compose function should be return nothing");
+    //     return Err(error.to_compile_error().into());
+    // }
 
     Ok(())
 }

@@ -19,13 +19,13 @@ pub(crate) fn collect_function_params(
             match arg {
                 FnArg::Typed(pat) => {
                     match pat.ty.as_ref() {
-                        Type::Path(_) | Type::BareFn(_) | Type::ImplTrait(_) => {}
-                        _ => {
-                            error = Some(syn::Error::new_spanned(
-                                pat.ty.as_ref(),
-                                "Compose function should own params",
-                            ));
-                        }
+                        _=> {}
+                        // _ => {
+                        //     error = Some(syn::Error::new_spanned(
+                        //         pat.ty.as_ref(),
+                        //         "Compose function should own params",
+                        //     ));
+                        // }
                     }
 
                     match pat.pat.as_ref() {

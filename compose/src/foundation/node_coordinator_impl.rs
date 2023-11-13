@@ -6,9 +6,10 @@ use std::rc::{Rc, Weak};
 
 use auto_delegate::Delegate;
 use compose_foundation_macro::AnyConverter;
+use log::trace;
 
 use crate::foundation::canvas::Canvas;
-use crate::foundation::geometry::{IntOffset, IntSize};
+use crate::foundation::geometry::{Density, IntOffset, IntSize};
 use crate::foundation::intrinsic_measurable::IntrinsicMeasurable;
 use crate::foundation::look_ahead_capable_placeable::LookaheadCapablePlaceable;
 use crate::foundation::look_ahead_capable_placeable_impl::LookaheadCapablePlaceableImpl;
@@ -57,12 +58,14 @@ impl IntrinsicMeasurable for NodeCoordinatorImpl {
 
     fn get_parent_data(&self) -> Option<Rc<RefCell<dyn Any>>> {
         let mut data = None;
-        // let density = self.layout_node().upgrade().unwrap().borrow().get_density();
+
+        let tail = self.get_tail();
+        let density = self.get_density();
 
         self.node_chain.upgrade().unwrap().borrow_mut().tail_to_head(|node| {
             if node.get_node_kind() == NodeKind::ParentData {
-                node.dispatch_for_kind(NodeKind::ParentData, |it| {
-                    // it.as_draw_modifier_node()
+                node.dispatch_for_kind_mut(NodeKind::ParentData, |it| {
+                    data = it.as_parent_data_modifier_node_mut().unwrap().modify_parent_data(density, data.clone())
                 });
             }
         });
@@ -237,7 +240,7 @@ impl NodeCoordinatorImpl {
     fn head_node(&self, include_tail: bool) -> Option<Rc<RefCell<dyn ModifierNode>>> {
         let node_chain = self.layout_node().upgrade().unwrap().borrow().node_chain.clone();
 
-        if node_chain.borrow().outer_coordinator.as_ptr() as *const() == self  as *const NodeCoordinatorImpl as *const() {
+        if node_chain.borrow().outer_coordinator.as_ptr() as *const () == self as *const NodeCoordinatorImpl as *const () {
             Some(node_chain.borrow().head.clone())
         } else {
             self.get_wrapped_by().and_then(|wrapped_by| {
@@ -251,7 +254,7 @@ impl NodeCoordinatorImpl {
         }
     }
 
-    fn visit_nodes(&self, mask: impl Into<u32>,  mut block: impl FnMut(&Rc<RefCell<dyn ModifierNode>>)) {
+    fn visit_nodes(&self, mask: impl Into<u32>, mut block: impl FnMut(&Rc<RefCell<dyn ModifierNode>>)) {
         let mut stop_node = self.get_tail();
         let mask = mask.into();
         let include_tail = mask & NodeKind::LayoutAware as u32 != 0;

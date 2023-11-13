@@ -51,7 +51,7 @@ impl MacOSComposeView {
         let root = this.borrow().root.clone();
         let this_real_type = Rc::downgrade(this);
         let owner: Weak<RefCell<dyn Owner>> = this_real_type;
-        root.borrow_mut().attach(owner);
+        root.borrow_mut().attach(None, owner);
     }
 
      fn detach(&mut self) {

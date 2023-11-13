@@ -2,11 +2,12 @@ use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::rc::{Rc, Weak};
 use std::sync::atomic::AtomicU32;
+use crate::foundation::geometry::Density;
 
 use crate::foundation::layout_node_draw_delegate::LayoutNodeDrawDelegate;
 use crate::foundation::layout_node_layout_delegate::LayoutNodeLayoutDelegate;
 use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
-use crate::foundation::modifier_container::ModifierContainer;
+use crate::foundation::layout_node_container::LayoutNodeContainer;
 use crate::foundation::node::Owner;
 use crate::foundation::node_coordinator::NodeCoordinator;
 use crate::foundation::usage_by_parent::UsageByParent;
@@ -24,7 +25,7 @@ thread_local! {
 
 #[derive(Debug)]
 pub(crate) struct LayoutNode {
-    pub(crate) modifier_container: Rc<RefCell<ModifierContainer>>,
+    pub(crate) layout_node_container: Rc<RefCell<LayoutNodeContainer>>,
     pub(crate) node_chain: Rc<RefCell<NodeChain>>,
     pub(crate) children: Rc<RefCell<Vec<Rc<RefCell<LayoutNode>>>>>,
     pub(crate) layout_node_layout_delegate: Rc<RefCell<LayoutNodeLayoutDelegate>>,
@@ -39,7 +40,7 @@ pub(crate) struct LayoutNode {
 impl LayoutNode {
     pub(crate) fn new() -> Rc<RefCell<Self>> {
         let node = LayoutNode {
-            modifier_container: ModifierContainer::new().wrap_with_rc_refcell(),
+            layout_node_container: LayoutNodeContainer::new().wrap_with_rc_refcell(),
             node_chain: NodeChain::new(),
             children: vec![].wrap_with_rc_refcell(),
             layout_node_layout_delegate: LayoutNodeLayoutDelegate::new(),
@@ -57,7 +58,7 @@ impl LayoutNode {
             let identify = node_ref.identify;
 
             let node_chain = node_ref.node_chain.clone();
-            let modifier_container = node_ref.modifier_container.clone();
+            let modifier_container = node_ref.layout_node_container.clone();
             node_chain
                 .borrow_mut()
                 .attach(identify, &node,
@@ -79,26 +80,20 @@ impl LayoutNode {
         node
     }
 
-    pub fn attach(&mut self, owner: Weak<RefCell<dyn Owner>>) {
-        let parent = self.get_parent();
+    pub fn attach(&mut self, parent: Option<&LayoutNode>, owner: Weak<RefCell<dyn Owner>>) {
         if parent.is_none() {
             self.get_measure_pass_delegate().borrow_mut().is_placed = true;
         }
 
         self.get_outer_coordinator().borrow_mut().set_wrapped_by(parent.and_then(|parent| Some(
-            Rc::downgrade(
-                &parent
-                    .upgrade()
-                    .unwrap()
-                    .borrow().get_inner_coordinator()
-            )
+            Rc::downgrade(&parent.get_inner_coordinator())
         )));
 
         self.owner = Some(owner.clone());
         owner.upgrade().unwrap().borrow().on_attach(self);
 
         self.for_each_child(|child| {
-            child.borrow_mut().attach(owner.clone());
+            child.borrow_mut().attach(Some(self), owner.clone());
         });
 
         self.layout_node_layout_delegate.borrow().update_parent_data();
@@ -191,7 +186,7 @@ impl LayoutNode {
 
         let owner = this.borrow().owner.clone();
         if let Some(owner) = owner {
-            child.borrow_mut().attach(owner);
+            child.borrow_mut().attach(Some(&this.borrow()), owner);
         }
     }
 
@@ -211,6 +206,13 @@ impl LayoutNode {
         self.layout_node_layout_delegate
             .borrow_mut()
             .update_parent_data();
+    }
+
+    pub(crate) fn get_density(&self) -> Density {
+        Density::new(
+            1.0,
+            1.0,
+        )
     }
 
     pub(crate) fn get_parent(&self) -> Option<Weak<RefCell<LayoutNode>>> {

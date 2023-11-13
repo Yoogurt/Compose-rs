@@ -269,6 +269,7 @@ impl Debug for Modifier {
 
 pub(crate) trait ModifierNodeExtension {
     fn dispatch_for_kind(&self, kind: NodeKind, block: impl FnMut(&dyn ModifierElement));
+    fn dispatch_for_kind_mut(&mut self, kind: NodeKind, block: impl FnMut(&mut dyn ModifierElement));
     fn next_draw_node(&self) -> Option<Rc<RefCell<dyn ModifierNode>>>;
     fn require_coordinator(&self, node_kind: NodeKind) -> Rc<RefCell<dyn NodeCoordinator>>;
 }
@@ -279,6 +280,14 @@ impl<T> ModifierNodeExtension for T where T: ?Sized + ModifierNode {
 
         if node == kind {
             block(self.as_modifier_element());
+        }
+    }
+
+    fn dispatch_for_kind_mut(&mut self, kind: NodeKind, mut block: impl FnMut(&mut dyn ModifierElement)) {
+        let node = self.get_node_kind();
+
+        if node == kind {
+            block(self.as_modifier_element_mut());
         }
     }
 

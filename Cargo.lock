@@ -140,6 +140,7 @@ dependencies = [
  "compose_foundation_macro",
  "compose_macro",
  "lazy_static",
+ "log",
  "skia-safe",
 ]
 

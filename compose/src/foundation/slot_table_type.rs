@@ -5,6 +5,7 @@ use super::layout_node::LayoutNode;
 
 #[derive(Debug, Hash, PartialEq, Eq)]
 pub(crate) enum GroupKindIndex {
+    Empty = 0,
     Group = 1,
     LayoutNode = 2,
     Custom = 3,
@@ -12,6 +13,7 @@ pub(crate) enum GroupKindIndex {
 
 #[derive(Debug)]
 pub(crate) enum GroupKind {
+    Empty,
     Group { hash: i64, depth: usize },
     LayoutNodeType(Rc<RefCell<LayoutNode>>),
     CustomType(Box<dyn Any>),
@@ -20,6 +22,7 @@ pub(crate) enum GroupKind {
 impl GroupKind {
     pub(crate) fn index(&self) -> GroupKindIndex {
         match self {
+            GroupKind::Empty => GroupKindIndex::Empty,
             GroupKind::Group { .. } => GroupKindIndex::Group,
             GroupKind::LayoutNodeType(_) => GroupKindIndex::LayoutNode,
             GroupKind::CustomType(_) => GroupKindIndex::Custom,

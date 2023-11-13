@@ -2,10 +2,12 @@ use std::cell::{Ref, RefCell, RefMut};
 use std::rc::Rc;
 
 use crate::foundation::constraint::Constraints;
+use crate::foundation::geometry::Density;
+use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::layout_state::LayoutState;
 use crate::foundation::measurable::Measurable;
 use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
-use crate::foundation::modifier_container::ModifierContainer;
+use crate::foundation::layout_node_container::LayoutNodeContainer;
 use crate::foundation::node_chain::NodeChain;
 use crate::foundation::remeasurable::Remeasurable;
 use crate::foundation::usage_by_parent::UsageByParent;
@@ -17,9 +19,9 @@ pub(crate) struct LayoutNodeLayoutDelegate {
     pub(crate) debug_label: String,
     pub(crate) last_constraints: Option<Constraints>,
     pub(crate) nodes: Option<Rc<RefCell<NodeChain>>>,
-    pub(crate) modifier_container: Rc<RefCell<ModifierContainer>>,
+    pub(crate) modifier_container: Rc<RefCell<LayoutNodeContainer>>,
     pub(crate) measure_pass_delegate: Rc<RefCell<MeasurePassDelegate>>,
-    identify: u32
+    identify: u32,
 }
 
 impl LayoutNodeLayoutDelegate {
@@ -27,10 +29,10 @@ impl LayoutNodeLayoutDelegate {
         LayoutNodeLayoutDelegate {
             debug_label: "".to_string(),
             last_constraints: None,
-            modifier_container: ModifierContainer::new().wrap_with_rc_refcell(),
+            modifier_container: LayoutNodeContainer::new().wrap_with_rc_refcell(),
             nodes: None,
             measure_pass_delegate: MeasurePassDelegate::new(),
-            identify: 0
+            identify: 0,
         }.wrap_with_rc_refcell()
     }
 
@@ -38,15 +40,15 @@ impl LayoutNodeLayoutDelegate {
         &mut self,
         identify: u32,
         node_chain: &Rc<RefCell<NodeChain>>,
-        modifier_container: &Rc<RefCell<ModifierContainer>>,
+        layout_node_container: &Rc<RefCell<LayoutNodeContainer>>,
         layout_state: &Rc<RefCell<LayoutState>>,
     ) {
         self.identify = identify;
         self.nodes = Some(node_chain.clone());
-        self.modifier_container = modifier_container.clone();
+        self.modifier_container = layout_node_container.clone();
         self.measure_pass_delegate
             .borrow_mut()
-            .attach(identify, node_chain, layout_state);
+            .attach(identify, node_chain, layout_state, layout_node_container);
     }
 
     pub(crate) fn as_measurable(&self) -> Ref<dyn Measurable> {
