@@ -7,7 +7,7 @@ pub(crate) fn ComposeNode(mut update: impl FnOnce(&mut LayoutNode) + 'static, mu
     Composer::start_node();
     let node = if Composer::inserting() {
         Composer::create_node(Box::new(|node| {
-            update(node.clone().borrow_mut().deref_mut());
+            update(&mut node.clone().borrow_mut());
         }))
     } else {
         Composer::use_node()

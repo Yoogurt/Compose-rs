@@ -3,6 +3,7 @@ use std::any::Any;
 use crate::foundation::composer_inner::ComposerInner;
 use crate::foundation::constraint::Constraints;
 use crate::foundation::layout_node::LayoutNode;
+use crate::foundation::snapshot_value::SnapShotValue;
 
 pub struct Composer {
     pub(crate) inner: RefCell<ComposerInner>,
@@ -89,7 +90,7 @@ impl Composer {
         })
     }
 
-    pub(crate) fn cache<R, T>(keys: &R, calculation: impl FnOnce() -> T) -> &'static T where R: Sized + PartialEq<R> + 'static {
+    pub(crate) fn cache<R, T>(keys: &R, calculation: impl FnOnce() -> T) -> SnapShotValue<T> where R: Sized + PartialEq<R> + 'static {
         COMPOSER.with(move |local_composer| local_composer.inner.borrow_mut().cache(keys, calculation))
     }
 
@@ -120,6 +121,10 @@ impl Composer {
 
     pub fn validate_group() {
         COMPOSER.with(|local_composer| local_composer.inner.borrow_mut().validate_group())
+    }
+
+    pub fn debug_print(){
+        COMPOSER.with(|local_composer| local_composer.inner.borrow().debug_print())
     }
 
     pub fn skip_compose() {}

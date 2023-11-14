@@ -1,5 +1,7 @@
 use std::{any::Any, cell::RefCell, rc::Rc};
 use std::hash::Hash;
+use std::ops::Deref;
+use std::fmt::{Debug, Formatter};
 
 use super::layout_node::LayoutNode;
 
@@ -11,12 +13,39 @@ pub(crate) enum GroupKindIndex {
     Custom = 3,
 }
 
-#[derive(Debug)]
 pub(crate) enum GroupKind {
     Empty,
-    Group { hash: i64, depth: usize },
+    Group { hash: i64, depth: usize, slot_data: Rc<RefCell<Vec<SlotTableType>>> },
     LayoutNodeType(Rc<RefCell<LayoutNode>>),
     CustomType(Box<dyn Any>),
+}
+
+impl Debug for GroupKind {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            GroupKind::Empty => {
+                f.debug_struct("GroupKind::Empty").finish()
+            }
+            GroupKind::Group { hash, depth, slot_data } => {
+                f.debug_struct("GroupKind::Group")
+                    .field("hash", hash)
+                    .field("depth", depth)
+                    .field("slot_data", slot_data)
+                    .finish()
+            }
+            GroupKind::LayoutNodeType(layout_node) => {
+                let identify = layout_node.borrow().identify;
+                f.debug_struct("GroupKind::LayoutNodeType")
+                    .field("layout_node", &format!("LayoutNode({})", identify))
+                    .finish()
+            }
+            GroupKind::CustomType(obj) => {
+                f.debug_struct("GroupKind::CustomType")
+                    .field("custom_type", &(obj.as_ref() as *const dyn Any as *const ()))
+                    .finish()
+            }
+        }
+    }
 }
 
 impl GroupKind {
@@ -32,6 +61,5 @@ impl GroupKind {
 
 #[derive(Debug)]
 pub(crate) struct SlotTableType {
-    pub(crate) parent: usize,
     pub(crate) data: GroupKind,
 }

@@ -8,12 +8,15 @@ use std::rc::Rc;
 
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::slot_table_type::SlotTableType;
+use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
 use super::slot_table_type::{GroupKind, GroupKindIndex};
 
 #[derive(Debug, Default)]
 pub(crate) struct SlotTable {
     pub(crate) slots: Rc<RefCell<Vec<SlotTableType>>>,
+    // pub(crate) slots_stack: Vec<>
+
     pub(crate) groups: Vec<usize>,
     pub(crate) groups_size: usize,
 
@@ -25,6 +28,7 @@ pub(crate) struct SlotTable {
 pub(crate) struct SlotReader {
     slot: Rc<RefCell<Vec<SlotTableType>>>,
     empty_count: usize,
+    current_slot: usize,
 }
 
 impl SlotReader {
@@ -32,6 +36,7 @@ impl SlotReader {
         Self {
             slot,
             empty_count: 0,
+            current_slot: 0,
         }
     }
 
@@ -50,62 +55,83 @@ impl SlotReader {
 
 pub(crate) struct SlotWriter {
     pub(crate) slot: Rc<RefCell<Vec<SlotTableType>>>,
-    pub(crate) group_parent: HashMap<GroupKindIndex, Vec<usize>>,
+    pub(crate) slot_stack: Vec<Rc<RefCell<Vec<SlotTableType>>>>,
 }
 
 impl SlotWriter {
     pub(crate) fn new(slot: Rc<RefCell<Vec<SlotTableType>>>) -> Self {
         Self {
             slot,
-            group_parent: Default::default(),
+            slot_stack: vec![],
         }
+    }
+
+    pub(crate) fn begin_insert_group(&mut self, hash: i64, depth: usize) {
+        let group_kind = GroupKind::Group {
+            hash,
+            depth,
+            slot_data: vec![].wrap_with_rc_refcell(),
+        };
+
+        self.slot.borrow_mut().push(SlotTableType {
+            data: group_kind,
+        });
+    }
+
+    pub(crate) fn enter_group(&mut self) {
+        self.slot_stack.push(self.slot.clone());
+        let slot = if let Some(slot_table_type) = self.slot.borrow().last() {
+            match slot_table_type.data {
+                GroupKind::Group { ref slot_data, .. } => slot_data.clone(),
+                _ => panic!("not a group"),
+            }
+        } else {
+            panic!("no group found")
+        };
+
+        self.slot = slot;
+    }
+
+    pub(crate) fn end_insert_group(&mut self, group_kind_index: GroupKindIndex) {}
+
+    pub(crate) fn exit_group(&mut self) {
+        self.slot = self.slot_stack.pop().unwrap();
     }
 
     pub(crate) fn begin_insert_layout_node(&mut self, layout_node: Rc<RefCell<LayoutNode>>) {
         let group_kind = GroupKind::LayoutNodeType(layout_node);
         let child_index = self.slot.borrow().len();
 
-        let parent = match self.group_parent.entry(group_kind.index()) {
-            Entry::Occupied(mut entry) => {
-                let parent = *entry.get().last().unwrap_or(&0);
-                entry.get_mut().push(child_index);
-                parent
-            }
-            Entry::Vacant(mut entry) => {
-                entry.insert(vec![child_index]);
-                0
-            }
-        };
-
         self.slot.borrow_mut().push(SlotTableType {
             data: group_kind,
-            parent,
         });
     }
 
     pub(crate) fn get_group_kind<'a, 'b>(
         &mut self,
-        group_kind: GroupKindIndex,
-        data: &'a mut RefMut<'b, Vec<SlotTableType>>,
+        group_kind_index: GroupKindIndex,
+        parent_stack: &'a mut RefMut<'b, Vec<SlotTableType>>,
     ) -> Option<&'a mut GroupKind> {
-        let parent = self.group_parent.get_mut(&group_kind);
-        match parent {
-            None => None,
-            Some(stack) => match stack.last() {
-                None => None,
-                Some(current) => match data.get_mut(*current) {
-                    None => None,
-                    Some(node) => Some(&mut node.data),
-                },
-            },
+        parent_stack.iter_mut().rev().find_map(|slot_table_type| {
+            let group_kind = &mut slot_table_type.data;
+            if group_kind.index() == group_kind_index {
+                Some(group_kind)
+            } else {
+                None
+            }
+        })
+    }
+
+    pub(crate) fn end_insert_layout_node(&mut self) {}
+
+    pub(crate) fn validate(&self) {
+        if !self.slot_stack.is_empty() {
+            panic!("unbalanced slot stack")
         }
     }
 
-    pub(crate) fn end_insert_layout_node(&mut self) {
-        self.group_parent
-            .get_mut(&GroupKindIndex::LayoutNode)
-            .unwrap()
-            .pop();
+    pub(crate) fn slot_stack(&self) -> Rc<RefCell<Vec<SlotTableType>>> {
+        self.slot_stack.last().unwrap().clone()
     }
 }
 

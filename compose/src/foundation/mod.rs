@@ -54,3 +54,4 @@ pub mod background;
 pub(crate) mod layout_node_draw_delegate;
 pub(crate) mod modifier_node;
 pub mod remember;
+pub mod snapshot_value;

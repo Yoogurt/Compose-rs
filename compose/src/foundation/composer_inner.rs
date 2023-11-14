@@ -1,8 +1,11 @@
 use std::{cell::RefCell, rc::Rc};
 use std::any::Any;
+use std::fmt::{Debug, Formatter};
 
 use crate::foundation::slot_table::{SlotReader, SlotTable, SlotWriter};
 use crate::foundation::slot_table_type::{GroupKindIndex, SlotTableType};
+use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
+use crate::foundation::snapshot_value::SnapShotValue;
 
 use super::{constraint::Constraints, layout_node::LayoutNode, slot_table_type::GroupKind};
 
@@ -20,6 +23,16 @@ struct Change {
     sequence: usize,
 }
 
+impl Debug for Change {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Change")
+            .field("change_type", &self.change_type)
+            .field("change", &(self.change.as_ref() as *const dyn FnOnce()))
+            .field("sequence", &self.sequence)
+            .finish()
+    }
+}
+
 pub(crate) struct ComposerInner {
     pub(crate) hash: i64,
     pub(crate) depth: usize,
@@ -27,18 +40,31 @@ pub(crate) struct ComposerInner {
     pub(crate) sequence: usize,
 
     pub(crate) inserting: bool,
-    pub(crate) layout_node_stack: Vec<Rc<RefCell<LayoutNode>>>,
-    pub(crate) slot_table: SlotTable,
     pub(crate) root: Option<Rc<RefCell<LayoutNode>>>,
+    pub(crate) layout_node_stack: Vec<Rc<RefCell<LayoutNode>>>,
+
+    pub(crate) slot_table: SlotTable,
+    pub(crate) reader: SlotReader,
+    pub(crate) writer: SlotWriter,
 
     fix_up: Vec<Change>,
     insert_up_fix_up: Vec<Change>,
     deferred_changes: Vec<Change>,
-
     changes: Vec<Change>,
+}
 
-    pub(crate) reader: SlotReader,
-    pub(crate) writer: SlotWriter,
+impl Debug for ComposerInner {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Composer")
+            .field("hash", &self.hash)
+            .field("depth", &self.depth)
+            .field("inserting", &self.inserting)
+            .field("slot_table", &self.slot_table)
+            .field("fix_up", &self.fix_up)
+            .field("insert_up_fix_up", &self.insert_up_fix_up)
+            .field("deferred_changes", &self.deferred_changes)
+            .finish()
+    }
 }
 
 impl ComposerInner {
@@ -74,11 +100,13 @@ impl ComposerInner {
 
     pub(crate) fn start_root(&mut self) {
         self.inserting = true;
-        self.start_group(Self::ROOT_KEY)
+        self.start_group(Self::ROOT_KEY);
+        self.writer.enter_group();
     }
 
     pub(crate) fn end_root(&mut self) {
         self.end_group(Self::ROOT_KEY);
+        self.writer.exit_group();
         self.inserting = false;
     }
 
@@ -97,9 +125,11 @@ impl ComposerInner {
             GroupKind::Group {
                 hash,
                 depth: self.depth,
+                slot_data: vec![].wrap_with_rc_refcell(),
             },
             None,
         );
+        self.writer.enter_group();
     }
 
     pub(crate) fn create_node(&mut self, factory: Box<dyn FnOnce(Rc<RefCell<LayoutNode>>)>) -> Rc<RefCell<LayoutNode>> {
@@ -112,17 +142,18 @@ impl ComposerInner {
                 factory(node);
             }));
         }
-        let mut slot_table_mut = self.slot_table.slots.borrow_mut();
+        let mut slot_table_mut = self.writer.slot_stack();
+        let mut slot_table_ref_mut = slot_table_mut.borrow_mut();
         let parent = self
             .writer
-            .get_group_kind(GroupKindIndex::LayoutNode, &mut slot_table_mut);
+            .get_group_kind(GroupKindIndex::LayoutNode, &mut slot_table_ref_mut);
 
         {
             let node = node.clone();
             match parent {
                 None => {
                     let root = self.root.clone().unwrap();
-                    drop(slot_table_mut);
+                    drop(slot_table_ref_mut);
                     if root.as_ptr() == node.as_ptr() {
                         dbg!("skipping attach root to itself");
                         return node;
@@ -135,7 +166,7 @@ impl ComposerInner {
                 Some(parent) => match parent {
                     GroupKind::LayoutNodeType(parent) => {
                         let parent = parent.clone();
-                        drop(slot_table_mut);
+                        drop(slot_table_ref_mut);
                         self.record_insert_up_fix_up(Box::new(move || {
                             LayoutNode::adopt_child(&parent, &node, false);
                         }));
@@ -253,6 +284,12 @@ impl ComposerInner {
         if self.depth != 0 || self.hash != 0 {
             panic!("validate group fail")
         }
+
+        self.writer.validate();
+    }
+
+    pub(crate) fn debug_print(&self) {
+        dbg!(self);
     }
 
     fn update_compound_hash_enter(&mut self, hash: i64) {
@@ -262,9 +299,9 @@ impl ComposerInner {
     }
 
     fn update_compound_hash_exit(&mut self, hash: i64) {
+        self.depth -= 1;
         self.hash ^= hash;
         self.hash = self.hash.rotate_right(3);
-        self.depth -= 1;
     }
 
     pub(crate) fn start(
@@ -277,11 +314,18 @@ impl ComposerInner {
         self.validate_node_not_expected();
         self.update_compound_hash_enter(key);
 
-        if self.inserting {}
+        if self.inserting {
+            self.writer.begin_insert_group(self.hash, self.depth);
+        } else {
+            todo!()
+        }
     }
 
     pub(crate) fn end(&mut self, key: i64) {
         self.update_compound_hash_exit(key);
+        if self.inserting {
+            self.writer.end_insert_group(GroupKindIndex::Group);
+        }
     }
 
     fn next_slot(&mut self) -> Option<&dyn Any> {
@@ -292,14 +336,17 @@ impl ComposerInner {
         }
     }
 
-    pub(crate) fn cache<R, T>(&mut self, key: &R, calculation: impl FnOnce() -> T) -> &T where R: Sized + PartialEq<R> + 'static {
+    pub(crate) fn cache<R, T>(&mut self, key: &R, calculation: impl FnOnce() -> T) -> SnapShotValue<T> where R: Sized + PartialEq<R> + 'static {
         let changed = self.changed(key);
-        if changed {
-            self.slot_table.op
-        } else {
-            let obj = self.next_slot().unwrap();
-            obj.downcast_ref::<T>().unwrap().clone()
-        }
+        // if changed {
+        //     let value = calculation();
+        //     let obj = value.wrap_with_rc_refcell();
+        //     self.next_slot().unwrap().downcast_ref::<T>().unwrap()
+        // } else {
+        //     let obj = self.next_slot().unwrap();
+        //     obj.downcast_ref::<T>().unwrap().clone()
+        // }
+        todo!()
     }
 
     pub(crate) fn changed<T>(&mut self, key: &T) -> bool where T: Sized + PartialEq<T> + 'static {

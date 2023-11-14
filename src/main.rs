@@ -85,6 +85,7 @@ fn main() {
     });
 
     Composer::validate_group();
+    Composer::debug_print();
     Composer::destroy();
     compose::foundation::memory::leak_token::validate_leak();
 }

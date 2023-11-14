@@ -237,9 +237,9 @@ fn remember_box_measure_policy(alignment: Alignment, propagate_min_constraint: b
 
 #[Composable]
 pub fn BoxLayout(modifier: Modifier, mut content: impl FnMut(&dyn BoxScope)) {
-    let value = remember(&123, || {
-        333
-    });
+    // let value = remember(&123, || {
+    //     333
+    // });
 
     Layout(modifier, remember_box_measure_policy(Alignment::TOP_START, false), || {
         content(INSTANCE);
