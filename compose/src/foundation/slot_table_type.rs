@@ -17,7 +17,7 @@ pub(crate) enum GroupKind {
     Empty,
     Group { hash: i64, depth: usize, slot_data: Rc<RefCell<Vec<SlotTableType>>> },
     LayoutNodeType(Rc<RefCell<LayoutNode>>),
-    CustomType(Box<dyn Any>),
+    CustomType(Rc<RefCell<dyn Any>>),
 }
 
 impl Debug for GroupKind {
@@ -36,12 +36,12 @@ impl Debug for GroupKind {
             GroupKind::LayoutNodeType(layout_node) => {
                 let identify = layout_node.borrow().identify;
                 f.debug_struct("GroupKind::LayoutNodeType")
-                    .field("layout_node", &format!("LayoutNode({})", identify))
+                    .field("layout_node", &format!("LayoutNode({identify})"))
                     .finish()
             }
             GroupKind::CustomType(obj) => {
                 f.debug_struct("GroupKind::CustomType")
-                    .field("custom_type", &(obj.as_ref() as *const dyn Any as *const ()))
+                    .field("custom_type", &(obj.as_ptr() ))
                     .finish()
             }
         }

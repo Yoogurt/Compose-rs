@@ -50,32 +50,32 @@ impl Alignment {
         }
     }
 
-    pub const fn horizontal(horizontal_bias: f32) -> Horizontal {
-        Horizontal {
+    pub const fn horizontal(horizontal_bias: f32) -> AlignmentHorizontal {
+        AlignmentHorizontal {
             horizontal_impl: BiasAlignment::static_horizontal_align,
             horizontal_bias,
             tag: "BiasAlignmentHorizontal",
         }
     }
 
-    const fn horizontal_with_tag(horizontal_bias: f32, tag: &'static str) -> Horizontal {
-        Horizontal {
+    const fn horizontal_with_tag(horizontal_bias: f32, tag: &'static str) -> AlignmentHorizontal {
+        AlignmentHorizontal {
             horizontal_impl: BiasAlignment::static_horizontal_align,
             horizontal_bias,
             tag,
         }
     }
 
-    pub const fn vertical(vertical_bias: f32) -> Vertical {
-        Vertical {
+    pub const fn vertical(vertical_bias: f32) -> AlignmentVertical {
+        AlignmentVertical {
             vertical_impl: BiasAlignment::static_vertical_align,
             vertical_bias,
             tag: "BiasAlignmentVertical",
         }
     }
 
-    const fn vertical_with_tag(vertical_bias: f32, tag: &'static str) -> Vertical {
-        Vertical {
+    const fn vertical_with_tag(vertical_bias: f32, tag: &'static str) -> AlignmentVertical {
+        AlignmentVertical {
             vertical_impl: BiasAlignment::static_vertical_align,
             vertical_bias,
             tag,
@@ -94,23 +94,23 @@ impl Alignment {
     pub const BOTTOM_CENTER: Alignment = Alignment::new_with_tag(0.0, 1.0, "BiasAlignment(bottom_center)");
     pub const BOTTOM_END: Alignment = Alignment::new_with_tag(1.0, 1.0, "BiasAlignment(bottom_end)");
 
-    pub const TOP: Vertical = Alignment::vertical_with_tag(-1.0, "BiasAlignmentVertical(top)");
-    pub const CENTER_VERTICALLY: Vertical = Alignment::vertical_with_tag(0.0, "BiasAlignmentVertical(center_vertically)");
-    pub const BOTTOM: Vertical = Alignment::vertical_with_tag(1.0, "BiasAlignmentVertical(bottom)");
+    pub const TOP: AlignmentVertical = Alignment::vertical_with_tag(-1.0, "BiasAlignmentVertical(top)");
+    pub const CENTER_VERTICALLY: AlignmentVertical = Alignment::vertical_with_tag(0.0, "BiasAlignmentVertical(center_vertically)");
+    pub const BOTTOM: AlignmentVertical = Alignment::vertical_with_tag(1.0, "BiasAlignmentVertical(bottom)");
 
-    pub const START: Horizontal = Alignment::horizontal_with_tag(-1.0, "BiasAlignmentHorizontal(start)");
-    pub const CENTER_HORIZONTALLY: Horizontal = Alignment::horizontal_with_tag(0.0, "BiasAlignmentHorizontal(center_horizontally)");
-    pub const END: Horizontal = Alignment::horizontal_with_tag(1.0, "BiasAlignmentHorizontal(end)");
+    pub const START: AlignmentHorizontal = Alignment::horizontal_with_tag(-1.0, "BiasAlignmentHorizontal(start)");
+    pub const CENTER_HORIZONTALLY: AlignmentHorizontal = Alignment::horizontal_with_tag(0.0, "BiasAlignmentHorizontal(center_horizontally)");
+    pub const END: AlignmentHorizontal = Alignment::horizontal_with_tag(1.0, "BiasAlignmentHorizontal(end)");
 }
 
 #[derive(Copy, Clone)]
-pub struct Horizontal {
+pub struct AlignmentHorizontal {
     horizontal_impl: fn(size: usize, space: usize, layout_direction: LayoutDirection, bias: f32) -> i32,
     horizontal_bias: f32,
     tag: &'static str,
 }
 
-impl Debug for Horizontal {
+impl Debug for AlignmentHorizontal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Horizontal")
             .field("tag", &self.tag)
@@ -119,20 +119,20 @@ impl Debug for Horizontal {
     }
 }
 
-impl Horizontal {
+impl AlignmentHorizontal {
     pub fn align(&self, size: usize, space: usize, layout_direction: LayoutDirection) -> i32 {
         (self.horizontal_impl)(size, space, layout_direction, self.horizontal_bias)
     }
 }
 
 #[derive(Copy, Clone)]
-pub struct Vertical {
+pub struct AlignmentVertical {
     vertical_impl: fn(size: usize, space: usize, bias: f32) -> i32,
     vertical_bias: f32,
     tag: &'static str,
 }
 
-impl Debug for Vertical {
+impl Debug for AlignmentVertical {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Vertical")
             .field("tag", &self.tag)
@@ -141,7 +141,7 @@ impl Debug for Vertical {
     }
 }
 
-impl Vertical {
+impl AlignmentVertical {
     pub fn align(&self, size: usize, space: usize) -> i32 {
         (self.vertical_impl)(size, space, self.vertical_bias)
     }

@@ -1,3 +1,5 @@
+#![feature(type_alias_impl_trait)]
+
 pub mod canvas;
 pub(crate) mod compose_node;
 pub mod composer;
@@ -55,3 +57,4 @@ pub(crate) mod layout_node_draw_delegate;
 pub(crate) mod modifier_node;
 pub mod remember;
 pub mod snapshot_value;
+mod remember_observer;

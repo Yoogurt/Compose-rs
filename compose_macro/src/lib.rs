@@ -12,6 +12,7 @@ use crate::attribute_parser::parse_attribute;
 use crate::function_params_collector::collect_function_params;
 use crate::hash_code_generator::generate_hash_code;
 use crate::signature_checker::verify_signature;
+use syn::ReturnType;
 
 mod attribute_parser;
 mod function_params_collector;
@@ -51,26 +52,50 @@ pub fn Composable(attribute: TokenStream, function: TokenStream) -> TokenStream 
 
     let hash = generate_hash_code();
 
+    let function_generics = &function.sig.generics;
+    let where_calcause = function_generics.where_clause.as_ref();
+    let output = &function.sig.output;
+
+    let start_group_stat = match output {
+        ReturnType::Default => {
+            quote! {
+                 compose::foundation::composer::Composer::start_group(#hash);
+            }
+        }
+        _ => {
+            TokenStream::default().into()
+        }
+    };
+
+    let end_group_stat = match output {
+        ReturnType::Default => {
+            quote! {
+                 compose::foundation::composer::Composer::end_group(#hash);
+            }
+        }
+        _ => {
+            TokenStream::default().into()
+        }
+    };
+
     let wrapped_function = if !function_inputs.is_empty() {
         (quote! {
              #[inline]
-                #function_visibility fn #function_name(#function_inputs_with_type) {
-                    compose::foundation::composer::Composer::start_group(#hash);
-                    {
-                        #function_body
-                    }
-                    compose::foundation::composer::Composer::end_group(#hash);
+                #function_visibility fn #function_name #function_generics(#function_inputs_with_type) #output #where_calcause {
+                    #start_group_stat
+                    let __result__ = { #function_body };
+                    #end_group_stat
+                    __result__
                 }
         })
     } else {
         (quote! {
              #[inline]
-                #function_visibility fn #function_name() {
-                    compose::foundation::composer::Composer::start_group(#hash);
-                    {
-                        #function_body
-                    }
-                    compose::foundation::composer::Composer::end_group(#hash);
+                #function_visibility fn #function_name #function_generics() #output #where_calcause {
+                    #start_group_stat
+                    let __result__ = { #function_body };
+                    #end_group_stat
+                    __result__
                 }
         })
     };
@@ -78,19 +103,19 @@ pub fn Composable(attribute: TokenStream, function: TokenStream) -> TokenStream 
     let result = if !function_inputs.is_empty() {
         (quote! {
             #[inline]
-            #function_visibility fn #origin_function_name(#function_inputs_with_type) {
+            #function_visibility fn #origin_function_name #function_generics(#function_inputs_with_type) #output #where_calcause {
                 #wrapped_function
 
-                #function_name(#(#function_inputs),*);
+                #function_name(#(#function_inputs),*)
             }
         })
     } else {
         (quote! {
             #[inline]
-            #function_visibility fn #origin_function_name() {
+            #function_visibility fn #origin_function_name #function_generics() #output #where_calcause {
                 #wrapped_function
 
-                #function_name();
+                #function_name()
             }
         })
     };

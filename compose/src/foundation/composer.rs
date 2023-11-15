@@ -60,8 +60,8 @@ impl Composer {
         COMPOSER.with(|local_composer| local_composer.inner.borrow_mut().start_node())
     }
 
-    pub(crate) fn create_node(factory: Box<dyn FnOnce(Rc<RefCell<LayoutNode>>)>) -> Rc<RefCell<LayoutNode>> {
-        COMPOSER.with(move |local_composer| local_composer.inner.borrow_mut().create_node(factory))
+    pub(crate) fn create_node(factory: impl FnOnce(Rc<RefCell<LayoutNode>>) + 'static) -> Rc<RefCell<LayoutNode>> {
+        COMPOSER.with(move |local_composer| local_composer.inner.borrow_mut().create_node(Box::new(factory)))
     }
 
     pub(crate) fn use_node() -> Rc<RefCell<LayoutNode>> {
@@ -90,7 +90,8 @@ impl Composer {
         })
     }
 
-    pub(crate) fn cache<R, T>(keys: &R, calculation: impl FnOnce() -> T) -> SnapShotValue<T> where R: Sized + PartialEq<R> + 'static {
+    pub(crate) fn cache<R, T>(keys: &R, calculation: impl FnOnce() -> T) -> SnapShotValue<T>
+        where T: 'static, R: Sized + PartialEq<R> + 'static {
         COMPOSER.with(move |local_composer| local_composer.inner.borrow_mut().cache(keys, calculation))
     }
 
@@ -123,7 +124,7 @@ impl Composer {
         COMPOSER.with(|local_composer| local_composer.inner.borrow_mut().validate_group())
     }
 
-    pub fn debug_print(){
+    pub fn debug_print() {
         COMPOSER.with(|local_composer| local_composer.inner.borrow().debug_print())
     }
 

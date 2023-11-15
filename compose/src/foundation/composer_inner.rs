@@ -101,12 +101,10 @@ impl ComposerInner {
     pub(crate) fn start_root(&mut self) {
         self.inserting = true;
         self.start_group(Self::ROOT_KEY);
-        self.writer.enter_group();
     }
 
     pub(crate) fn end_root(&mut self) {
         self.end_group(Self::ROOT_KEY);
-        self.writer.exit_group();
         self.inserting = false;
     }
 
@@ -115,7 +113,8 @@ impl ComposerInner {
     }
 
     pub(crate) fn end_group(&mut self, hash: i64) {
-        self.end(hash)
+        self.writer.exit_group();
+        self.end(hash);
     }
 
     pub(crate) fn start_group(&mut self, hash: i64) {
@@ -142,18 +141,15 @@ impl ComposerInner {
                 factory(node);
             }));
         }
-        let mut slot_table_mut = self.writer.slot_stack();
-        let mut slot_table_ref_mut = slot_table_mut.borrow_mut();
-        let parent = self
-            .writer
-            .get_group_kind(GroupKindIndex::LayoutNode, &mut slot_table_ref_mut);
+        self.writer.begin_insert_layout_node(node.clone());
+
+        let parent = self.writer.parent_layout_node();
 
         {
             let node = node.clone();
             match parent {
                 None => {
                     let root = self.root.clone().unwrap();
-                    drop(slot_table_ref_mut);
                     if root.as_ptr() == node.as_ptr() {
                         dbg!("skipping attach root to itself");
                         return node;
@@ -163,22 +159,13 @@ impl ComposerInner {
                         LayoutNode::adopt_child(&root, &node, true);
                     }));
                 }
-                Some(parent) => match parent {
-                    GroupKind::LayoutNodeType(parent) => {
-                        let parent = parent.clone();
-                        drop(slot_table_ref_mut);
-                        self.record_insert_up_fix_up(Box::new(move || {
-                            LayoutNode::adopt_child(&parent, &node, false);
-                        }));
-                    }
-                    _ => {
-                        panic!("parent with wrong type")
-                    }
-                },
+                Some(parent) => {
+                    self.record_insert_up_fix_up(Box::new(move || {
+                        LayoutNode::adopt_child(&parent, &node, false);
+                    }));
+                }
             }
         }
-
-        self.writer.begin_insert_layout_node(node.clone());
 
         node
     }
@@ -336,27 +323,35 @@ impl ComposerInner {
         }
     }
 
-    pub(crate) fn cache<R, T>(&mut self, key: &R, calculation: impl FnOnce() -> T) -> SnapShotValue<T> where R: Sized + PartialEq<R> + 'static {
+    fn update_value(&mut self, value: Rc<RefCell<dyn Any>>) {
+        if self.inserting {
+            self.writer.update(value);
+        } else {
+            todo!()
+        }
+    }
+
+    pub(crate) fn cache<R, T>(&mut self, key: &R, calculation: impl FnOnce() -> T) -> SnapShotValue<T>
+        where T: 'static, R: Sized + PartialEq<R> + 'static {
         let changed = self.changed(key);
-        // if changed {
-        //     let value = calculation();
-        //     let obj = value.wrap_with_rc_refcell();
-        //     self.next_slot().unwrap().downcast_ref::<T>().unwrap()
-        // } else {
-        //     let obj = self.next_slot().unwrap();
-        //     obj.downcast_ref::<T>().unwrap().clone()
-        // }
-        todo!()
+        if changed {
+            let value = calculation();
+            let obj = value.wrap_with_rc_refcell();
+            self.update_value(obj.clone());
+            return SnapShotValue::new(obj);
+        } else {
+            todo!()
+        }
     }
 
     pub(crate) fn changed<T>(&mut self, key: &T) -> bool where T: Sized + PartialEq<T> + 'static {
         if let Some(obj) = self.next_slot() {
             if let Some(obj_cast) = obj.downcast_ref::<T>() {
-                return obj_cast == key;
+                return obj_cast != key;
             }
         }
 
-        false
+        true
     }
 }
 
