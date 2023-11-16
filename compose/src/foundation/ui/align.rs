@@ -3,15 +3,17 @@ use std::fmt::Debug;
 use crate::foundation::geometry::{IntOffset, IntSize};
 use crate::foundation::layout_direction::LayoutDirection;
 
+pub type Alignment = AlignmentStruct;
+
 #[derive(Copy, Clone)]
-pub struct Alignment {
+pub struct AlignmentStruct {
     alignment_impl: fn(size: IntSize, space: IntSize, bias: (f32, f32), layout_direction: LayoutDirection) -> IntOffset,
     horizontal_bias: f32,
     vertical_bias: f32,
     tag: &'static str,
 }
 
-impl Debug for Alignment {
+impl Debug for AlignmentStruct {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Alignment")
             .field("tag", &self.tag)
@@ -21,19 +23,19 @@ impl Debug for Alignment {
     }
 }
 
-impl Default for Alignment {
+impl Default for AlignmentStruct {
     fn default() -> Self {
-        Alignment::CENTER
+        AlignmentStruct::CENTER
     }
 }
 
-impl Alignment {
+impl AlignmentStruct {
     pub fn align(&self, size: IntSize, space: IntSize, layout_direction: LayoutDirection) -> IntOffset {
         (self.alignment_impl)(size, space, (self.horizontal_bias, self.vertical_bias), layout_direction)
     }
 
-    pub const fn new(horizontal_bias: f32, vertical_bias: f32) -> Alignment {
-        Alignment {
+    pub const fn new(horizontal_bias: f32, vertical_bias: f32) -> AlignmentStruct {
+        AlignmentStruct {
             alignment_impl: BiasAlignment::static_align,
             tag: "BiasAlignment",
             horizontal_bias,
@@ -41,8 +43,8 @@ impl Alignment {
         }
     }
 
-    const fn new_with_tag(horizontal_bias: f32, vertical_bias: f32, tag: &'static str) -> Alignment {
-        Alignment {
+    const fn new_with_tag(horizontal_bias: f32, vertical_bias: f32, tag: &'static str) -> AlignmentStruct {
+        AlignmentStruct {
             alignment_impl: BiasAlignment::static_align,
             tag,
             horizontal_bias,
@@ -82,25 +84,25 @@ impl Alignment {
         }
     }
 
-    pub const TOP_START: Alignment = Alignment::new_with_tag(-1.0, -1.0, "BiasAlignment(top_start)");
-    pub const TOP_CENTER: Alignment = Alignment::new_with_tag(0.0, -1.0, "BiasAlignment(top_center)");
-    pub const TOP_END: Alignment = Alignment::new_with_tag(1.0, -1.0, "BiasAlignment(top_end)");
+    pub const TOP_START: AlignmentStruct = AlignmentStruct::new_with_tag(-1.0, -1.0, "BiasAlignment(top_start)");
+    pub const TOP_CENTER: AlignmentStruct = AlignmentStruct::new_with_tag(0.0, -1.0, "BiasAlignment(top_center)");
+    pub const TOP_END: AlignmentStruct = AlignmentStruct::new_with_tag(1.0, -1.0, "BiasAlignment(top_end)");
 
-    pub const CENTER_START: Alignment = Alignment::new_with_tag(-1.0, 0.0, "BiasAlignment(center_start)");
-    pub const CENTER: Alignment = Alignment::new_with_tag(0.0, 0.0, "BiasAlignment(center)");
-    pub const CENTER_END: Alignment = Alignment::new_with_tag(1.0, 0.0, "BiasAlignment(center_end)");
+    pub const CENTER_START: AlignmentStruct = AlignmentStruct::new_with_tag(-1.0, 0.0, "BiasAlignment(center_start)");
+    pub const CENTER: AlignmentStruct = AlignmentStruct::new_with_tag(0.0, 0.0, "BiasAlignment(center)");
+    pub const CENTER_END: AlignmentStruct = AlignmentStruct::new_with_tag(1.0, 0.0, "BiasAlignment(center_end)");
 
-    pub const BOTTOM_START: Alignment = Alignment::new_with_tag(-1.0, 1.0, "BiasAlignment(bottom_start)");
-    pub const BOTTOM_CENTER: Alignment = Alignment::new_with_tag(0.0, 1.0, "BiasAlignment(bottom_center)");
-    pub const BOTTOM_END: Alignment = Alignment::new_with_tag(1.0, 1.0, "BiasAlignment(bottom_end)");
+    pub const BOTTOM_START: AlignmentStruct = AlignmentStruct::new_with_tag(-1.0, 1.0, "BiasAlignment(bottom_start)");
+    pub const BOTTOM_CENTER: AlignmentStruct = AlignmentStruct::new_with_tag(0.0, 1.0, "BiasAlignment(bottom_center)");
+    pub const BOTTOM_END: AlignmentStruct = AlignmentStruct::new_with_tag(1.0, 1.0, "BiasAlignment(bottom_end)");
 
-    pub const TOP: AlignmentVertical = Alignment::vertical_with_tag(-1.0, "BiasAlignmentVertical(top)");
-    pub const CENTER_VERTICALLY: AlignmentVertical = Alignment::vertical_with_tag(0.0, "BiasAlignmentVertical(center_vertically)");
-    pub const BOTTOM: AlignmentVertical = Alignment::vertical_with_tag(1.0, "BiasAlignmentVertical(bottom)");
+    pub const TOP: AlignmentVertical = AlignmentStruct::vertical_with_tag(-1.0, "BiasAlignmentVertical(top)");
+    pub const CENTER_VERTICALLY: AlignmentVertical = AlignmentStruct::vertical_with_tag(0.0, "BiasAlignmentVertical(center_vertically)");
+    pub const BOTTOM: AlignmentVertical = AlignmentStruct::vertical_with_tag(1.0, "BiasAlignmentVertical(bottom)");
 
-    pub const START: AlignmentHorizontal = Alignment::horizontal_with_tag(-1.0, "BiasAlignmentHorizontal(start)");
-    pub const CENTER_HORIZONTALLY: AlignmentHorizontal = Alignment::horizontal_with_tag(0.0, "BiasAlignmentHorizontal(center_horizontally)");
-    pub const END: AlignmentHorizontal = Alignment::horizontal_with_tag(1.0, "BiasAlignmentHorizontal(end)");
+    pub const START: AlignmentHorizontal = AlignmentStruct::horizontal_with_tag(-1.0, "BiasAlignmentHorizontal(start)");
+    pub const CENTER_HORIZONTALLY: AlignmentHorizontal = AlignmentStruct::horizontal_with_tag(0.0, "BiasAlignmentHorizontal(center_horizontally)");
+    pub const END: AlignmentHorizontal = AlignmentStruct::horizontal_with_tag(1.0, "BiasAlignmentHorizontal(end)");
 }
 
 #[derive(Copy, Clone)]

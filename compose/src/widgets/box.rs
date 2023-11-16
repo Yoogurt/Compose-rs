@@ -19,6 +19,7 @@ use crate::foundation::measurable::MultiChildrenMeasurePolicy;
 use crate::foundation::modifier::{ModifierNode, ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::modifier_node::ParentDataModifierNode;
 use crate::foundation::oop::AnyConverter;
+use crate::foundation::parent_data::ExtractParentData;
 use crate::foundation::placeable::Placeable;
 use crate::foundation::placement_scope::PlacementScope;
 use crate::foundation::ui::align::Alignment;
@@ -60,10 +61,7 @@ const INSTANCE: &dyn BoxScope = &BoxScopeInstance {};
 
 impl BoxMeasurableTrait for &mut dyn Measurable {
     fn box_child_data_node(&self) -> Option<Ref<BoxChildDataNode>> {
-        self.get_parent_data_ref()
-            .and_then(|parent_data| Ref::filter_map(parent_data.borrow(), |parent_data| {
-                parent_data.downcast_ref::<BoxChildDataNode>()
-            }).ok())
+       self.cast::<BoxChildDataNode>()
     }
 
     fn matches_parent_size(&self) -> bool {

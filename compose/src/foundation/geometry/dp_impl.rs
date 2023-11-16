@@ -1,7 +1,7 @@
 use std::hash::{Hash, Hasher};
 use std::ops::{Add, Sub};
 
-use crate::foundation::geometry::{Dp, IntoDp};
+use crate::foundation::geometry::{Density, Dp, IntoDp};
 
 impl IntoDp for f32 {
     fn dp(self) -> Dp {
@@ -16,7 +16,7 @@ impl IntoDp for f64 {
 }
 
 impl IntoDp for i32 {
-    fn dp(self) -> Dp {
+     fn dp(self) -> Dp {
         Dp::new(self as f64)
     }
 }
@@ -62,6 +62,10 @@ impl Dp {
 
     const fn new(value: f64) -> Self {
         Self { value }
+    }
+
+    pub fn round_to_px(&self, density: Density) -> f64 {
+        (self.value * density.density).round()
     }
 
     pub fn is_infinite(&self) -> bool {

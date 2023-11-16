@@ -11,7 +11,7 @@ use compose::foundation::drawing::canvas_impl::new_canvas;
 use compose::foundation::geometry::IntoDp;
 use compose::foundation::layout::size_modifier::SizeModifier;
 use compose::foundation::modifier::Modifier;
-use compose::foundation::ui::align::Alignment;
+use compose::foundation::ui::align::AlignmentStruct;
 use compose::foundation::ui::graphics::color::Color;
 use compose::widgets::r#box::BoxLayout;
 use compose_macro::Composable;
@@ -22,8 +22,8 @@ use skia_safe::{AlphaType, ColorSpace, ColorType, ImageInfo, surfaces,
 #[Composable]
 fn test_box_composable() {
     BoxLayout(Modifier.width(100.dp()).height(100.dp()).background(Color::BLUE), |box_scope| {
-        BoxLayout(Modifier.align(box_scope, Alignment::CENTER).width(75.dp()).height(75.dp()).background(Color::YELLOW), |_| {});
-        BoxLayout(Modifier.align(box_scope, Alignment::CENTER).width(50.dp()).height(50.dp()).background(Color::GREEN), |_| {});
+        BoxLayout(Modifier.align(box_scope, AlignmentStruct::CENTER).width(75.dp()).height(75.dp()).background(Color::YELLOW), |_| {});
+        BoxLayout(Modifier.align(box_scope, AlignmentStruct::CENTER).width(50.dp()).height(50.dp()).background(Color::GREEN), |_| {});
     });
 }
 
