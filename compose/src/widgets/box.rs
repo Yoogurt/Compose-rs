@@ -1,4 +1,4 @@
-use std::any::Any;
+use std::any::{Any, TypeId};
 use std::cell::{Ref, RefCell, RefMut};
 use std::ops::DerefMut;
 use std::rc::{Rc, Weak};
@@ -24,12 +24,14 @@ use crate::foundation::placeable::Placeable;
 use crate::foundation::placement_scope::PlacementScope;
 use crate::foundation::ui::align::Alignment;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
+use crate::foundation::utils::option_extension::OptionalInstanceConverter;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::utils::self_reference::SelfReference;
 use crate::widgets::layout::Layout;
 
 trait BoxMeasurableTrait {
-    fn box_child_data_node(&self) -> Option<Ref<BoxChildDataNode>>;
+    fn box_child_data_node(&self) -> Option<&BoxChildDataNode>;
+    fn alignment(&self) -> Option<Alignment>;
     fn matches_parent_size(&self) -> bool;
 }
 
@@ -60,70 +62,68 @@ impl BoxScope for BoxScopeInstance {}
 const INSTANCE: &dyn BoxScope = &BoxScopeInstance {};
 
 impl BoxMeasurableTrait for &mut dyn Measurable {
-    fn box_child_data_node(&self) -> Option<Ref<BoxChildDataNode>> {
-       self.cast::<BoxChildDataNode>()
+    fn box_child_data_node(&self) -> Option<&BoxChildDataNode> {
+        self.cast::<BoxChildDataNode>()
+    }
+
+    fn alignment(&self) -> Option<Alignment> {
+        self.box_child_data_node().map(|child_data| {
+            child_data.alignment
+        })
     }
 
     fn matches_parent_size(&self) -> bool {
-        if let Some(parent_data) = self.get_parent_data() {
-            let box_child_data_node = self.box_child_data_node();
-
-            return if let Some(node) = box_child_data_node {
-                node.match_parent_size
-            } else {
-                false
-            };
+        let box_child_data_node = self.box_child_data_node();
+        if let Some(node) = box_child_data_node {
+            node.match_parent_size
+        } else {
+            false
         }
-        false
     }
+}
+
+#[derive(Debug, Default, Clone)]
+struct BoxChildDataNode {
+    alignment: Alignment,
+    match_parent_size: bool,
 }
 
 #[derive(Delegate, Debug, Default, ModifierElement)]
 #[Impl(ParentDataModifierNodeConverter)]
-struct BoxChildDataNode {
-    alignment: Alignment,
-    match_parent_size: bool,
+struct BoxChildDataModifierNode {
+    box_child_data_node: BoxChildDataNode,
 
     #[to(ModifierNode, DelegatableNode)]
     node_impl: ModifierNodeImpl,
-    weak_self: Weak<RefCell<Self>>,
 }
 
-impl NodeKindPatch for BoxChildDataNode {
+impl NodeKindPatch for BoxChildDataModifierNode {
     fn get_node_kind(&self) -> NodeKind {
         NodeKind::ParentData
     }
 }
 
-impl SelfReference for BoxChildDataNode {
-    fn get_self(&self) -> Weak<RefCell<Self>> {
-        self.weak_self.clone()
-    }
-}
-
-impl ParentDataModifierNode for BoxChildDataNode {
-    fn modify_parent_data(&mut self, density: Density, parent_data: Option<Rc<RefCell<dyn Any>>>) -> Option<Rc<RefCell<dyn Any>>> {
-        self.get_self().upgrade().map(|this| this as Rc<RefCell<dyn Any>>)
+impl ParentDataModifierNode for BoxChildDataModifierNode {
+    fn modify_parent_data(&mut self, density: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {
+        Some(parent_data.cast_or_init(|| { self.box_child_data_node.clone() }))
     }
 }
 
 fn box_child_data(alignment: Alignment, match_parent_size: bool) -> Modifier {
     Modifier::ModifierNodeElement {
         create: (move || {
-            let mut box_child_data_node = BoxChildDataNode::default();
+            let mut box_child_data_node = BoxChildDataModifierNode::default();
 
-            box_child_data_node.alignment = alignment;
-            box_child_data_node.match_parent_size = match_parent_size;
+            box_child_data_node.box_child_data_node.alignment = alignment;
+            box_child_data_node.box_child_data_node.match_parent_size = match_parent_size;
 
             let box_child_data_node = box_child_data_node.wrap_with_rc_refcell();
-            box_child_data_node.borrow_mut().weak_self = Rc::downgrade(&box_child_data_node);
-
             box_child_data_node as Rc<RefCell<dyn ModifierNode>>
         }).wrap_with_box(),
         update: (move |mut box_child_data_node: RefMut<dyn ModifierNode>| {
-            if let Some(box_child_data_node) = box_child_data_node.as_any_mut().downcast_mut::<BoxChildDataNode>() {
-                box_child_data_node.alignment = alignment;
-                box_child_data_node.match_parent_size = match_parent_size;
+            if let Some(box_child_data_node) = box_child_data_node.as_any_mut().downcast_mut::<BoxChildDataModifierNode>() {
+                box_child_data_node.box_child_data_node.alignment = alignment;
+                box_child_data_node.box_child_data_node.match_parent_size = match_parent_size;
             }
         }).wrap_with_box(),
     }
@@ -215,7 +215,7 @@ fn remember_box_measure_policy(alignment: Alignment, propagate_min_constraint: b
 
                 let layout_direction = measure_scope.get_layout_direction();
                 let box_child_data = measurables.iter().map(|child| {
-                    child.box_child_data_node().map(|box_child_data_node| box_child_data_node.alignment).unwrap_or(alignment)
+                    child.alignment().unwrap_or(alignment)
                 }).collect::<Vec<Alignment>>();
 
                 measure_scope.layout((box_width, box_height).into(), (move |scope: &dyn PlacementScope| {

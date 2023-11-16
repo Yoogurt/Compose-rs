@@ -15,6 +15,7 @@ use crate::foundation::measurable::Measurable;
 use crate::foundation::layout_node_container::LayoutNodeContainer;
 use crate::foundation::node_chain::NodeChain;
 use crate::foundation::node_coordinator::NodeCoordinator;
+use crate::foundation::parent_data::ParentDataGenerator;
 use crate::foundation::placeable::Placeable;
 use crate::foundation::placeable_impl::PlaceableImpl;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
@@ -38,7 +39,7 @@ pub(crate) struct MeasurePassDelegate {
     pub(crate) is_placed: bool,
     pub(crate) layout_state: Option<Rc<RefCell<LayoutState>>>,
     pub(crate) layout_node_container: Option<Rc<RefCell<LayoutNodeContainer>>>,
-    pub(crate) parent_data: Option<Rc<RefCell<dyn Any>>>,
+    pub(crate) parent_data: Option<Box<dyn Any>>,
 
     parent_data_dirty: bool,
     weak_self: Weak<RefCell<Self>>,
@@ -190,16 +191,11 @@ impl MeasurePassDelegate {
     }
 
     pub(crate) fn update_parent_data(&mut self) -> bool {
-        if self.get_parent_data().is_none()
-            && self.get_outer_coordinator().borrow().get_parent_data().is_none() {
-            return false;
-        }
-
         if !self.parent_data_dirty {
             return false;
         }
+        self.parent_data = self.get_outer_coordinator().borrow().generate_parent_data();
         self.parent_data_dirty = false;
-        self.parent_data = self.get_outer_coordinator().borrow().get_parent_data();
 
         true
     }
@@ -301,17 +297,15 @@ impl MeasurePassDelegate {
     }
 }
 
+impl ParentDataGenerator for MeasurePassDelegate {
+    fn generate_parent_data(&self) -> Option<Box<dyn Any>> {
+        todo!()
+    }
+}
+
 impl IntrinsicMeasurable for MeasurePassDelegate {
-    fn set_parent_data(&mut self, parent_data: Option<Rc<RefCell<dyn Any>>>) {
-        self.parent_data = parent_data;
-    }
-
-    fn get_parent_data(&self) -> Option<Rc<RefCell<dyn Any>>> {
-        self.parent_data.clone()
-    }
-
-    fn get_parent_data_ref(&self) -> Option<&Rc<RefCell<dyn Any>>> {
-        self.parent_data.as_ref()
+    fn get_parent_data(&self) -> Option<&dyn Any> {
+        self.parent_data.as_ref().map(|parent_data| parent_data.as_ref())
     }
 }
 

@@ -64,6 +64,12 @@ pub trait NodeKindPatch {
     fn get_node_kind(&self) -> NodeKind;
 }
 
+pub trait NodeKindParentData : NodeKindPatch {
+    fn get_node_kind(&self) -> NodeKind {
+        NodeKind::ParentData
+    }
+}
+
 pub trait ModifierElement: AnyConverter + LayoutModifierNodeConverter + DrawModifierNodeConverter + ParentDataModifierNodeConverter + NodeKindPatch + Debug {
     fn as_modifier_element(&self) -> &dyn ModifierElement;
     fn as_modifier_element_mut(&mut self) -> &mut dyn ModifierElement;

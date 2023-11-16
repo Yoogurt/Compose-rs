@@ -19,6 +19,8 @@ use crate::foundation::measurable::Measurable;
 use crate::foundation::modifier::{ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::modifier_node::ParentDataModifierNode;
 use crate::foundation::parent_data::ExtractParentData;
+use crate::foundation::ui::align::AlignmentHorizontal;
+use crate::foundation::utils::option_extension::OptionalInstanceConverter;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::utils::self_reference::SelfReference;
 use crate::widgets::cross_axis_alignment::CrossAxisAlignment;
@@ -35,17 +37,28 @@ pub(crate) struct RowColumnParentData {
     pub(crate) cross_axis_alignment: Option<CrossAxisAlignment>,
 }
 
+impl Default for RowColumnParentData {
+    fn default() -> Self {
+        Self { weight: 0f32, fill: true, cross_axis_alignment: None }
+    }
+}
+
 #[derive(Debug, Delegate, ModifierElement)]
 #[Impl(ParentDataModifierNodeConverter)]
 pub(crate) struct HorizontalAlignModifier {
+    pub(crate) alignment_horizontal: AlignmentHorizontal,
     #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
     weak_self: Weak<RefCell<Self>>,
 }
 
 impl ParentDataModifierNode for HorizontalAlignModifier {
-    fn modify_parent_data(&mut self, density: Density, parent_data: Option<Rc<RefCell<dyn Any>>>) -> Option<Rc<RefCell<dyn Any>>> {
-        todo!()
+    fn modify_parent_data(&mut self, density: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {
+        let mut parent_data = parent_data.cast_or_init(|| {
+            RowColumnParentData::default()
+        });
+        parent_data.cross_axis_alignment = Some(CrossAxisAlignment::horizontal(self.alignment_horizontal));
+        Some(parent_data)
     }
 }
 
@@ -68,8 +81,9 @@ impl NodeKindPatch for HorizontalAlignModifier {
 }
 
 impl HorizontalAlignModifier {
-    pub fn new() -> Rc<RefCell<Self>> {
+    pub fn new(alignment_horizontal: AlignmentHorizontal) -> Rc<RefCell<Self>> {
         let mut result = Self {
+            alignment_horizontal,
             node_impl: ModifierNodeImpl::default(),
             weak_self: Weak::new(),
         }.wrap_with_rc_refcell();
@@ -85,7 +99,7 @@ pub(crate) struct RowColumnMeasureHelper {
     pub(crate) arrangement: fn(total_size: usize, size: &[usize], layout_direction: LayoutDirection, main_axis_positions: &mut [i32], density: Density) -> Vec<i32>,
     pub(crate) arrangement_spacing: Dp,
     pub(crate) cross_axis_size: SizeMode,
-    pub(crate) cross_axis_aligment: CrossAxisAlignment,
+    pub(crate) cross_axis_alignment: CrossAxisAlignment,
 }
 
 pub(crate) struct RowColumnMeasureHelperResult {
@@ -96,11 +110,11 @@ pub(crate) struct RowColumnMeasureHelperResult {
 }
 
 trait RowColumnParentDataTrait {
-    fn row_column_parent_data(&self) -> Option<Ref<RowColumnParentData>>;
+    fn row_column_parent_data(&self) -> Option<&RowColumnParentData>;
 }
 
 impl<T> RowColumnParentDataTrait for T where T: ?Sized + Measurable {
-    fn row_column_parent_data(&self) -> Option<Ref<RowColumnParentData>> {
+    fn row_column_parent_data(&self) -> Option<&RowColumnParentData> {
         self.cast::<RowColumnParentData>()
     }
 }
@@ -127,7 +141,7 @@ impl RowColumnMeasureHelper {
                                    range: RangeInclusive<usize>) -> RowColumnMeasureHelperResult {
         let constraints = OrientationIndependentConstrains::new_with_orientation(*constraints, self.orientation);
 
-        let arragement_spacing_px = self.arrangement_spacing.round_to_px(measure_scope.get_density());
+        let arrangement_spacing_px = self.arrangement_spacing.round_to_px(measure_scope.get_density());
 
         let mut total_weight = 0f32;
         let mut fixed_space = 0usize;
@@ -163,7 +177,7 @@ impl RowColumnMeasureHelper {
                 });
 
                 let placeable_main_axis_size = self.main_axis_size(placeable.borrow().deref());
-                space_after_last_no_weight = (arragement_spacing_px as usize).min(main_axis_max - fixed_space - placeable_main_axis_size);
+                space_after_last_no_weight = (arrangement_spacing_px as usize).min(main_axis_max - fixed_space - placeable_main_axis_size);
                 fixed_space += placeable_main_axis_size + space_after_last_no_weight;
                 cross_axis_space = cross_axis_space.max(self.cross_axis_size(placeable.borrow().deref()));
 

@@ -40,7 +40,8 @@ pub(crate) struct InnerNodeCoordinator {
     IntrinsicMeasurable,
     LookaheadCapablePlaceable,
     TailModifierNodeProvider,
-    MeasureResultProvider
+    MeasureResultProvider,
+    ParentDataGenerator
     )]
     pub(crate) node_coordinator_impl: NodeCoordinatorImpl,
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,

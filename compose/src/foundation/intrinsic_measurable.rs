@@ -6,9 +6,7 @@ use auto_delegate::delegate;
 
 #[delegate]
 pub trait IntrinsicMeasurable {
-    fn set_parent_data(&mut self, parent_data: Option<Rc<RefCell<dyn Any>>>);
-    fn get_parent_data(&self) -> Option<Rc<RefCell<dyn Any>>>;
-    fn get_parent_data_ref(&self) -> Option<&Rc<RefCell<dyn Any>>>;
+    fn get_parent_data(&self) -> Option<&dyn Any>;
 
     fn min_intrinsic_width(&self, height: usize) -> usize {
         0

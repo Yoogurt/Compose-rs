@@ -47,15 +47,11 @@ impl Measurable for LookaheadPassDelegate {
 }
 
 impl IntrinsicMeasurable for LookaheadPassDelegate {
-    fn set_parent_data(&mut self, _parent_data: Option<Rc<RefCell<dyn Any>>>) {
-        todo!()
-    }
+    // fn generate_parent_data(&self) -> Option<Box<dyn Any>> {
+    //     todo!()
+    // }
 
-    fn get_parent_data(&self) -> Option<Rc<RefCell<dyn Any>>> {
-        todo!()
-    }
-
-    fn get_parent_data_ref(&self) -> Option<&Rc<RefCell<dyn Any>>> {
+    fn get_parent_data(&self) -> Option<&dyn Any> {
         todo!()
     }
 }

@@ -9,6 +9,7 @@ use crate::foundation::look_ahead_capable_placeable::LookaheadCapablePlaceable;
 use crate::foundation::measure_result::MeasureResultProvider;
 use crate::foundation::modifier::ModifierNode;
 use crate::foundation::oop::AnyConverter;
+use crate::foundation::parent_data::ParentDataGenerator;
 
 use super::{measurable::Measurable, placeable::Placeable};
 
@@ -51,6 +52,7 @@ pub trait NodeCoordinator: PerformDrawTrait
 + Debug
 + MeasureResultProvider
 + DrawableNodeCoordinator
++ ParentDataGenerator
 + Measurable {
     fn on_initialize(&self) {}
     fn on_placed(&self) {}

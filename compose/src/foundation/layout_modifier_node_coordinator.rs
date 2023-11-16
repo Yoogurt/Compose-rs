@@ -30,7 +30,8 @@ pub(crate) struct LayoutModifierNodeCoordinator {
     PlaceablePlaceAt,
     IntrinsicMeasurable,
     LookaheadCapablePlaceable,
-    MeasureResultProvider
+    MeasureResultProvider,
+    ParentDataGenerator
     )]
     pub(crate) node_coordinator_impl: NodeCoordinatorImpl,
 }

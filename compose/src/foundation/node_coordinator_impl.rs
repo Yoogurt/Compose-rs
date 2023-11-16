@@ -1,4 +1,4 @@
-use std::any::Any;
+use std::any::{Any, TypeId};
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
@@ -20,6 +20,7 @@ use crate::foundation::node::LayoutNodeDrawScope;
 use crate::foundation::node_chain::{NodeChain, TailModifierNode};
 use crate::foundation::node_coordinator::{DrawableNodeCoordinator, NodeCoordinatorTrait, PerformDrawTrait};
 use crate::foundation::node_coordinator::TailModifierNodeProvider;
+use crate::foundation::parent_data::ParentDataGenerator;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 use crate::foundation::ui::draw::{CanvasDrawScope, DrawContext};
 use crate::foundation::utils::box_wrapper::WrapWithBox;
@@ -44,37 +45,32 @@ pub(crate) struct NodeCoordinatorImpl {
     pub(crate) z_index: f32,
 
     pub(crate) tail: Rc<RefCell<dyn ModifierNode>>,
-    pub(crate) parent_data: Option<Rc<RefCell<dyn Any>>>,
 
     pub(crate) measure_result: Option<MeasureResult>,
 
     perform_draw_vtable: Option<Weak<RefCell<dyn PerformDrawTrait>>>,
 }
 
-impl IntrinsicMeasurable for NodeCoordinatorImpl {
-    fn set_parent_data(&mut self, parent_data: Option<Rc<RefCell<dyn Any>>>) {
-        self.parent_data = parent_data;
-    }
-
-    fn get_parent_data(&self) -> Option<Rc<RefCell<dyn Any>>> {
+impl ParentDataGenerator for NodeCoordinatorImpl {
+    fn generate_parent_data(&self) -> Option<Box<dyn Any>> {
         let mut data = None;
-
-        let tail = self.get_tail();
         let density = self.get_density();
 
         self.node_chain.upgrade().unwrap().borrow_mut().tail_to_head(|node| {
             if node.get_node_kind() == NodeKind::ParentData {
                 node.dispatch_for_kind_mut(NodeKind::ParentData, |it| {
-                    data = it.as_parent_data_modifier_node_mut().unwrap().modify_parent_data(density, data.clone())
+                    data = (it.as_parent_data_modifier_node_mut().unwrap().modify_parent_data(density, data.take()));
                 });
             }
         });
 
         data
     }
+}
 
-    fn get_parent_data_ref(&self) -> Option<&Rc<RefCell<dyn Any>>> {
-        self.parent_data.as_ref()
+impl IntrinsicMeasurable for NodeCoordinatorImpl {
+    fn get_parent_data(&self) -> Option<&dyn Any> {
+        todo!()
     }
 }
 
@@ -214,7 +210,6 @@ impl NodeCoordinatorImpl {
             wrapped_by: None,
             layout_node: Weak::new(),
             node_chain: Weak::new(),
-            parent_data: None,
             z_index: 0.0,
             tail: TailModifierNode::default().wrap_with_rc_refcell(),
 
