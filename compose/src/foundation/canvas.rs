@@ -17,7 +17,7 @@ pub trait Canvas {
     fn restore(&mut self);
     fn save_count(&self) -> usize;
 
-    fn translate(&mut self, x: f32, y:f32);
+    fn translate(&mut self, x: f32, y: f32);
 
     fn draw_rect(&mut self, color: Color, rect: Rect);
 }

@@ -1,8 +1,7 @@
-use crate::foundation::geometry::{Density, IntSize};
-use crate::foundation::placement_scope::PlacementScope;
+use crate::foundation::geometry::Density;
 
 use super::{
-    layout_direction::LayoutDirection, measure_result::MeasureResult, measure_scope::MeasureScope,
+    layout_direction::LayoutDirection, measure_scope::MeasureScope,
     measure_scope::MeasureScopeImpl,
 };
 

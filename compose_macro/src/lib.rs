@@ -4,15 +4,15 @@ use proc_macro::{Span, TokenStream};
 
 use proc_macro2::Ident;
 use quote::quote;
-use syn::parse_macro_input;
 use syn::ItemFn;
+use syn::parse_macro_input;
+use syn::ReturnType;
 use syn::spanned::Spanned;
 
 use crate::attribute_parser::parse_attribute;
 use crate::function_params_collector::collect_function_params;
 use crate::hash_code_generator::generate_hash_code;
 use crate::signature_checker::verify_signature;
-use syn::ReturnType;
 
 mod attribute_parser;
 mod function_params_collector;

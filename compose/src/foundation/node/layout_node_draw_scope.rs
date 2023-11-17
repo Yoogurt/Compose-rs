@@ -94,5 +94,4 @@ impl<'a> ContentDrawScope<'a> for LayoutNodeDrawScope<'a> {
     }
 }
 
-fn perform_draw(draw_modifier_node: &dyn DrawModifierNode, canvas: &mut dyn Canvas) {
-}
+fn perform_draw(draw_modifier_node: &dyn DrawModifierNode, canvas: &mut dyn Canvas) {}

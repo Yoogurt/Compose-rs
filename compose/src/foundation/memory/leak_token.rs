@@ -15,16 +15,16 @@ lazy_static! {
 
 #[derive(Debug)]
 pub(crate) struct LeakToken<T>
-where
-    T: LeakableObject,
+    where
+        T: LeakableObject,
 {
     tag: &'static str,
     _data: PhantomData<T>,
 }
 
 impl<T> Default for LeakToken<T>
-where
-    T: LeakableObject,
+    where
+        T: LeakableObject,
 {
     fn default() -> Self {
         match TAG_REMEMBER.lock().expect("").entry(T::tag()) {
@@ -43,8 +43,8 @@ where
 }
 
 impl<T> Drop for LeakToken<T>
-where
-    T: LeakableObject,
+    where
+        T: LeakableObject,
 {
     fn drop(&mut self) {
         match TAG_REMEMBER.lock().expect("").entry(T::tag()) {

@@ -1,4 +1,3 @@
-use crate::foundation::geometry::Density;
 use crate::foundation::modifier::Modifier;
 
 #[derive(Debug)]

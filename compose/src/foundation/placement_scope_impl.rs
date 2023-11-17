@@ -33,7 +33,7 @@ impl PlacementScope for PlacementScopeImpl<'_> {
         if self.parent_layout_direction() == LayoutDirection::Ltr || self.parent_width() == 0 {
             placeable.place_at((x, y).into(), z_index)
         } else {
-            let x =   self.parent_width() as i32 - placeable.get_size().width as i32 - x;
+            let x = self.parent_width() as i32 - placeable.get_size().width as i32 - x;
 
             placeable.place_at(
                 (

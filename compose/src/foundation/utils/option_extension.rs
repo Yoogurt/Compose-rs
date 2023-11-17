@@ -1,4 +1,5 @@
 use std::any::Any;
+
 use crate::foundation::utils::box_wrapper::WrapWithBox;
 
 pub(crate) trait OptionThen<T> {

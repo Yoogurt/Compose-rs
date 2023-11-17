@@ -28,7 +28,7 @@ impl<T> Mul<T> for Size<T> where T: Mul<Output=T> + Copy
     }
 }
 
-impl<T> Div<T> for Size<T>where T: Div<Output=T> + Copy
+impl<T> Div<T> for Size<T> where T: Div<Output=T> + Copy
 {
     type Output = Size<T>;
     fn div(self, rhs: T) -> Self::Output {

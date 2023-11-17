@@ -60,7 +60,7 @@ impl LayoutModifierNodeCoordinator {
     pub(crate) fn new(
         layout_node: &Rc<RefCell<LayoutNode>>,
         measure_node: &Rc<RefCell<dyn ModifierNode>>,
-        node_chain: &Rc<RefCell<NodeChain>>
+        node_chain: &Rc<RefCell<NodeChain>>,
     ) -> Self {
         let mut result = Self {
             layout_node: Rc::downgrade(layout_node),

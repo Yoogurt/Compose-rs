@@ -28,29 +28,27 @@ impl BackwardsCompatNode {
     pub(crate) fn new(element: Rc<RefCell<dyn ModifierElement>>) -> Self {
         BackwardsCompatNode {
             element,
-            modifier_node_impl: ModifierNodeImpl::default()
+            modifier_node_impl: ModifierNodeImpl::default(),
         }
     }
 }
 
 impl NodeKindPatch for BackwardsCompatNode {
-    fn get_node_kind(& self) -> NodeKind {
+    fn get_node_kind(&self) -> NodeKind {
         self.element.borrow_mut().get_node_kind()
     }
 }
 
 impl LayoutModifierNode for BackwardsCompatNode {
-    fn measure(& self, measure_scope: &mut dyn MeasureScope, measurable: &mut dyn Measurable, constraint: &Constraints) -> MeasureResult {
+    fn measure(&self, measure_scope: &mut dyn MeasureScope, measurable: &mut dyn Measurable, constraint: &Constraints) -> MeasureResult {
         self.element.borrow_mut().as_layout_modifier_node_mut().unwrap().measure(measure_scope, measurable, constraint)
     }
 }
 
 impl DrawModifierNode for BackwardsCompatNode {
-    fn draw(& self, draw_scope: &mut dyn ContentDrawScope) {
+    fn draw(&self, draw_scope: &mut dyn ContentDrawScope) {
         self.element.borrow_mut().as_draw_modifier_node_mut().unwrap().draw(draw_scope)
     }
 
-    fn on_measure_result_changed(&mut self) {
-
-    }
+    fn on_measure_result_changed(&mut self) {}
 }

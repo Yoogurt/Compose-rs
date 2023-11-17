@@ -1,9 +1,7 @@
-pub(crate) trait  RememberObserver {
+pub(crate) trait RememberObserver {
     fn on_remembered(&self);
     fn on_forgotten(&self);
     fn on_abandoned(&self);
 }
 
-pub(crate) struct RememberObserverItem {
-
-}
+pub(crate) struct RememberObserverItem {}

@@ -1,29 +1,31 @@
-use crate::impl_node_kind_parent_data;
 use std::any::Any;
-use auto_delegate::Delegate;
-use std::rc::Rc;
-use std::cmp::max;
 use std::cell::RefCell;
+use std::cmp::max;
 use std::ops::{Deref, DerefMut, RangeInclusive};
+use std::rc::Rc;
+
+use auto_delegate::Delegate;
 use compose_foundation_macro::ModifierElement;
-use crate::foundation::ui::size_mode::SizeMode;
+
 use crate::foundation::constraint::Constraints;
 use crate::foundation::delegatable_node::{DelegatableKind, DelegatableNode};
 use crate::foundation::geometry::{CoerceAtLeast, Density};
-use crate::foundation::layout_direction::LayoutDirection;
-use crate::foundation::measure_scope::MeasureScope;
-use crate::foundation::placeable::Placeable;
-use crate::widgets::orientation_independent_constrains::OrientationIndependentConstrains;
 use crate::foundation::geometry::Dp;
+use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::measurable::Measurable;
+use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::modifier::{ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::modifier_node::ParentDataModifierNode;
 use crate::foundation::parent_data::ExtractParentData;
+use crate::foundation::placeable::Placeable;
 use crate::foundation::placement_scope::PlacementScope;
 use crate::foundation::ui::align::{AlignmentHorizontal, AlignmentVertical};
+use crate::foundation::ui::size_mode::SizeMode;
 use crate::foundation::utils::option_extension::OptionalInstanceConverter;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
+use crate::impl_node_kind_parent_data;
 use crate::widgets::cross_axis_alignment::CrossAxisAlignment;
+use crate::widgets::orientation_independent_constrains::OrientationIndependentConstrains;
 
 #[derive(Copy, Clone)]
 pub(crate) enum LayoutOrientation {
@@ -92,7 +94,7 @@ impl ParentDataModifierNode for VerticalAlignModifier {
 }
 
 impl VerticalAlignModifier {
-    pub fn new(alignment_vertical: AlignmentVertical) ->Self {
+    pub fn new(alignment_vertical: AlignmentVertical) -> Self {
         Self {
             alignment_vertical,
             node_impl: ModifierNodeImpl::default(),

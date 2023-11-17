@@ -1,10 +1,7 @@
 use std::any::Any;
-use std::cell::{RefCell, RefMut};
+use std::cell::RefCell;
 use std::cell::Ref;
-use std::collections::hash_map::Entry;
-use std::collections::HashMap;
 use std::ops::Deref;
-use std::ops::Index;
 use std::rc::Rc;
 
 use crate::foundation::layout_node::LayoutNode;
@@ -63,7 +60,7 @@ pub(crate) struct SlotWriter {
     pub(crate) slot_stack: Vec<Rc<RefCell<Vec<SlotTableType>>>>,
 
     pub(crate) current_layout_node: Option<Rc<RefCell<LayoutNode>>>,
-    pub(crate) layout_node_stack: Vec<Rc<RefCell<LayoutNode>>>
+    pub(crate) layout_node_stack: Vec<Rc<RefCell<LayoutNode>>>,
 }
 
 impl SlotWriter {

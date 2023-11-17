@@ -1,6 +1,4 @@
-use std::cell::{RefCell, RefMut};
 use std::hash::{Hash, Hasher};
-use std::rc::Rc;
 
 use auto_delegate::Delegate;
 use compose_foundation_macro::ModifierElement;
@@ -13,9 +11,6 @@ use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::measure_scope::{MeasureScope, MeasureScopeLayoutAction};
 use crate::foundation::modifier::{Modifier, modifier_node_element_creator, modifier_node_element_updater, ModifierNode, ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::modifier_node::LayoutModifierNode;
-use crate::foundation::oop::AnyConverter;
-use crate::foundation::utils::box_wrapper::WrapWithBox;
-use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
 pub trait SizeModifier {
     fn width(self, width: Dp) -> Modifier;
@@ -251,13 +246,13 @@ fn size_element<T>(
                 ..Default::default()
             }
         }),
-        update: modifier_node_element_updater(move | size_node: &mut SizeNode| {
-                size_node.min_width = min_width_raw.into();
-                size_node.max_width = max_width_raw.into();
-                size_node.min_height = min_height_raw.into();
-                size_node.max_height = max_height_raw.into();
-                size_node.enforce_incoming = enforce_incoming;
-        })
+        update: modifier_node_element_updater(move |size_node: &mut SizeNode| {
+            size_node.min_width = min_width_raw.into();
+            size_node.max_width = max_width_raw.into();
+            size_node.min_height = min_height_raw.into();
+            size_node.max_height = max_height_raw.into();
+            size_node.enforce_incoming = enforce_incoming;
+        }),
     }
 }
 

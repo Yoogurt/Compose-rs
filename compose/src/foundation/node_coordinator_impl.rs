@@ -1,4 +1,4 @@
-use std::any::{Any, TypeId};
+use std::any::Any;
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
@@ -6,10 +6,9 @@ use std::rc::{Rc, Weak};
 
 use auto_delegate::Delegate;
 use compose_foundation_macro::AnyConverter;
-use log::trace;
 
 use crate::foundation::canvas::Canvas;
-use crate::foundation::geometry::{Density, IntOffset, IntSize};
+use crate::foundation::geometry::{IntOffset, IntSize};
 use crate::foundation::intrinsic_measurable::IntrinsicMeasurable;
 use crate::foundation::look_ahead_capable_placeable::LookaheadCapablePlaceable;
 use crate::foundation::look_ahead_capable_placeable_impl::LookaheadCapablePlaceableImpl;

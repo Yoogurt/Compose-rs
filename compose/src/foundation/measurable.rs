@@ -17,14 +17,14 @@ pub trait Measurable: IntrinsicMeasurable {
 }
 
 pub type SingleChildMeasurePolicy =
-    Box<dyn FnMut(&mut dyn MeasureScope, &mut dyn Measurable, &Constraints) -> MeasureResult>;
+Box<dyn FnMut(&mut dyn MeasureScope, &mut dyn Measurable, &Constraints) -> MeasureResult>;
 
 pub type SingleChildMeasurePolicyUnBox =
-    fn(&mut dyn MeasureScope, &mut dyn Measurable, &Constraints) -> MeasureResult;
+fn(&mut dyn MeasureScope, &mut dyn Measurable, &Constraints) -> MeasureResult;
 
 pub type MultiChildrenMeasurePolicy = Box<
-    dyn FnMut(& dyn MeasureScope, &mut [&mut dyn Measurable], &Constraints) -> MeasureResult,
+    dyn FnMut(&dyn MeasureScope, &mut [&mut dyn Measurable], &Constraints) -> MeasureResult,
 >;
 
 pub type MultiChildrenMeasurePolicyUnBox =
-    dyn FnMut(& dyn MeasureScope, &mut [&mut dyn Measurable], &Constraints) -> MeasureResult;
+dyn FnMut(&dyn MeasureScope, &mut [&mut dyn Measurable], &Constraints) -> MeasureResult;

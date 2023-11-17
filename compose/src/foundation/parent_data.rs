@@ -1,6 +1,8 @@
-use std::any::{Any};
+use std::any::Any;
 use std::fmt::Debug;
+
 use auto_delegate::delegate;
+
 use crate::foundation::measurable::Measurable;
 
 pub trait ParentData: Debug {}

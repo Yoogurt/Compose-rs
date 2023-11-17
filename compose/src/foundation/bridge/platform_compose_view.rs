@@ -54,7 +54,7 @@ impl MacOSComposeView {
         root.borrow_mut().attach(None, owner);
     }
 
-     fn detach(&mut self) {
+    fn detach(&mut self) {
         self.root.borrow_mut().detach();
     }
 
@@ -98,9 +98,7 @@ impl Owner for MacOSComposeView {
         todo!()
     }
 
-    fn on_attach(&self, layout_node: &LayoutNode) {
-    }
+    fn on_attach(&self, layout_node: &LayoutNode) {}
 
-    fn on_detach(&self, layout_node: &LayoutNode) {
-    }
+    fn on_detach(&self, layout_node: &LayoutNode) {}
 }

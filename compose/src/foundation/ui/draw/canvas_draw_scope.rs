@@ -47,7 +47,7 @@ impl<'a> CanvasDrawScope<'a> {
         }
     }
 
-    pub(crate) fn draw<T>(&mut self, params: T, mut block: impl FnOnce(T, &mut Self))  {
+    pub(crate) fn draw<T>(&mut self, params: T, mut block: impl FnOnce(T, &mut Self)) {
         block(params, self)
     }
 }

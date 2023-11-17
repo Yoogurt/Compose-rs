@@ -1,3 +1,1 @@
-pub(crate) struct LayoutNodeSharedState {
-
-}
+pub(crate) struct LayoutNodeSharedState {}

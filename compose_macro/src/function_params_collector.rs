@@ -19,7 +19,7 @@ pub(crate) fn collect_function_params(
             match arg {
                 FnArg::Typed(pat) => {
                     match pat.ty.as_ref() {
-                        _=> {}
+                        _ => {}
                         // _ => {
                         //     error = Some(syn::Error::new_spanned(
                         //         pat.ty.as_ref(),

@@ -3,9 +3,9 @@ use std::any::Any;
 use std::fmt::{Debug, Formatter};
 
 use crate::foundation::slot_table::{SlotReader, SlotTable, SlotWriter};
-use crate::foundation::slot_table_type::{GroupKindIndex, SlotTableType};
-use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
+use crate::foundation::slot_table_type::GroupKindIndex;
 use crate::foundation::snapshot_value::SnapShotValue;
+use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
 use super::{constraint::Constraints, layout_node::LayoutNode, slot_table_type::GroupKind};
 

@@ -1,7 +1,6 @@
 use std::{any::Any, cell::RefCell, rc::Rc};
-use std::hash::Hash;
-use std::ops::Deref;
 use std::fmt::{Debug, Formatter};
+use std::hash::Hash;
 
 use super::layout_node::LayoutNode;
 
@@ -41,7 +40,7 @@ impl Debug for GroupKind {
             }
             GroupKind::CustomType(obj) => {
                 f.debug_struct("GroupKind::CustomType")
-                    .field("custom_type", &(obj.as_ptr() ))
+                    .field("custom_type", &(obj.as_ptr()))
                     .finish()
             }
         }

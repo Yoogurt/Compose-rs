@@ -7,8 +7,7 @@ use crate::foundation::utils::box_wrapper::WrapWithBox;
 
 use super::layout_direction::LayoutDirection;
 
-pub(crate) fn empty_place_action(_: &dyn PlacementScope) {
-}
+pub(crate) fn empty_place_action(_: &dyn PlacementScope) {}
 
 #[delegate]
 pub trait MeasureScope {

@@ -1,6 +1,6 @@
 use compose_macro::Composable;
-use crate as compose;
 
+use crate as compose;
 use crate::foundation::composer::Composer;
 use crate::foundation::layout_node::LayoutNode;
 

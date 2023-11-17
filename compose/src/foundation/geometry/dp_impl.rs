@@ -16,7 +16,7 @@ impl IntoDp for f64 {
 }
 
 impl IntoDp for i32 {
-     fn dp(self) -> Dp {
+    fn dp(self) -> Dp {
         Dp::new(self as f64)
     }
 }
