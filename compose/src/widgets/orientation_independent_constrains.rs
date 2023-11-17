@@ -7,13 +7,13 @@ pub(crate) struct OrientationIndependentConstrains {
 }
 
 impl OrientationIndependentConstrains {
-    fn new_internal(main_axis_min: usize, main_axis_max: usize, cross_axis_min: usize, cross_axis_max: usize) -> Self {
+    pub fn new(main_axis_min: usize, main_axis_max: usize, cross_axis_min: usize, cross_axis_max: usize) -> Self {
         Self {
             value: Constraints::new(main_axis_min..=main_axis_max, cross_axis_min..=cross_axis_max)
         }
     }
 
-    pub fn new(value: Constraints) -> Self {
+    pub fn new_with_constrains(value: Constraints) -> Self {
         Self { value }
     }
 
@@ -31,7 +31,7 @@ impl OrientationIndependentConstrains {
     }
 
     pub fn new_with_orientation(constraints: Constraints, orientation: LayoutOrientation) -> Self {
-        Self::new_internal(
+        Self::new(
             match orientation {
                 LayoutOrientation::Horizontal => constraints.min_width,
                 LayoutOrientation::Vertical => constraints.min_height,
@@ -59,7 +59,7 @@ impl OrientationIndependentConstrains {
     }
 
     pub fn stretch_cross_axis(&self) -> Self {
-        Self::new_internal(
+        Self::new(
             self.main_axis_min(),
             self.main_axis_max(),
             if self.cross_axis_max() != Constraints::INFINITE { self.cross_axis_max() } else { self.cross_axis_min() },
@@ -75,6 +75,6 @@ impl OrientationIndependentConstrains {
     }
 
     pub fn copy(&self, main_axis_min: usize, main_axis_max: usize, cross_axis_min: usize, cross_axis_max: usize) -> Self {
-        Self::new_internal(main_axis_min, main_axis_max, cross_axis_min, cross_axis_max)
+        Self::new(main_axis_min, main_axis_max, cross_axis_min, cross_axis_max)
     }
 }

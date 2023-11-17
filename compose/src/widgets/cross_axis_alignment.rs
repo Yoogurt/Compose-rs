@@ -1,63 +1,53 @@
+use std::borrow::Borrow;
+use std::rc::Rc;
+use std::fmt::{Debug, Formatter};
 use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::placeable::Placeable;
+use crate::foundation::ui::align::{AlignmentHorizontal, AlignmentVertical};
 
-#[derive(Debug, Copy, Clone)]
-pub struct CrossAxisAlignment {
-    align_impl: &'a dyn FnMut(usize, LayoutDirection, &dyn Placeable, i32) -> i32,
-    is_relative: bool,
-    tag: &'static str,
+#[derive(Debug, Clone, Copy)]
+pub enum CrossAxisAlignment {
+    START,
+    CENTER,
+    END,
+    HORIZONTAL(AlignmentHorizontal),
+    VERTICAL(AlignmentVertical),
 }
 
-impl CrossAxisAlignment<'_> {
-    pub fn CENTER() -> CrossAxisAlignment {
-        Self {
-            align_impl: &center_cross_axis_alignment,
-            is_relative: false,
-            tag: "CenterCrossAxisAlignment",
+impl CrossAxisAlignment {
+    pub fn align(&self, size: usize, layout_direction: LayoutDirection, placeable: &dyn Placeable, before_cross_axis_aligment_line: i32) -> i32 {
+        match self {
+            Self::START => start_align(size, layout_direction, placeable, before_cross_axis_aligment_line),
+            Self::CENTER => center_align(size, layout_direction, placeable, before_cross_axis_aligment_line),
+            Self::END => end_align(size, layout_direction, placeable, before_cross_axis_aligment_line),
+            Self::HORIZONTAL(alignment_horizontal) => horizontal_align(alignment_horizontal, size, layout_direction, placeable, before_cross_axis_aligment_line),
+            Self::VERTICAL(alignment_vertical) => vertical_align(alignment_vertical, size, layout_direction, placeable, before_cross_axis_aligment_line),
         }
     }
-
-    pub fn START() -> CrossAxisAlignment {
-        Self {
-            align_impl: &start_cross_axis_alignment,
-            is_relative: true,
-            tag: "StartCrossAxisAlignment",
-        }
-    }
-
-    pub fn END() -> CrossAxisAlignment {
-        Self {
-            align_impl: &end_cross_axis_alignment,
-            is_relative: true,
-            tag: "EndCrossAxisAlignment",
-        }
-    }
-
-    // pub fn horizontal(horizontal: AlignmentHorizontal) -> Self {
-    //     Self {
-    //         align_impl: move |size: usize, layout_direction: LayoutDirection, placeable: &dyn Placeable, before_cross_axis_alignment_line: i32| {
-    //             horizontal.align(0, size, layout_direction)
-    //         },
-    //         is_relative: false,
-    //         tag: "HorizontalCrossAxisAlignment",
-    //     }
-    // }
 }
 
-fn center_cross_axis_alignment(size: usize, layout_direction: LayoutDirection, placeable: &dyn Placeable, before_cross_axis_aligment_line: i32) -> i32 {
+fn center_align(size: usize, layout_direction: LayoutDirection, placeable: &dyn Placeable, before_cross_axis_aligment_line: i32) -> i32 {
     size as i32 / 2
 }
 
-fn start_cross_axis_alignment(size: usize, layout_direction: LayoutDirection, placeable: &dyn Placeable, before_cross_axis_aligment_line: i32) -> i32 {
+fn start_align(size: usize, layout_direction: LayoutDirection, placeable: &dyn Placeable, before_cross_axis_aligment_line: i32) -> i32 {
     match layout_direction {
         LayoutDirection::Ltr => 0,
         LayoutDirection::Rtl => size as i32,
     }
 }
 
-fn end_cross_axis_alignment(size: usize, layout_direction: LayoutDirection, placeable: &dyn Placeable, before_cross_axis_aligment_line: i32) -> i32 {
+fn end_align(size: usize, layout_direction: LayoutDirection, placeable: &dyn Placeable, before_cross_axis_aligment_line: i32) -> i32 {
     match layout_direction {
         LayoutDirection::Ltr => size as i32,
         LayoutDirection::Rtl => 0,
     }
+}
+
+fn horizontal_align(horizontal: &AlignmentHorizontal, size: usize, layout_direction: LayoutDirection, placeable: &dyn Placeable, before_cross_axis_aligment_line: i32) -> i32 {
+    horizontal.align(0, size, layout_direction)
+}
+
+fn vertical_align(vertical: &AlignmentVertical, size: usize, layout_direction: LayoutDirection, placeable: &dyn Placeable, before_cross_axis_aligment_line: i32) -> i32 {
+    vertical.align(0, size)
 }
