@@ -201,12 +201,6 @@ impl ComposerInner {
         self.sequence += 1;
     }
 
-    pub(crate) fn register_insert_up_fix_up(&mut self) {
-        if let Some(insert_up_fix_up) = self.insert_up_fix_up.pop() {
-            self.fix_up.push(insert_up_fix_up)
-        }
-    }
-
     pub(crate) fn apply_changes(&mut self) {
         let mut changes = Vec::<Change>::new();
         std::mem::swap(&mut self.changes, &mut changes);
@@ -214,6 +208,12 @@ impl ComposerInner {
             println!("apply change sequence: {} , type: {:?}", change.sequence, change.change_type);
             (change.change)();
         });
+    }
+
+    pub(crate) fn register_insert_up_fix_up(&mut self) {
+        if let Some(insert_up_fix_up) = self.insert_up_fix_up.pop() {
+            self.fix_up.push(insert_up_fix_up)
+        }
     }
 
     pub(crate) fn apply_deferred_changes(&mut self) {

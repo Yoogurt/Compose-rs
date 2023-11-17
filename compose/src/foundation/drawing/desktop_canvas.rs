@@ -4,17 +4,17 @@ use crate::foundation::canvas::{Canvas, CanvasExtension, CanvasSaveGuard};
 use crate::foundation::ui::graphics::color;
 use crate::foundation::ui::graphics::color::Color;
 
-pub struct MacOSCanvas<'a> {
+pub struct DesktopCanvas<'a> {
     inner: &'a mut skia_safe::Canvas,
 }
 
-impl<'a> MacOSCanvas<'a> {
-    pub fn new(skia_canvas: &'a mut skia_safe::Canvas) -> MacOSCanvas {
-        MacOSCanvas { inner: skia_canvas }
+impl<'a> DesktopCanvas<'a> {
+    pub fn new(skia_canvas: &'a mut skia_safe::Canvas) -> DesktopCanvas {
+        DesktopCanvas { inner: skia_canvas }
     }
 }
 
-impl Canvas for MacOSCanvas<'_> {
+impl Canvas for DesktopCanvas<'_> {
     fn save(&mut self) -> CanvasSaveGuard<'_> {
         self.inner.save();
         CanvasSaveGuard { canvas: self }
@@ -38,4 +38,4 @@ impl Canvas for MacOSCanvas<'_> {
     }
 }
 
-impl CanvasExtension for MacOSCanvas<'_> {}
+impl CanvasExtension for DesktopCanvas<'_> {}

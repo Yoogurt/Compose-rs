@@ -10,8 +10,8 @@ use crate::foundation::delegatable_node::DelegatableNode;
 use crate::foundation::geometry::{CoerceAtLeast, CoerceAtMost, CoerceIn, Dp, IntSize};
 use crate::foundation::measurable::{Measurable, SingleChildMeasurePolicy};
 use crate::foundation::measure_result::MeasureResult;
-use crate::foundation::measure_scope::MeasureScope;
-use crate::foundation::modifier::{Modifier, ModifierNode, ModifierNodeImpl, NodeKind, NodeKindPatch};
+use crate::foundation::measure_scope::{MeasureScope, MeasureScopeLayoutAction};
+use crate::foundation::modifier::{Modifier, modifier_node_element_creator, modifier_node_element_updater, ModifierNode, ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::modifier_node::LayoutModifierNode;
 use crate::foundation::oop::AnyConverter;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
@@ -81,7 +81,7 @@ fn size_measure_policy<T>(
             };
 
             let (measure_result, placeable) = measurable.measure(&target_constraints);
-            measure_scope.layout(IntSize::zero(), Box::new(move |scope| scope.place_relative(placeable.borrow_mut(), 0, 0)))
+            measure_scope.layout(IntSize::zero(), move |scope| scope.place_relative(placeable.borrow_mut(), 0, 0))
         },
     )
 }
@@ -199,7 +199,7 @@ impl LayoutModifierNode for SizeNode {
 
         measure_scope.layout(
             measure_result.into(),
-            Box::new(move |scope| scope.place_relative(placeable.borrow_mut(), 0, 0)),
+            move |scope| scope.place_relative(placeable.borrow_mut(), 0, 0),
         )
     }
 }
@@ -241,7 +241,7 @@ fn size_element<T>(
         T: Into<Dp> + Copy + 'static,
 {
     Modifier::ModifierNodeElement {
-        create: (move || {
+        create: modifier_node_element_creator(move || {
             SizeNode {
                 min_width: min_width_raw.into(),
                 max_width: max_width_raw.into(),
@@ -250,21 +250,14 @@ fn size_element<T>(
                 enforce_incoming,
                 ..Default::default()
             }
-                .wrap_with_rc_refcell() as Rc<RefCell<dyn ModifierNode>>
-        })
-            .wrap_with_box(),
-        update: (move |mut size_node: RefMut<dyn ModifierNode>| {
-            if let Some(size_node) = size_node.as_any_mut().downcast_mut::<SizeNode>() {
+        }),
+        update: modifier_node_element_updater(move | size_node: &mut SizeNode| {
                 size_node.min_width = min_width_raw.into();
                 size_node.max_width = max_width_raw.into();
                 size_node.min_height = min_height_raw.into();
                 size_node.max_height = max_height_raw.into();
                 size_node.enforce_incoming = enforce_incoming;
-            } else {
-                panic!("wrong type for SizeNode");
-            }
         })
-            .wrap_with_box(),
     }
 }
 

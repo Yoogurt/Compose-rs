@@ -3,9 +3,8 @@ use std::any::Any;
 use auto_delegate::Delegate;
 use std::rc::Rc;
 use std::cmp::max;
-use std::rc::Weak;
-use std::cell::{Ref, RefCell};
-use std::ops::{Deref, DerefMut, RangeInclusive, RangeToInclusive};
+use std::cell::RefCell;
+use std::ops::{Deref, DerefMut, RangeInclusive};
 use compose_foundation_macro::ModifierElement;
 use crate::foundation::ui::size_mode::SizeMode;
 use crate::foundation::constraint::Constraints;
@@ -24,8 +23,6 @@ use crate::foundation::placement_scope::PlacementScope;
 use crate::foundation::ui::align::{AlignmentHorizontal, AlignmentVertical};
 use crate::foundation::utils::option_extension::OptionalInstanceConverter;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
-use crate::foundation::utils::self_reference::SelfReference;
-use crate::impl_node_kind_any;
 use crate::widgets::cross_axis_alignment::CrossAxisAlignment;
 
 #[derive(Copy, Clone)]
@@ -56,33 +53,22 @@ pub(crate) struct HorizontalAlignModifier {
 }
 
 impl HorizontalAlignModifier {
-    pub fn new(alignment_horizontal: AlignmentHorizontal) -> Rc<RefCell<Self>> {
+    pub fn new(alignment_horizontal: AlignmentHorizontal) -> Self {
         Self {
             alignment_horizontal,
             node_impl: ModifierNodeImpl::default(),
-        }.wrap_with_rc_refcell()
+        }
     }
 }
+impl_node_kind_parent_data!(HorizontalAlignModifier);
 
 impl ParentDataModifierNode for HorizontalAlignModifier {
-    fn modify_parent_data(&mut self, density: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {
+    fn modify_parent_data(&mut self, _: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {
         let mut parent_data = parent_data.cast_or_init(|| {
             RowColumnParentData::default()
         });
         parent_data.cross_axis_alignment = Some(CrossAxisAlignment::HORIZONTAL(self.alignment_horizontal));
         Some(parent_data)
-    }
-}
-
-impl DelegatableNode for HorizontalAlignModifier {
-    fn get_node(&self) -> DelegatableKind {
-        DelegatableKind::This
-    }
-}
-
-impl NodeKindPatch for HorizontalAlignModifier {
-    fn get_node_kind(&self) -> NodeKind {
-        NodeKind::ParentData
     }
 }
 
@@ -93,21 +79,10 @@ pub(crate) struct VerticalAlignModifier {
     #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
 }
-
-impl DelegatableNode for VerticalAlignModifier {
-    fn get_node(&self) -> DelegatableKind {
-        DelegatableKind::This
-    }
-}
-
-impl NodeKindPatch for VerticalAlignModifier {
-    fn get_node_kind(&self) -> NodeKind {
-        NodeKind::ParentData
-    }
-}
+impl_node_kind_parent_data!(VerticalAlignModifier);
 
 impl ParentDataModifierNode for VerticalAlignModifier {
-    fn modify_parent_data(&mut self, density: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {
+    fn modify_parent_data(&mut self, _: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {
         let mut parent_data = parent_data.cast_or_init(|| {
             RowColumnParentData::default()
         });
@@ -117,11 +92,11 @@ impl ParentDataModifierNode for VerticalAlignModifier {
 }
 
 impl VerticalAlignModifier {
-    pub fn new(alignment_vertical: AlignmentVertical) -> Rc<RefCell<Self>> {
+    pub fn new(alignment_vertical: AlignmentVertical) ->Self {
         Self {
             alignment_vertical,
             node_impl: ModifierNodeImpl::default(),
-        }.wrap_with_rc_refcell()
+        }
     }
 }
 
@@ -137,7 +112,7 @@ pub(crate) struct LayoutWeightNode {
 impl_node_kind_parent_data!(LayoutWeightNode);
 
 impl ParentDataModifierNode for LayoutWeightNode {
-    fn modify_parent_data(&mut self, density: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {
+    fn modify_parent_data(&mut self, _: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {
         let mut parent_data = parent_data.cast_or_init(|| {
             RowColumnParentData::default()
         });

@@ -21,12 +21,12 @@ use skia_safe::{AlphaType, ColorSpace, ColorType, ImageInfo, surfaces,
 };
 
 #[Composable]
-fn test_box_composable() {
+fn test_widget() {
     Row(Modifier.width(200.dp()).height(200.dp()).background(Color::BLUE), RowParams {
         ..Default::default()
     }, |row_scope| {
-        BoxLayout(Modifier.width(100.dp()).height(100.dp()).weight(row_scope, 1f32).vertical_align(row_scope, Alignment::CENTER_VERTICALLY).background(Color::YELLOW), |_| {});
-        BoxLayout(Modifier.width(75.dp()).height(75.dp()).background(Color::GREEN), |_| {});
+        BoxLayout(Modifier.height(100.dp()).weight(row_scope, 1f32).vertical_align(row_scope, Alignment::CENTER_VERTICALLY).background(Color::YELLOW), |_| {});
+        BoxLayout(Modifier.weight(row_scope, 1f32).height(75.dp()).background(Color::GREEN), |_| {});
     });
 }
 
@@ -84,7 +84,7 @@ fn run_skia_render_engine(content: fn()) {
 
 fn main() {
     run_skia_render_engine(|| {
-        test_box_composable();
+        test_widget();
     });
 
     Composer::validate_group();

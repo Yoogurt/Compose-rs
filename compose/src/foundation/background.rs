@@ -4,11 +4,10 @@ use compose_foundation_macro::ModifierElement;
 use crate::foundation::canvas::Canvas;
 use crate::foundation::delegatable_node::DelegatableNode;
 use crate::foundation::geometry::Offset;
-use crate::foundation::modifier::{Modifier, ModifierNodeImpl, NodeKind, NodeKindPatch};
+use crate::foundation::modifier::{Modifier, modifier_node_element_creator, modifier_node_element_updater, ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::modifier_node::DrawModifierNode;
 use crate::foundation::ui::draw::{ContentDrawScope, DrawScope};
 use crate::foundation::ui::graphics::color::Color;
-use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
 pub trait BackgroundModifier {
     fn background(self, color: Color) -> Modifier;
@@ -16,15 +15,14 @@ pub trait BackgroundModifier {
 
 fn background_element(color: Color) -> Modifier {
     Modifier::ModifierNodeElement {
-        create: Box::new(move || {
+        create: modifier_node_element_creator(move || {
             BackgroundNode {
                 color,
                 alpha: 1.0,
                 node_impl: ModifierNodeImpl::default(),
-            }.wrap_with_rc_refcell()
+            }
         }),
-        update: Box::new(move |mut element| {
-            let background_element = element.as_modifier_element_mut().as_any_mut().downcast_mut::<BackgroundNode>().unwrap();
+        update: modifier_node_element_updater(move |background_element: &mut BackgroundNode| {
             background_element.color = color;
             background_element.alpha = 1.0;
         }),

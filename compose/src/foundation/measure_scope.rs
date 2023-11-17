@@ -7,24 +7,31 @@ use crate::foundation::utils::box_wrapper::WrapWithBox;
 
 use super::layout_direction::LayoutDirection;
 
-pub(crate) fn empty_place_action() -> Box<dyn FnOnce(&dyn PlacementScope)> {
-    (|_: &dyn PlacementScope| {}).wrap_with_box()
+pub(crate) fn empty_place_action(_: &dyn PlacementScope) {
 }
 
 #[delegate]
 pub trait MeasureScope {
     fn get_density(&self) -> Density;
     fn get_layout_direction(&self) -> LayoutDirection;
-
-    fn layout(
-        &self,
-        size: IntSize,
-        place_action: Box<dyn FnOnce(&dyn PlacementScope)>,
-    ) -> MeasureResult;
 }
 
 #[derive(Debug, Default)]
 pub struct MeasureScopeImpl {
     pub(crate) density: Density,
     pub(crate) layout_direction: LayoutDirection,
+}
+
+pub trait MeasureScopeLayoutAction {
+    fn layout(
+        &self,
+        size: IntSize,
+        place_action: impl FnOnce(&dyn PlacementScope) + 'static,
+    ) -> MeasureResult;
+}
+
+impl<T> MeasureScopeLayoutAction for T where T: ?Sized + MeasureScope {
+    fn layout(&self, size: IntSize, place_action: impl FnOnce(&dyn PlacementScope) + 'static) -> MeasureResult {
+        MeasureResult::new(size, Some(place_action.wrap_with_box()))
+    }
 }

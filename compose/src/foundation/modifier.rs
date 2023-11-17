@@ -13,6 +13,8 @@ use crate::foundation::delegatable_node::{DelegatableKind, DelegatableNode};
 use crate::foundation::node_coordinator::NodeCoordinator;
 use crate::foundation::oop::{AnyConverter, DrawModifierNodeConverter, ParentDataModifierNodeConverter};
 use crate::foundation::oop::LayoutModifierNodeConverter;
+use crate::foundation::utils::box_wrapper::WrapWithBox;
+use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::utils::weak_upgrade::WeakUpdater;
 
 pub const Modifier: Modifier = Modifier::Unit;
@@ -81,7 +83,7 @@ pub trait NodeKindPatch {
     fn get_node_kind(&self) -> NodeKind;
 }
 
-pub trait NodeKindParentData : NodeKindPatch {
+pub trait NodeKindParentData: NodeKindPatch {
     fn get_node_kind(&self) -> NodeKind {
         NodeKind::ParentData
     }
@@ -181,6 +183,24 @@ pub enum Modifier {
         left: Box<Modifier>,
         right: Box<Modifier>,
     },
+}
+
+#[inline]
+pub(crate) fn modifier_node_element_creator<T>(mut creator: impl FnMut() -> T + 'static) -> Box<dyn FnMut() -> Rc<RefCell<dyn ModifierNode>>> where T: Sized + ModifierNode {
+    (move || {
+        creator().wrap_with_rc_refcell() as Rc<RefCell<dyn ModifierNode>>
+    }).wrap_with_box()
+}
+
+#[inline]
+pub(crate) fn modifier_node_element_updater<T>(mut updater: impl FnMut(&mut T) + 'static) -> Box<dyn FnMut(RefMut<dyn ModifierNode>)> where T: Sized + ModifierNode {
+    (move |mut element: RefMut<dyn ModifierNode>| {
+        if let Some(element) = element.as_any_mut().downcast_mut::<T>() {
+            updater(element);
+        } else {
+            panic!("incorrect type for update modifier node element")
+        }
+    }).wrap_with_box()
 }
 
 impl Modifier {

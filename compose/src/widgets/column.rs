@@ -1,29 +1,16 @@
 use crate::widgets::row_column::{row_column_measure_policy, RowColumnWeightScope};
-use crate::widgets::row_column_measurement_helper::RowColumnParentDataTrait;
-use crate::widgets::row_column_measurement_helper::{HorizontalAlignModifier, LayoutOrientation, RowColumnParentData};
-use std::cell::{RefCell, RefMut};
-use std::rc::Rc;
-use crate::foundation::geometry::Dp;
-use crate::foundation::measurable::Measurable;
+use crate::widgets::row_column_measurement_helper::{HorizontalAlignModifier, LayoutOrientation};
 use compose_macro::Composable;
 use crate as compose;
-use crate::foundation::constraint::Constraints;
 use crate::foundation::geometry::Density;
 use crate::foundation::layout_direction::LayoutDirection;
-use crate::foundation::measurable::MultiChildrenMeasurePolicy;
-use crate::foundation::modifier::{Modifier, ModifierNode};
-use crate::foundation::utils::box_wrapper::WrapWithBox;
+use crate::foundation::modifier::{Modifier, modifier_node_element_creator, modifier_node_element_updater};
 use crate::widgets::layout::Layout;
-use crate::foundation::measure_scope::MeasureScope;
-use crate::foundation::placeable::Placeable;
-use crate::foundation::placement_scope::PlacementScope;
 use crate::foundation::ui::align::AlignmentHorizontal;
 use crate::foundation::ui::align::AlignmentStruct;
 use crate::foundation::ui::arrangement::ArrangementVertical;
 use crate::foundation::ui::size_mode::SizeMode;
-use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::widgets::cross_axis_alignment::CrossAxisAlignment;
-use crate::widgets::row_column_measurement_helper::RowColumnMeasureHelper;
 
 impl Modifier {
     pub fn horizontal_align(self, column_scope: &dyn ColumnScope, alignment_horizontal: AlignmentHorizontal) -> Modifier {
@@ -41,14 +28,12 @@ struct ColumnScopeImpl {}
 
 fn horizontal_align_modifier(alignment_horizontal: AlignmentHorizontal) -> Modifier {
     Modifier::ModifierNodeElement {
-        create: (move || {
-            HorizontalAlignModifier::new(alignment_horizontal) as Rc<RefCell<dyn ModifierNode>>
-        }).wrap_with_box(),
-        update: (move |mut modifier_node: RefMut<dyn ModifierNode>| {
-            if let Some(horizontal_align_modifier) = modifier_node.as_any_mut().downcast_mut::<HorizontalAlignModifier>() {
-                horizontal_align_modifier.alignment_horizontal = alignment_horizontal;
-            }
-        }).wrap_with_box(),
+        create: modifier_node_element_creator(move || {
+            HorizontalAlignModifier::new(alignment_horizontal)
+        }),
+        update: modifier_node_element_updater(move |horizontal_align_modifier: &mut HorizontalAlignModifier| {
+            horizontal_align_modifier.alignment_horizontal = alignment_horizontal;
+        })
     }
 }
 

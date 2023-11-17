@@ -23,14 +23,4 @@ impl MeasureScope for MeasureScopeImpl {
     fn get_layout_direction(&self) -> LayoutDirection {
         self.layout_direction
     }
-
-    fn layout(
-        &self,
-        size: IntSize,
-        place_action: Box<dyn FnOnce(&dyn PlacementScope)>
-    ) -> MeasureResult {
-        // let place_scope = PlacementScopeImpl::new(size.width(), size.height(), self);
-        // place_action(&place_scope);
-        MeasureResult::new(size, Some(place_action))
-    }
 }

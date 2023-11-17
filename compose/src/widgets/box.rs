@@ -16,7 +16,8 @@ use crate::foundation::delegatable_node::DelegatableNode;
 use crate::foundation::geometry::Density;
 use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::measurable::MultiChildrenMeasurePolicy;
-use crate::foundation::modifier::{ModifierNode, ModifierNodeImpl, NodeKind, NodeKindPatch};
+use crate::foundation::measure_scope::{empty_place_action, MeasureScopeLayoutAction};
+use crate::foundation::modifier::{modifier_node_element_creator, modifier_node_element_updater, ModifierNode, ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::modifier_node::ParentDataModifierNode;
 use crate::foundation::oop::AnyConverter;
 use crate::foundation::parent_data::ExtractParentData;
@@ -104,28 +105,25 @@ impl NodeKindPatch for BoxChildDataModifierNode {
 }
 
 impl ParentDataModifierNode for BoxChildDataModifierNode {
-    fn modify_parent_data(&mut self, density: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {
+    fn modify_parent_data(&mut self, _: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {
         Some(parent_data.cast_or_init(|| { self.box_child_data_node.clone() }))
     }
 }
 
 fn box_child_data(alignment: Alignment, match_parent_size: bool) -> Modifier {
     Modifier::ModifierNodeElement {
-        create: (move || {
+        create: modifier_node_element_creator(move || {
             let mut box_child_data_node = BoxChildDataModifierNode::default();
 
             box_child_data_node.box_child_data_node.alignment = alignment;
             box_child_data_node.box_child_data_node.match_parent_size = match_parent_size;
 
-            let box_child_data_node = box_child_data_node.wrap_with_rc_refcell();
-            box_child_data_node as Rc<RefCell<dyn ModifierNode>>
-        }).wrap_with_box(),
-        update: (move |mut box_child_data_node: RefMut<dyn ModifierNode>| {
-            if let Some(box_child_data_node) = box_child_data_node.as_any_mut().downcast_mut::<BoxChildDataModifierNode>() {
-                box_child_data_node.box_child_data_node.alignment = alignment;
-                box_child_data_node.box_child_data_node.match_parent_size = match_parent_size;
-            }
-        }).wrap_with_box(),
+            box_child_data_node
+        }),
+        update: modifier_node_element_updater(move |mut box_child_data_node: &mut BoxChildDataModifierNode| {
+            box_child_data_node.box_child_data_node.alignment = alignment;
+            box_child_data_node.box_child_data_node.match_parent_size = match_parent_size;
+        }),
     }
 }
 
@@ -149,12 +147,12 @@ fn remember_box_measure_policy(alignment: Alignment, propagate_min_constraint: b
             Constraints::new(0..=constraints.max_width, 0..=constraints.max_height)
         };
         match children_count {
-            0 => measure_scope.layout((constraints.min_width, constraints.min_height).into(), (|_: &dyn PlacementScope| {}).wrap_with_box()),
+            0 => measure_scope.layout((constraints.min_width, constraints.min_height).into(), empty_place_action),
             1 => {
                 let (measure_result, placeable) = measurables[0].measure(&content_constraints);
                 measure_scope.layout(
                     measure_result,
-                    (move |scope: &dyn PlacementScope| scope.place_relative(placeable.borrow_mut(), 0, 0)).wrap_with_box(),
+                    move |scope: &dyn PlacementScope| scope.place_relative(placeable.borrow_mut(), 0, 0),
                 )
             }
             _ => {

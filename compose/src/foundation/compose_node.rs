@@ -1,4 +1,3 @@
-use std::ops::DerefMut;
 use compose_macro::Composable;
 use crate as compose;
 

@@ -4,7 +4,7 @@ use crate::foundation::constraint::Constraints;
 use crate::foundation::geometry::{Density, Dp};
 use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::measurable::{Measurable, MultiChildrenMeasurePolicy};
-use crate::foundation::measure_scope::MeasureScope;
+use crate::foundation::measure_scope::{MeasureScope, MeasureScopeLayoutAction};
 use crate::foundation::modifier::{Modifier, ModifierNode};
 use crate::foundation::modifier::Modifier::{ModifierElement, ModifierNodeElement};
 use crate::foundation::placeable::Placeable;
@@ -16,7 +16,11 @@ use crate::widgets::row_column_measurement_helper::{LayoutOrientation, LayoutWei
 
 impl Modifier {
     pub fn weight<T>(self, scope: &T, weight: f32) -> Self where T: ?Sized + RowColumnWeightScope {
-        scope.weight(self, weight)
+        scope.weight(self, weight, true)
+    }
+
+    pub fn weight_no_fill<T>(self, scope: &T, weight: f32) -> Self where T: ?Sized + RowColumnWeightScope {
+        scope.weight(self, weight, false)
     }
 }
 
@@ -34,8 +38,8 @@ fn row_column_modifier_element(weight: f32, fill: bool) -> Modifier {
 }
 
 pub trait RowColumnWeightScope {
-    fn weight(&self, modifier: Modifier, weight: f32) -> Modifier {
-        modifier.then(row_column_modifier_element(weight, true))
+    fn weight(&self, modifier: Modifier, weight: f32, fill: bool) -> Modifier {
+        modifier.then(row_column_modifier_element(weight, fill))
     }
 }
 
@@ -83,8 +87,8 @@ pub(crate) fn row_column_measure_policy(
         }
 
         let layout_direction = measure_scope.get_layout_direction();
-        measure_scope.layout((layout_width, layout_height).into(), (move |placement_scope: &dyn PlacementScope| {
+        measure_scope.layout((layout_width, layout_height).into(), move |placement_scope: &dyn PlacementScope| {
             row_column_measurement_helper.place_helper(placement_scope, measure_result, 0, layout_direction, placeables, parent_data)
-        }).wrap_with_box())
+        })
     }).wrap_with_box()
 }
