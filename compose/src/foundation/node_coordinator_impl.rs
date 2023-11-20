@@ -5,7 +5,7 @@ use std::ops::{Deref, DerefMut};
 use std::rc::{Rc, Weak};
 
 use auto_delegate::Delegate;
-use compose_foundation_macro::AnyConverter;
+use compose_foundation_macro::{AnyConverter, Leak};
 
 use crate::foundation::canvas::Canvas;
 use crate::foundation::geometry::{IntOffset, IntSize};
@@ -14,6 +14,7 @@ use crate::foundation::look_ahead_capable_placeable::LookaheadCapablePlaceable;
 use crate::foundation::look_ahead_capable_placeable_impl::LookaheadCapablePlaceableImpl;
 use crate::foundation::measure_result::{MeasureResult, MeasureResultProvider};
 use crate::foundation::measure_scope::MeasureScope;
+use crate::foundation::memory::leak_token::LeakToken;
 use crate::foundation::modifier::{ModifierNode, ModifierNodeExtension, NodeKind};
 use crate::foundation::node::LayoutNodeDrawScope;
 use crate::foundation::node_chain::{NodeChain, TailModifierNode};
@@ -32,6 +33,7 @@ use super::measurable::Measurable;
 use super::node_coordinator::NodeCoordinator;
 use super::placeable::Placeable;
 
+#[Leak]
 #[derive(Debug, Delegate, AnyConverter)]
 pub(crate) struct NodeCoordinatorImpl {
     #[to(Placeable, Measured, MeasureScope, LookaheadCapablePlaceable)]
@@ -214,11 +216,16 @@ impl NodeCoordinatorImpl {
 
             measure_result: None,
             perform_draw_vtable: None,
+            leak_object: Default::default()
         }
     }
 
-    pub fn attach_vtable(&mut self, perform_draw_vtable: Weak<RefCell<dyn PerformDrawTrait>>) {
+    pub fn set_vtable_perform_draw_trait(&mut self, perform_draw_vtable: Weak<RefCell<dyn PerformDrawTrait>>) {
         self.perform_draw_vtable = Some(perform_draw_vtable);
+    }
+
+    pub fn set_vtable_placeable_place_at(&mut self, place_at_vtable: Weak<RefCell<dyn PlaceablePlaceAt>>) {
+        self.look_ahead_capable_placeable_impl.placeable_impl.borrow_mut().set_vtable(place_at_vtable);
     }
 
     pub(crate) fn on_layout_modifier_node_changed(&self) {}

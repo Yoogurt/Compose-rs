@@ -64,8 +64,8 @@ impl Dp {
         Self { value }
     }
 
-    pub fn round_to_px(&self, density: Density) -> f64 {
-        (self.value * density.density).round()
+    pub fn round_to_px(&self, density: Density) -> i32 {
+        (self.value * density.density).round() as i32
     }
 
     pub fn is_infinite(&self) -> bool {

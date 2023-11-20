@@ -237,8 +237,7 @@ impl NodeChain {
                         &self.layout_node.upgrade().unwrap(),
                         &node_rc,
                         &self.get_self().upgrade().unwrap(),
-                    )
-                        .wrap_with_rc_refcell();
+                    );
                     let weak_layout_modifier_node_coordinator = Rc::downgrade(&c);
                     let weak_dyn_node_coordinator: Weak<RefCell<dyn NodeCoordinator>> =
                         weak_layout_modifier_node_coordinator;

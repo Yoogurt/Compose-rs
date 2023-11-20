@@ -11,6 +11,7 @@ use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::measure_scope::{MeasureScope, MeasureScopeLayoutAction};
 use crate::foundation::modifier::{Modifier, modifier_node_element_creator, modifier_node_element_updater, ModifierNode, ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::modifier_node::LayoutModifierNode;
+use crate::impl_node_kind_layout_node;
 
 pub trait SizeModifier {
     fn width(self, width: Dp) -> Modifier;
@@ -90,7 +91,7 @@ struct SizeNode {
     max_height: Dp,
     enforce_incoming: bool,
 
-    #[to(ModifierNode, DelegatableNode)]
+    #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
 }
 
@@ -198,17 +199,11 @@ impl LayoutModifierNode for SizeNode {
         )
     }
 }
-
-impl NodeKindPatch for SizeNode {
-    fn get_node_kind(&self) -> NodeKind {
-        NodeKind::Layout
-    }
-}
+impl_node_kind_layout_node!(SizeNode);
 
 impl PartialEq for SizeNode {
     fn eq(&self, other: &Self) -> bool {
         self.min_width == other.min_width
-            && self.max_width == other.max_width
             && self.min_height == other.min_height
             && self.max_height == other.max_height
             && self.enforce_incoming == other.enforce_incoming

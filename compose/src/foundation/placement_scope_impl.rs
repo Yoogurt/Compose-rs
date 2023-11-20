@@ -24,6 +24,14 @@ impl PlacementScope for PlacementScopeImpl<'_> {
         self.measure_scope.get_layout_direction()
     }
 
+    fn place(&self, mut placeable: RefMut<dyn Placeable>, x: i32, y: i32) {
+        self.place_with_z(placeable, x, y, 0f32)
+    }
+
+    fn place_with_z(&self, mut placeable: RefMut<dyn Placeable>, x: i32, y: i32, z_index: f32) {
+        placeable.place_at((x, y).into(), z_index)
+    }
+
     fn place_relative(&self, placeable: RefMut<dyn Placeable>, x: i32, y: i32) {
         self.place_relative_with_z(placeable, x, y, 0.0)
     }

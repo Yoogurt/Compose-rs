@@ -9,7 +9,7 @@ use crate::foundation::measured::MeasuredImpl;
 use crate::foundation::placeable::Placeable;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 
-#[derive(Debug, Delegate, Default)]
+#[derive(Debug, Delegate)]
 pub(crate) struct PlaceableImpl {
     pub(crate) size: IntSize,
     #[to(Measured)]
@@ -17,12 +17,13 @@ pub(crate) struct PlaceableImpl {
     pub(crate) measured_size: IntSize,
     pub(crate) measurement_constraint: Constraints,
     pub(crate) apparent_to_real_offset: IntOffset,
+    debug_label: &'static str,
 
     place_at_vtable: Option<Weak<RefCell<dyn PlaceablePlaceAt>>>,
 }
 
 impl PlaceableImpl {
-    pub(crate) fn new() -> Self {
+    pub(crate) fn new(debug_label: &'static str) -> Self {
         PlaceableImpl {
             size: IntSize::zero(),
             measured: MeasuredImpl::new(),
@@ -30,6 +31,7 @@ impl PlaceableImpl {
             measurement_constraint: Constraints::unbounded(),
             apparent_to_real_offset: IntOffset::zero(),
 
+            debug_label,
             place_at_vtable: None,
         }
     }

@@ -14,15 +14,6 @@ thread_local! {
 }
 
 impl Composer {
-    pub fn dispatch_layout_to_first_layout_node(constraint: &Constraints) {
-        COMPOSER.with(|local_composer| {
-            local_composer
-                .inner
-                .borrow()
-                .dispatch_layout_to_first_layout_node(constraint);
-        })
-    }
-
     pub(crate) fn attach_root_layout_node(root: Rc<RefCell<LayoutNode>>) -> bool {
         COMPOSER.with(|local_composer| {
             local_composer

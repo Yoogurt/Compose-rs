@@ -12,7 +12,6 @@ use crate::foundation::{
     constraint::Constraints, measurable::Measurable,
     measure_scope::MeasureScope, modifier::Modifier,
 };
-use crate::foundation::delegatable_node::DelegatableNode;
 use crate::foundation::geometry::Density;
 use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::measurable::MultiChildrenMeasurePolicy;
@@ -25,6 +24,7 @@ use crate::foundation::placement_scope::PlacementScope;
 use crate::foundation::ui::align::Alignment;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
 use crate::foundation::utils::option_extension::OptionalInstanceConverter;
+use crate::impl_node_kind_parent_data;
 use crate::widgets::layout::Layout;
 
 trait BoxMeasurableTrait {
@@ -91,15 +91,11 @@ struct BoxChildDataNode {
 struct BoxChildDataModifierNode {
     box_child_data_node: BoxChildDataNode,
 
-    #[to(ModifierNode, DelegatableNode)]
+    #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
 }
 
-impl NodeKindPatch for BoxChildDataModifierNode {
-    fn get_node_kind(&self) -> NodeKind {
-        NodeKind::ParentData
-    }
-}
+impl_node_kind_parent_data!(BoxChildDataModifierNode);
 
 impl ParentDataModifierNode for BoxChildDataModifierNode {
     fn modify_parent_data(&mut self, _: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {

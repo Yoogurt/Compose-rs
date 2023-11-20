@@ -30,7 +30,7 @@ impl MacOSComposeView {
 
         let mut result = MacOSComposeView {
             root: measure_and_layout_delegate.root.clone(),
-            measure_and_layout_delegate: measure_and_layout_delegate,
+            measure_and_layout_delegate,
         };
 
         result

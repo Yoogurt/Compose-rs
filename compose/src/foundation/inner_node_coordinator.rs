@@ -85,13 +85,11 @@ impl InnerNodeCoordinator {
             identify: 0,
         }.wrap_with_rc_refcell();
 
-        let this: Rc<RefCell<dyn PerformDrawTrait>> = result.clone();
-
         {
             let mut result_mut = result.borrow_mut();
-            result_mut.node_coordinator_impl.attach_vtable(Rc::downgrade(&this));
-
             result_mut.weak_this = Rc::downgrade(&result);
+
+            result_mut.node_coordinator_impl.set_vtable_perform_draw_trait(Rc::downgrade(&(result.clone() as Rc<RefCell<dyn PerformDrawTrait>>)));
         }
         result
     }

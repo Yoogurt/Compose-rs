@@ -21,7 +21,7 @@ pub(crate) struct LookaheadPassDelegate {
 impl LookaheadPassDelegate {
     pub(crate) fn new() -> Self {
         LookaheadPassDelegate {
-            placeable_impl: PlaceableImpl::new(),
+            placeable_impl: PlaceableImpl::new("LookaheadPassDelegate"),
         }
     }
 }

@@ -171,6 +171,7 @@ impl ComposerInner {
     }
 
     pub(crate) fn use_node(&mut self) -> Rc<RefCell<LayoutNode>> {
+        self.validate_node_expected();
         todo!()
     }
 

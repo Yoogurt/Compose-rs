@@ -5,7 +5,7 @@ use crate::foundation::constraint::Constraints;
 use crate::foundation::geometry::{Density, Dp};
 use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::measurable::{Measurable, MultiChildrenMeasurePolicy};
-use crate::foundation::measure_scope::{MeasureScope, MeasureScopeLayoutAction};
+use crate::foundation::measure_scope::{empty_place_action, MeasureScope, MeasureScopeLayoutAction};
 use crate::foundation::modifier::{Modifier, ModifierNode};
 use crate::foundation::modifier::Modifier::ModifierNodeElement;
 use crate::foundation::placeable::Placeable;
@@ -52,6 +52,10 @@ pub(crate) fn row_column_measure_policy(
     cross_axis_alignment: CrossAxisAlignment,
 ) -> MultiChildrenMeasurePolicy {
     (move |measure_scope: &dyn MeasureScope, measurables: &mut [&mut dyn Measurable], constraints: &Constraints| {
+        if measurables.is_empty() {
+            return measure_scope.layout(constraints.min_dimension().into(), empty_place_action);
+        }
+
         let mut placeables: Vec<Option<Rc<RefCell<dyn Placeable>>>> = vec![None; measurables.len()];
 
         let row_column_measurement_helper = RowColumnMeasureHelper {

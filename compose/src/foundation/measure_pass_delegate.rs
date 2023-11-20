@@ -105,7 +105,7 @@ impl PlaceablePlaceAt for MeasurePassDelegate {
 impl MeasurePassDelegate {
     pub(crate) fn new() -> Rc<RefCell<Self>> {
         let mut result = MeasurePassDelegate {
-            placeable_impl: PlaceableImpl::new().wrap_with_rc_refcell(),
+            placeable_impl: PlaceableImpl::new("MeasurePassDelegate").wrap_with_rc_refcell(),
             nodes: None,
             remeasure_pending: false,
             measure_pending: false,

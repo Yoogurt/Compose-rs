@@ -22,7 +22,7 @@ use skia_safe::{AlphaType, ColorSpace, ColorType, ImageInfo, surfaces,
 
 #[Composable]
 fn test_widget() {
-    Row(Modifier.width(200.dp()).height(200.dp()).background(Color::BLUE), RowParams {
+    Row(Modifier.padding_top(100.dp()).padding_start(50.dp()).width(200.dp()).height(200.dp()).background(Color::BLUE), RowParams {
         ..Default::default()
     }, |row_scope| {
         BoxLayout(Modifier.height(100.dp()).weight(row_scope, 1f32).vertical_align(row_scope, Alignment::CENTER_VERTICALLY).background(Color::YELLOW), |_| {});

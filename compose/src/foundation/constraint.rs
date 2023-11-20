@@ -1,6 +1,6 @@
 use std::ops::RangeInclusive;
 
-use crate::foundation::geometry::{CoerceIn, IntSize};
+use crate::foundation::geometry::{CoerceIn, IntOffset, IntSize};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Constraints {
@@ -113,6 +113,25 @@ impl Constraints {
 
     pub fn max_dimension(&self) -> (usize, usize) {
         (self.max_width, self.max_height)
+    }
+
+    pub fn offset(&self, offset: IntOffset) -> Constraints {
+        let min_width = Self::check_add_signed(self.min_width, offset.x);
+        let max_width = Self::check_add_signed(self.max_width, offset.x);
+
+        let min_height = Self::check_add_signed(self.min_height, offset.y);
+        let max_height = Self::check_add_signed(self.max_height, offset.y);
+        Constraints::new(min_width..=max_width, min_height..=max_height)
+    }
+
+    fn check_add_signed(origin: usize, offset: i32) -> usize {
+        origin.checked_add_signed(offset as isize).unwrap_or(
+            if offset > 0 {
+                Constraints::INFINITE
+            } else {
+                0
+            }
+        )
     }
 }
 

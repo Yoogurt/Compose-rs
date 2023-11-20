@@ -11,13 +11,24 @@ use crate::foundation::measured::Measured;
 use crate::foundation::placeable::Placeable;
 use crate::foundation::placeable_impl::PlaceableImpl;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
+use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
-#[derive(Default, Debug, Delegate)]
+#[derive(Debug, Delegate)]
 pub(crate) struct LookaheadCapablePlaceableImpl {
-    placeable_impl: Rc<RefCell<PlaceableImpl>>,
+    pub(crate) placeable_impl: Rc<RefCell<PlaceableImpl>>,
     #[to(MeasureScope)]
     measure_scope_impl: MeasureScopeImpl,
     position: IntOffset,
+}
+
+impl Default for LookaheadCapablePlaceableImpl {
+    fn default() -> Self {
+        Self {
+            placeable_impl: PlaceableImpl::new("LookaheadCapablePlaceableImpl").wrap_with_rc_refcell(),
+            measure_scope_impl: MeasureScopeImpl::default(),
+            position: Default::default()
+        }
+    }
 }
 
 impl Measured for LookaheadCapablePlaceableImpl {

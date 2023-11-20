@@ -65,15 +65,32 @@ macro_rules! impl_node_kind_any {
 #[macro_export]
 macro_rules! impl_node_kind_parent_data {
     ($tt:tt) => {
-        impl NodeKindPatch for $tt {
-            fn get_node_kind(&self) -> NodeKind {
-                NodeKind::ParentData
+        impl crate::foundation::modifier::NodeKindPatch for $tt {
+            fn get_node_kind(&self) -> crate::foundation::modifier::NodeKind {
+                crate::foundation::modifier::NodeKind::ParentData
             }
         }
 
-        impl DelegatableNode for $tt {
-            fn get_node(&self) -> DelegatableKind {
-                DelegatableKind::This
+        impl crate::foundation::delegatable_node::DelegatableNode for $tt {
+            fn get_node(&self) -> crate::foundation::delegatable_node::DelegatableKind {
+                crate::foundation::delegatable_node::DelegatableKind::This
+            }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! impl_node_kind_layout_node {
+    ($tt:tt) => {
+        impl crate::foundation::modifier::NodeKindPatch for $tt {
+            fn get_node_kind(&self) -> crate::foundation::modifier::NodeKind {
+                crate::foundation::modifier::NodeKind::Layout
+            }
+        }
+
+        impl crate::foundation::delegatable_node::DelegatableNode for $tt {
+            fn get_node(&self) -> crate::foundation::delegatable_node::DelegatableKind {
+                crate::foundation::delegatable_node::DelegatableKind::This
             }
         }
     };
