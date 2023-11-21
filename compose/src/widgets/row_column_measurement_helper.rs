@@ -126,12 +126,12 @@ impl ParentDataModifierNode for LayoutWeightNode {
 }
 
 impl LayoutWeightNode {
-    pub fn new() -> Rc<RefCell<Self>> {
+    pub fn new() -> Self {
         Self {
             weight: 0f32,
             fill: true,
             node_impl: ModifierNodeImpl::default(),
-        }.wrap_with_rc_refcell()
+        }
     }
 }
 

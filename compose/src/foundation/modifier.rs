@@ -185,13 +185,13 @@ impl ModifierNode for ModifierNodeImpl {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub enum Modifier {
     #[default]
     Unit,
     ModifierNodeElement {
-        create: Box<dyn FnMut() -> Rc<RefCell<dyn ModifierNode>>>,
-        update: Box<dyn FnMut(RefMut<dyn ModifierNode>)>,
+        create: Rc<dyn Fn() -> Rc<RefCell<dyn ModifierNode>>>,
+        update: Rc<dyn Fn(RefMut<dyn ModifierNode>)>,
     },
     ModifierElement(
         Rc<RefCell<dyn ModifierElement>>
@@ -203,21 +203,21 @@ pub enum Modifier {
 }
 
 #[inline]
-pub(crate) fn modifier_node_element_creator<T>(mut creator: impl FnMut() -> T + 'static) -> Box<dyn FnMut() -> Rc<RefCell<dyn ModifierNode>>> where T: Sized + ModifierNode {
-    (move || {
+pub(crate) fn modifier_node_element_creator<T>(creator: impl Fn() -> T + 'static) -> Rc<dyn Fn() -> Rc<RefCell<dyn ModifierNode>>> where T: Sized + ModifierNode {
+    Rc::new(move || {
         creator().wrap_with_rc_refcell() as Rc<RefCell<dyn ModifierNode>>
-    }).wrap_with_box()
+    })
 }
 
 #[inline]
-pub(crate) fn modifier_node_element_updater<T>(mut updater: impl FnMut(&mut T) + 'static) -> Box<dyn FnMut(RefMut<dyn ModifierNode>)> where T: Sized + ModifierNode {
-    (move |mut element: RefMut<dyn ModifierNode>| {
+pub(crate) fn modifier_node_element_updater<T>(updater: impl Fn(&mut T) + 'static) -> Rc<dyn Fn(RefMut<dyn ModifierNode>)> where T: Sized + ModifierNode {
+    Rc::new(move |mut element: RefMut<dyn ModifierNode>| {
         if let Some(element) = element.as_any_mut().downcast_mut::<T>() {
             updater(element);
         } else {
             panic!("incorrect type for update modifier node element")
         }
-    }).wrap_with_box()
+    })
 }
 
 impl Modifier {

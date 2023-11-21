@@ -12,7 +12,7 @@ use crate::foundation::constraint::Constraints;
 use crate::foundation::geometry::{IntOffset, IntSize};
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::layout_node_layout_delegate::LayoutNodeLayoutDelegate;
-use crate::foundation::measurable::Measurable;
+use crate::foundation::measurable::{Measurable, MultiChildrenMeasurePolicyDelegate};
 use crate::foundation::measurable::MultiChildrenMeasurePolicy;
 use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
 use crate::foundation::measure_result::{MeasureResult, MeasureResultProvider};
@@ -66,18 +66,16 @@ impl Deref for InnerNodeCoordinator {
     }
 }
 
-fn error_measure_policy(
-    _measure_scope: &dyn MeasureScope,
-    _children: &mut [&mut dyn Measurable],
-    _constraint: &Constraints,
-) -> MeasureResult {
-    panic!("no measure policy provided")
+fn error_measure_policy() -> MultiChildrenMeasurePolicy {
+    MultiChildrenMeasurePolicyDelegate(|_, _, _| {
+        panic!("no measure policy provided")
+    })
 }
 
 impl InnerNodeCoordinator {
     pub(crate) fn new() -> Rc<RefCell<InnerNodeCoordinator>> {
         let mut result = InnerNodeCoordinator {
-            measure_policy: Box::new(error_measure_policy),
+            measure_policy: error_measure_policy(),
             layout_node: Weak::new(),
             node_coordinator_impl: NodeCoordinatorImpl::new(),
             measure_pass_delegate: Weak::new(),
@@ -124,8 +122,9 @@ impl Measurable for InnerNodeCoordinator {
                     .set_measured_by_parent(UsageByParent::NotUsed)
             });
 
-            let measure_policy = &mut this.measure_policy;
             let measure_result = {
+                let mut measure_policy = this.measure_policy.borrow_mut();
+
                 let children_rc = this.layout_node.upgrade().unwrap().borrow().get_children();
                 let children = children_rc.borrow_mut();
 

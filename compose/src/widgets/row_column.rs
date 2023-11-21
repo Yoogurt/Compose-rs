@@ -7,7 +7,7 @@ use crate::foundation::geometry::{Density, Dp};
 use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::measurable::{Measurable, MultiChildrenMeasurePolicy};
 use crate::foundation::measure_scope::{empty_place_action, MeasureScope, MeasureScopeLayoutAction};
-use crate::foundation::modifier::{Modifier, ModifierNode};
+use crate::foundation::modifier::{Modifier, modifier_node_element_creator, modifier_node_element_updater, ModifierNode};
 use crate::foundation::modifier::Modifier::ModifierNodeElement;
 use crate::foundation::placeable::Placeable;
 use crate::foundation::placement_scope::PlacementScope;
@@ -28,14 +28,14 @@ impl Modifier {
 
 fn row_column_modifier_element(weight: f32, fill: bool) -> Modifier {
     ModifierNodeElement {
-        create: (move || {
-            let result = LayoutWeightNode::new();
-            result.borrow_mut().weight = weight;
-            result.borrow_mut().fill = fill;
+        create: modifier_node_element_creator(move || {
+            let mut result = LayoutWeightNode::new();
+            result.weight = weight;
+            result.fill = fill;
 
-            result as Rc<RefCell<dyn ModifierNode>>
-        }).wrap_with_box(),
-        update: (move |_: RefMut<dyn ModifierNode>| {}).wrap_with_box(),
+            result
+        }),
+        update: modifier_node_element_updater(move |_: &mut LayoutWeightNode| {}),
     }
 }
 

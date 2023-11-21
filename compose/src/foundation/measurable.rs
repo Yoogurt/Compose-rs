@@ -3,6 +3,7 @@ use std::rc::Rc;
 
 use crate::foundation::geometry::IntSize;
 use crate::foundation::intrinsic_measurable::IntrinsicMeasurable;
+use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
 use super::{
     constraint::Constraints, measure_result::MeasureResult, measure_scope::MeasureScope,
@@ -17,22 +18,22 @@ pub trait Measurable: IntrinsicMeasurable {
 }
 
 pub type SingleChildMeasurePolicy =
-Box<dyn FnMut(&mut dyn MeasureScope, &mut dyn Measurable, &Constraints) -> MeasureResult>;
+Rc<RefCell<dyn FnMut(&mut dyn MeasureScope, &mut dyn Measurable, &Constraints) -> MeasureResult>>;
 
 #[inline]
 pub fn SingleChildMeasurePolicyDelegate(
     delegate: impl FnMut(&mut dyn MeasureScope, &mut dyn Measurable, &Constraints) -> MeasureResult + 'static,
 ) -> SingleChildMeasurePolicy {
-    Box::new(delegate)
+    delegate.wrap_with_rc_refcell()
 }
 
-pub type MultiChildrenMeasurePolicy = Box<
+pub type MultiChildrenMeasurePolicy = Rc<RefCell<
     dyn FnMut(&dyn MeasureScope, &mut [&mut dyn Measurable], &Constraints) -> MeasureResult,
->;
+>>;
 
 #[inline]
 pub fn MultiChildrenMeasurePolicyDelegate(
     delegate: impl FnMut(&dyn MeasureScope, &mut [&mut dyn Measurable], &Constraints) -> MeasureResult + 'static,
 ) -> MultiChildrenMeasurePolicy {
-    Box::new(delegate)
+    delegate.wrap_with_rc_refcell()
 }

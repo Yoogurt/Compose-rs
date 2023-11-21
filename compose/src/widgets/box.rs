@@ -14,7 +14,7 @@ use crate::foundation::{
 };
 use crate::foundation::geometry::Density;
 use crate::foundation::layout_direction::LayoutDirection;
-use crate::foundation::measurable::MultiChildrenMeasurePolicy;
+use crate::foundation::measurable::{MultiChildrenMeasurePolicy, MultiChildrenMeasurePolicyDelegate};
 use crate::foundation::measure_scope::{empty_place_action, MeasureScopeLayoutAction};
 use crate::foundation::modifier::{modifier_node_element_creator, modifier_node_element_updater, ModifierNode, ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::modifier_node::ParentDataModifierNode;
@@ -129,7 +129,7 @@ fn place_in_box(placeable: &mut dyn Placeable,
 }
 
 fn remember_box_measure_policy(alignment: Alignment, propagate_min_constraint: bool) -> MultiChildrenMeasurePolicy {
-    (move |measure_scope: &dyn MeasureScope,
+    MultiChildrenMeasurePolicyDelegate(move |measure_scope: &dyn MeasureScope,
            measurables: &mut [&mut dyn Measurable],
            constraints: &Constraints| {
         let children_count = measurables.len();
@@ -221,7 +221,7 @@ fn remember_box_measure_policy(alignment: Alignment, propagate_min_constraint: b
                 }).wrap_with_box())
             }
         }
-    }).wrap_with_box()
+    })
 }
 
 #[Composable]

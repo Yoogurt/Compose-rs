@@ -24,6 +24,7 @@ pub fn Composable(attribute: TokenStream, function: TokenStream) -> TokenStream 
     let function = parse_macro_input!(function as ItemFn);
     let attribute = parse_attribute(attribute);
 
+    quote::format_ident!()
     let mutable_composer_export = attribute.compose_mutable_descriptor();
 
     let signature = &function.sig;

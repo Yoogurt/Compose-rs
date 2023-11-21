@@ -1,13 +1,13 @@
 use crate::foundation::constraint::Constraints;
 use crate::foundation::geometry::IntSize;
-use crate::foundation::measurable::{Measurable, MultiChildrenMeasurePolicy};
+use crate::foundation::measurable::{Measurable, MultiChildrenMeasurePolicy, MultiChildrenMeasurePolicyDelegate};
 use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::measure_scope::{empty_place_action, MeasureScope, MeasureScopeLayoutAction};
 use crate::foundation::placement_scope::PlacementScope;
 
 #[inline]
 pub(crate) fn root_measure_policy() -> MultiChildrenMeasurePolicy {
-    Box::new(
+    MultiChildrenMeasurePolicyDelegate(
         |measure_scope,
          measurables,
          constraint|
