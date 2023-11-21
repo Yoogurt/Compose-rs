@@ -3,6 +3,7 @@ use std::{cell::RefCell, rc::Rc};
 use crate::foundation::composer_inner::ComposerInner;
 use crate::foundation::constraint::Constraints;
 use crate::foundation::layout_node::LayoutNode;
+use crate::foundation::recompose_scope_impl::RecomposeScope;
 use crate::foundation::snapshot_value::SnapShotValue;
 
 pub struct Composer {
@@ -117,6 +118,10 @@ impl Composer {
 
     pub fn debug_print() {
         COMPOSER.with(|local_composer| local_composer.inner.borrow().debug_print())
+    }
+
+    pub fn recompose_scope() -> Option<Rc<dyn RecomposeScope>> {
+        COMPOSER.with(|local_composer| local_composer.inner.borrow().recompose_scope())
     }
 
     pub fn skip_compose() {}

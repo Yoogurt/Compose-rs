@@ -1,6 +1,9 @@
+use crate::foundation::recompose_scope_impl::RecomposeScopeImpl;
 use std::{cell::RefCell, rc::Rc};
 use std::any::Any;
 use std::fmt::{Debug, Formatter};
+use crate::foundation::derived_state::DerivedStateObserver;
+use crate::foundation::recompose_scope_impl::RecomposeScope;
 
 use crate::foundation::slot_table::{SlotReader, SlotTable, SlotWriter};
 use crate::foundation::slot_table_type::GroupKindIndex;
@@ -51,6 +54,8 @@ pub(crate) struct ComposerInner {
     insert_up_fix_up: Vec<Change>,
     deferred_changes: Vec<Change>,
     changes: Vec<Change>,
+
+    invalidate_stack: Vec<Rc<RecomposeScopeImpl>>,
 }
 
 impl Debug for ComposerInner {
@@ -280,6 +285,10 @@ impl ComposerInner {
         dbg!(self);
     }
 
+    pub(crate) fn recompose_scope(&self) -> Option<Rc<dyn RecomposeScope>> {
+        self.invalidate_stack.last().map(|scope| scope.clone() as Rc<dyn RecomposeScope>)
+    }
+
     fn update_compound_hash_enter(&mut self, hash: i64) {
         self.hash = self.hash.rotate_left(3);
         self.hash ^= hash;
@@ -377,6 +386,17 @@ impl Default for ComposerInner {
             changes: vec![],
             reader,
             writer,
+            invalidate_stack: vec![],
         }
+    }
+}
+
+impl DerivedStateObserver for ComposerInner {
+    fn start(&mut self) {
+        todo!()
+    }
+
+    fn done(&mut self) {
+        todo!()
     }
 }
