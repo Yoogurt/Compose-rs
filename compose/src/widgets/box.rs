@@ -140,7 +140,7 @@ fn remember_box_measure_policy(alignment: Alignment, propagate_min_constraint: b
             Constraints::new(0..=constraints.max_width, 0..=constraints.max_height)
         };
         match children_count {
-            0 => measure_scope.layout((constraints.min_width, constraints.min_height).into(), empty_place_action),
+            0 => measure_scope.layout((constraints.min_width, constraints.min_height), empty_place_action),
             1 => {
                 let (measure_result, placeable) = measurables[0].measure(&content_constraints);
                 measure_scope.layout(
@@ -209,7 +209,7 @@ fn remember_box_measure_policy(alignment: Alignment, propagate_min_constraint: b
                     child.alignment().unwrap_or(alignment)
                 }).collect::<Vec<Alignment>>();
 
-                measure_scope.layout((box_width, box_height).into(), (move |scope: &dyn PlacementScope| {
+                measure_scope.layout((box_width, box_height), (move |scope: &dyn PlacementScope| {
                     placeables.iter_mut().enumerate().for_each(|(index, placeable)| {
                         place_in_box(placeable.as_mut().unwrap().borrow_mut().deref_mut(),
                                      layout_direction,

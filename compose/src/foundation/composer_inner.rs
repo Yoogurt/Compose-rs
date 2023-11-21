@@ -55,7 +55,7 @@ pub(crate) struct ComposerInner {
     deferred_changes: Vec<Change>,
     changes: Vec<Change>,
 
-    invalidate_stack: Vec<Rc<RecomposeScopeImpl>>,
+    invalidate_stack: Vec<Rc<RefCell<RecomposeScopeImpl>>>,
 }
 
 impl Debug for ComposerInner {
@@ -82,6 +82,7 @@ impl ComposerInner {
         self.fix_up.clear();
         self.insert_up_fix_up.clear();
         self.deferred_changes.clear();
+        self.invalidate_stack.clear();
     }
 
     pub(crate) fn dispatch_layout_to_first_layout_node(&self, _constraint: &Constraints) {}
@@ -285,8 +286,25 @@ impl ComposerInner {
         dbg!(self);
     }
 
-    pub(crate) fn recompose_scope(&self) -> Option<Rc<dyn RecomposeScope>> {
-        self.invalidate_stack.last().map(|scope| scope.clone() as Rc<dyn RecomposeScope>)
+    fn add_recompose_scope(&mut self) {
+        if self.inserting {
+            let recompose_scope_impl = RecomposeScopeImpl::new().wrap_with_rc_refcell();
+            self.invalidate_stack.push(recompose_scope_impl.clone());
+            self.update_value(recompose_scope_impl.clone());
+            recompose_scope_impl.borrow_mut().start(0);
+        }
+    }
+
+    pub(crate) fn start_restart_group(&mut self) {
+        self.add_recompose_scope()
+    }
+
+    pub(crate) fn end_restart_group(&mut self) {
+        self.invalidate_stack.pop();
+    }
+
+    pub(crate) fn recompose_scope(&self) -> Option<Rc<RefCell<dyn RecomposeScope>>> {
+        self.invalidate_stack.last().map(|scope| scope.clone() as Rc<RefCell<dyn RecomposeScope>>)
     }
 
     fn update_compound_hash_enter(&mut self, hash: i64) {

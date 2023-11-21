@@ -24,13 +24,25 @@ pub struct MeasureScopeImpl {
 pub trait MeasureScopeLayoutAction {
     fn layout(
         &self,
-        size: IntSize,
+        size: impl Into<IntSize>,
         place_action: impl FnOnce(&dyn PlacementScope) + 'static,
+    ) -> MeasureResult;
+
+    fn layout_without_place(
+        &self,
+        size: impl Into<IntSize>,
     ) -> MeasureResult;
 }
 
 impl<T> MeasureScopeLayoutAction for T where T: ?Sized + MeasureScope {
-    fn layout(&self, size: IntSize, place_action: impl FnOnce(&dyn PlacementScope) + 'static) -> MeasureResult {
-        MeasureResult::new(size, Some(place_action.wrap_with_box()))
+    fn layout(&self, size: impl Into<IntSize>, place_action: impl FnOnce(&dyn PlacementScope) + 'static) -> MeasureResult {
+        MeasureResult::new(size.into(), Some(place_action.wrap_with_box()))
+    }
+
+    fn layout_without_place(
+        &self,
+        size: impl Into<IntSize>,
+    ) -> MeasureResult {
+        MeasureResult::new(size.into(), None)
     }
 }

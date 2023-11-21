@@ -74,7 +74,7 @@ impl LayoutModifierNode for PaddingElement {
         let start = self.start;
         let top = self.top;
         let rtl_aware = self.rtl_aware;
-        measure_scope.layout((width, height).into(), move |placement_scope| {
+        measure_scope.layout((width, height), move |placement_scope| {
             if rtl_aware {
                 placement_scope.place_relative(placeable.borrow_mut(), start.round_to_px(density), top.round_to_px(density))
             } else {

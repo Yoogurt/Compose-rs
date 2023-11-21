@@ -19,12 +19,20 @@ pub trait Measurable: IntrinsicMeasurable {
 pub type SingleChildMeasurePolicy =
 Box<dyn FnMut(&mut dyn MeasureScope, &mut dyn Measurable, &Constraints) -> MeasureResult>;
 
-pub type SingleChildMeasurePolicyUnBox =
-fn(&mut dyn MeasureScope, &mut dyn Measurable, &Constraints) -> MeasureResult;
+#[inline]
+pub fn SingleChildMeasurePolicyDelegate(
+    delegate: impl FnMut(&mut dyn MeasureScope, &mut dyn Measurable, &Constraints) -> MeasureResult + 'static,
+) -> SingleChildMeasurePolicy {
+    Box::new(delegate)
+}
 
 pub type MultiChildrenMeasurePolicy = Box<
     dyn FnMut(&dyn MeasureScope, &mut [&mut dyn Measurable], &Constraints) -> MeasureResult,
 >;
 
-pub type MultiChildrenMeasurePolicyUnBox =
-dyn FnMut(&dyn MeasureScope, &mut [&mut dyn Measurable], &Constraints) -> MeasureResult;
+#[inline]
+pub fn MultiChildrenMeasurePolicyDelegate(
+    delegate: impl FnMut(&dyn MeasureScope, &mut [&mut dyn Measurable], &Constraints) -> MeasureResult + 'static,
+) -> MultiChildrenMeasurePolicy {
+    Box::new(delegate)
+}

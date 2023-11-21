@@ -11,6 +11,7 @@ use compose::foundation::drawing::canvas_impl::new_canvas;
 use compose::foundation::geometry::IntoDp;
 use compose::foundation::layout::size_modifier::SizeModifier;
 use compose::foundation::modifier::Modifier;
+use compose::foundation::spacer::Spacer;
 use compose::foundation::ui::align::Alignment;
 use compose::foundation::ui::graphics::color::Color;
 use compose::widgets::r#box::BoxLayout;
@@ -26,13 +27,14 @@ fn test_widget() {
         ..Default::default()
     }, |row_scope| {
         BoxLayout(Modifier.height(100.dp()).weight(row_scope, 1f32).vertical_align(row_scope, Alignment::CENTER_VERTICALLY).background(Color::YELLOW), |_| {});
+        Spacer(Modifier.width(50.dp()));
         BoxLayout(Modifier.weight(row_scope, 1f32).height(75.dp()).background(Color::GREEN), |_| {});
     });
 }
 
 fn run_skia_render_engine(content: fn()) {
     let mut windows = Window::new(
-        "Compose",
+        "Compose-rs",
         800,
         500,
         WindowOptions {

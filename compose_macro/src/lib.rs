@@ -60,6 +60,7 @@ pub fn Composable(attribute: TokenStream, function: TokenStream) -> TokenStream 
         ReturnType::Default => {
             quote! {
                  compose::foundation::composer::Composer::start_group(#hash);
+                 compose::foundation::composer::Composer::start_restart_group();
             }
         }
         _ => {
@@ -70,7 +71,8 @@ pub fn Composable(attribute: TokenStream, function: TokenStream) -> TokenStream 
     let end_group_stat = match output {
         ReturnType::Default => {
             quote! {
-                 compose::foundation::composer::Composer::end_group(#hash);
+                compose::foundation::composer::Composer::end_restart_group();
+                compose::foundation::composer::Composer::end_group(#hash);
             }
         }
         _ => {

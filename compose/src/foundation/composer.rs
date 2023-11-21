@@ -40,14 +40,6 @@ impl Composer {
         })
     }
 
-    pub(crate) fn start_root() {
-        COMPOSER.with(|local_composer| local_composer.inner.borrow_mut().start_root())
-    }
-
-    pub(crate) fn end_root() {
-        COMPOSER.with(|local_composer| local_composer.inner.borrow_mut().end_root())
-    }
-
     pub(crate) fn start_node() {
         COMPOSER.with(|local_composer| local_composer.inner.borrow_mut().start_node())
     }
@@ -120,8 +112,28 @@ impl Composer {
         COMPOSER.with(|local_composer| local_composer.inner.borrow().debug_print())
     }
 
-    pub fn recompose_scope() -> Option<Rc<dyn RecomposeScope>> {
+    pub fn recompose_scope() -> Option<Rc<RefCell<dyn RecomposeScope>>> {
         COMPOSER.with(|local_composer| local_composer.inner.borrow().recompose_scope())
+    }
+
+    pub fn do_compose(content: impl FnOnce()) {
+        COMPOSER.with(|local_composer| {
+            local_composer.inner.borrow_mut().start_root();
+            content();
+            local_composer.inner.borrow_mut().end_root();
+        });
+    }
+
+    pub fn start_restart_group() {
+        COMPOSER.with(|local_composer| {
+            local_composer.inner.borrow_mut().start_restart_group();
+        });
+    }
+
+    pub fn end_restart_group() {
+        COMPOSER.with(|local_composer| {
+            local_composer.inner.borrow_mut().end_restart_group();
+        });
     }
 
     pub fn skip_compose() {}

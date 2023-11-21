@@ -6,7 +6,7 @@ use compose_foundation_macro::ModifierElement;
 use crate::foundation::constraint::Constraints;
 use crate::foundation::delegatable_node::DelegatableNode;
 use crate::foundation::geometry::{CoerceAtLeast, CoerceAtMost, CoerceIn, Dp, IntSize};
-use crate::foundation::measurable::{Measurable, SingleChildMeasurePolicy};
+use crate::foundation::measurable::{Measurable, SingleChildMeasurePolicy, SingleChildMeasurePolicyDelegate};
 use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::measure_scope::{MeasureScope, MeasureScopeLayoutAction};
 use crate::foundation::modifier::{Modifier, modifier_node_element_creator, modifier_node_element_updater, ModifierNode, ModifierNodeImpl, NodeKind, NodeKindPatch};
@@ -27,11 +27,10 @@ fn size_measure_policy<T>(
     where
         T: Into<Dp> + Copy + 'static,
 {
-    Box::new(
-        move |measure_scope: &mut dyn MeasureScope,
-              measurable: &mut dyn Measurable,
-              _constraint: &Constraints|
-              -> MeasureResult {
+    SingleChildMeasurePolicyDelegate(
+        move |measure_scope,
+              measurable,
+              _constraint| {
             let target_constraints: Constraints = {
                 let max_width = max_width.into();
                 let max_width = if max_width.is_unspecific() {
@@ -194,7 +193,7 @@ impl LayoutModifierNode for SizeNode {
         let (measure_result, placeable) = measurable.measure(&wrapped_constraints);
 
         measure_scope.layout(
-            measure_result.into(),
+            measure_result,
             move |scope| scope.place_relative(placeable.borrow_mut(), 0, 0),
         )
     }

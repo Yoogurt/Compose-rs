@@ -60,3 +60,4 @@ pub mod snapshot_value;
 mod remember_observer;
 pub mod recompose_scope_impl;
 mod derived_state;
+pub mod spacer;

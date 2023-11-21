@@ -1,3 +1,4 @@
+use crate::foundation::measurable::MultiChildrenMeasurePolicyDelegate;
 use std::cell::{RefCell, RefMut};
 use std::rc::Rc;
 
@@ -51,9 +52,9 @@ pub(crate) fn row_column_measure_policy(
     cross_axis_size: SizeMode,
     cross_axis_alignment: CrossAxisAlignment,
 ) -> MultiChildrenMeasurePolicy {
-    (move |measure_scope: &dyn MeasureScope, measurables: &mut [&mut dyn Measurable], constraints: &Constraints| {
+    MultiChildrenMeasurePolicyDelegate(move |measure_scope, measurables, constraints| {
         if measurables.is_empty() {
-            return measure_scope.layout(constraints.min_dimension().into(), empty_place_action);
+            return measure_scope.layout_without_place(constraints.min_dimension());
         }
 
         let mut placeables: Vec<Option<Rc<RefCell<dyn Placeable>>>> = vec![None; measurables.len()];
@@ -92,8 +93,8 @@ pub(crate) fn row_column_measure_policy(
         }
 
         let layout_direction = measure_scope.get_layout_direction();
-        measure_scope.layout((layout_width, layout_height).into(), move |placement_scope: &dyn PlacementScope| {
+        measure_scope.layout((layout_width, layout_height), move |placement_scope| {
             row_column_measurement_helper.place_helper(placement_scope, measure_result, 0, layout_direction, placeables, parent_data)
         })
-    }).wrap_with_box()
+    })
 }

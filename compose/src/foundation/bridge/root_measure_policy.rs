@@ -8,13 +8,13 @@ use crate::foundation::placement_scope::PlacementScope;
 #[inline]
 pub(crate) fn root_measure_policy() -> MultiChildrenMeasurePolicy {
     Box::new(
-        |measure_scope: &dyn MeasureScope,
-         measurables: &mut [&mut dyn Measurable],
-         constraint: &Constraints|
+        |measure_scope,
+         measurables,
+         constraint|
          -> MeasureResult {
             match measurables.len() {
                 0 => measure_scope
-                    .layout((constraint.min_width, constraint.min_height).into(), empty_place_action),
+                    .layout_without_place(constraint.min_dimension()),
                 1 => {
                     let (measure_result, placeable) = measurables[0].measure(constraint);
                     measure_scope.layout(
@@ -40,8 +40,8 @@ pub(crate) fn root_measure_policy() -> MultiChildrenMeasurePolicy {
                         .collect::<Vec<_>>();
 
                     measure_scope.layout(
-                        IntSize::new(constraint.constrain_width(max_width),
-                                     constraint.constrain_height(max_height)),
+                        (constraint.constrain_width(max_width),
+                         constraint.constrain_height(max_height)),
                         move |place_scope: &dyn PlacementScope| {
                             placeables
                                 .iter_mut()

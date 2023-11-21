@@ -10,3 +10,14 @@ impl RecomposeScope for RecomposeScopeImpl {
         todo!()
     }
 }
+
+impl RecomposeScopeImpl {
+    pub(crate) fn new() -> Self {
+        Self {
+        }
+    }
+
+    pub(crate) fn start(&mut self, token: i32) {
+
+    }
+}

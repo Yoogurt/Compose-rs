@@ -59,9 +59,7 @@ impl MacOSComposeView {
     }
 
     pub fn set_content(&self, content: impl FnOnce()) {
-        Composer::start_root();
-        content();
-        Composer::end_root();
+        Composer::do_compose(content);
     }
 
     pub fn dispatch_measure(&mut self, width: usize, height: usize) {
