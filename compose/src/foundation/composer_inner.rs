@@ -40,7 +40,7 @@ impl Debug for Change {
 }
 
 pub(crate) struct ComposerInner {
-    pub(crate) hash: i64,
+    pub(crate) hash: u64,
     pub(crate) depth: usize,
     pub(crate) node_expected: bool,
     pub(crate) sequence: usize,
@@ -75,8 +75,8 @@ impl Debug for ComposerInner {
 }
 
 impl ComposerInner {
-    const ROOT_KEY: i64 = 100;
-    const NODE_KEY: i64 = 125;
+    const ROOT_KEY: u64 = 100;
+    const NODE_KEY: u64 = 125;
 
     pub(crate) fn destroy(&mut self) {
         self.slot_table.slots.borrow_mut().clear();
@@ -147,12 +147,12 @@ impl ComposerInner {
         self.node_expected = true
     }
 
-    pub(crate) fn end_group(&mut self, hash: i64) {
+    pub(crate) fn end_group(&mut self, hash: u64) {
         self.writer.exit_group();
         self.end(hash);
     }
 
-    pub(crate) fn start_group(&mut self, hash: i64) {
+    pub(crate) fn start_group(&mut self, hash: u64) {
         self.start(
             hash,
             None,
@@ -209,7 +209,8 @@ impl ComposerInner {
         self.validate_node_expected();
 
         let node = self.writer.use_layout_node();
-        self.writer.begin_insert_layout_node(node.clone());
+        self.writer.begin_use_layout_node(node.clone());
+        self.writer.skip_slot();
 
         node
     }
@@ -346,13 +347,13 @@ impl ComposerInner {
         self.invalidate_stack.last().map(|scope| scope.clone() as Rc<RefCell<dyn RecomposeScope>>)
     }
 
-    fn update_compound_hash_enter(&mut self, hash: i64) {
+    fn update_compound_hash_enter(&mut self, hash: u64) {
         self.hash = self.hash.rotate_left(3);
         self.hash ^= hash;
         self.depth += 1;
     }
 
-    fn update_compound_hash_exit(&mut self, hash: i64) {
+    fn update_compound_hash_exit(&mut self, hash: u64) {
         self.depth -= 1;
         self.hash ^= hash;
         self.hash = self.hash.rotate_right(3);
@@ -360,7 +361,7 @@ impl ComposerInner {
 
     pub(crate) fn start(
         &mut self,
-        key: i64,
+        key: u64,
         object_key: Option<Box<dyn Any>>,
         group_kind: GroupKind,
         data: Option<Box<dyn Any>>,
@@ -386,7 +387,7 @@ impl ComposerInner {
         self.writer.enter_group();
     }
 
-    pub(crate) fn end(&mut self, key: i64) {
+    pub(crate) fn end(&mut self, key: u64) {
         self.update_compound_hash_exit(key);
         if self.inserting {
             self.writer.end_insert_group(GroupKindIndex::Group);

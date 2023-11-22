@@ -15,7 +15,7 @@ pub(crate) enum GroupKindIndex {
 pub(crate) enum GroupKind {
     Empty,
     Group {
-        hash: i64,
+        hash: u64,
         depth: usize,
         skipping: bool,
         slot_data: Rc<RefCell<Vec<SlotTableType>>>,

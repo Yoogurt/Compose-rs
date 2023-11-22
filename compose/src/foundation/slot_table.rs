@@ -79,10 +79,10 @@ impl SlotWriter {
 
     fn insert_slot_table_type(&mut self, slot_table_type: SlotTableType) {
         self.slot.borrow_mut().insert(self.current_slot_index, slot_table_type);
-        self.current_slot_index += 1;
+        self.skip_slot();
     }
 
-    pub(crate) fn begin_insert_group(&mut self, hash: i64, depth: usize) {
+    pub(crate) fn begin_insert_group(&mut self, hash: u64, depth: usize) {
         let group_kind = GroupKind::Group {
             hash,
             depth,
@@ -119,13 +119,13 @@ impl SlotWriter {
     }
 
     pub(crate) fn begin_insert_layout_node(&mut self, layout_node: Rc<RefCell<LayoutNode>>) {
-        let group_kind = GroupKind::LayoutNodeType(layout_node);
+        let group_kind = GroupKind::LayoutNodeType(layout_node.clone());
 
         self.insert_slot_table_type(SlotTableType {
             data: group_kind,
         });
 
-        self.begin_use_layout_node(layout_node.clone());
+        self.begin_use_layout_node(layout_node);
     }
 
     pub(crate) fn begin_use_layout_node(&mut self, layout_node: Rc<RefCell<LayoutNode>>) {

@@ -49,7 +49,7 @@ impl Composer {
         })
     }
 
-    pub fn start_group(hash: i64) {
+    pub fn start_group(hash: u64) {
         COMPOSER.with(|local_composer| {
             local_composer.inner.borrow_mut().start_group(hash);
         })
@@ -113,7 +113,7 @@ impl Composer {
         COMPOSER.with(|local_composer| local_composer.inner.borrow().inserting())
     }
 
-    pub fn end_group(hash: i64) {
+    pub fn end_group(hash: u64) {
         COMPOSER.with(|local_composer| {
             local_composer.inner.borrow_mut().end_group(hash);
         })
