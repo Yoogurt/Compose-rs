@@ -57,6 +57,8 @@ impl SlotReader {
 
 pub(crate) struct SlotWriter {
     pub(crate) slot: Rc<RefCell<Vec<SlotTableType>>>,
+    pub(crate) current_slot_index: usize,
+    pub(crate) slot_index_stack: Vec<usize>,
     pub(crate) slot_stack: Vec<Rc<RefCell<Vec<SlotTableType>>>>,
 
     pub(crate) current_layout_node: Option<Rc<RefCell<LayoutNode>>>,
@@ -67,20 +69,28 @@ impl SlotWriter {
     pub(crate) fn new(slot: Rc<RefCell<Vec<SlotTableType>>>) -> Self {
         Self {
             slot,
+            current_slot_index: 0,
+            slot_index_stack: vec![],
             slot_stack: vec![],
             current_layout_node: None,
             layout_node_stack: vec![],
         }
     }
 
+    fn insert_slot_table_type(&mut self, slot_table_type: SlotTableType) {
+        self.slot.borrow_mut().insert(self.current_slot_index, slot_table_type);
+        self.current_slot_index += 1;
+    }
+
     pub(crate) fn begin_insert_group(&mut self, hash: i64, depth: usize) {
         let group_kind = GroupKind::Group {
             hash,
             depth,
+            skipping: false,
             slot_data: vec![].wrap_with_rc_refcell(),
         };
 
-        self.slot.borrow_mut().push(SlotTableType {
+        self.insert_slot_table_type(SlotTableType {
             data: group_kind,
         });
     }
@@ -97,26 +107,39 @@ impl SlotWriter {
         };
 
         self.slot = slot;
+        self.slot_index_stack.push(self.current_slot_index);
+        self.current_slot_index = 0;
     }
 
     pub(crate) fn end_insert_group(&mut self, group_kind_index: GroupKindIndex) {}
 
     pub(crate) fn exit_group(&mut self) {
         self.slot = self.slot_stack.pop().unwrap();
+        self.current_slot_index = self.slot_index_stack.pop().unwrap();
     }
 
     pub(crate) fn begin_insert_layout_node(&mut self, layout_node: Rc<RefCell<LayoutNode>>) {
+        let group_kind = GroupKind::LayoutNodeType(layout_node);
+
+        self.insert_slot_table_type(SlotTableType {
+            data: group_kind,
+        });
+
+        self.begin_use_layout_node(layout_node.clone());
+    }
+
+    pub(crate) fn begin_use_layout_node(&mut self, layout_node: Rc<RefCell<LayoutNode>>) {
         if let Some(pre_layout_node) = self.current_layout_node.as_ref() {
             self.layout_node_stack.push(pre_layout_node.clone());
         }
         self.current_layout_node = Some(layout_node.clone());
+    }
 
-        let group_kind = GroupKind::LayoutNodeType(layout_node);
-        let child_index = self.slot.borrow().len();
-
-        self.slot.borrow_mut().push(SlotTableType {
-            data: group_kind,
-        });
+    pub fn use_layout_node(&self) -> Rc<RefCell<LayoutNode>> {
+        match self.slot.borrow()[self.current_slot_index].data {
+            GroupKind::LayoutNodeType(ref layout_node) => layout_node.clone(),
+            _ => panic!("not a layout node"),
+        }
     }
 
     pub(crate) fn parent_layout_node(&self) -> Option<Rc<RefCell<LayoutNode>>> {
@@ -133,8 +156,12 @@ impl SlotWriter {
         }
     }
 
+    pub fn skip_slot(&mut self) {
+        self.current_slot_index += 1;
+    }
+
     pub(crate) fn update(&mut self, value: Rc<RefCell<dyn Any>>) {
-        self.slot.borrow_mut().push(SlotTableType {
+        self.insert_slot_table_type(SlotTableType {
             data: GroupKind::CustomType(value),
         });
     }

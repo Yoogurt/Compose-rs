@@ -1,12 +1,15 @@
+use crate::foundation::composer::ScopeUpdateScope;
 use crate::foundation::recompose_scope_impl::RecomposeScopeImpl;
 use std::{cell::RefCell, rc::Rc};
 use std::any::Any;
+use std::cell::{Ref, RefMut};
 use std::fmt::{Debug, Formatter};
+use std::ops::{Deref, DerefMut};
 use crate::foundation::derived_state::DerivedStateObserver;
 use crate::foundation::recompose_scope_impl::RecomposeScope;
 
 use crate::foundation::slot_table::{SlotReader, SlotTable, SlotWriter};
-use crate::foundation::slot_table_type::GroupKindIndex;
+use crate::foundation::slot_table_type::{GroupKindIndex, SlotTableType};
 use crate::foundation::snapshot_value::SnapShotValue;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
@@ -47,7 +50,6 @@ pub(crate) struct ComposerInner {
     pub(crate) layout_node_stack: Vec<Rc<RefCell<LayoutNode>>>,
 
     pub(crate) slot_table: SlotTable,
-    pub(crate) reader: SlotReader,
     pub(crate) writer: SlotWriter,
 
     fix_up: Vec<Change>,
@@ -104,14 +106,41 @@ impl ComposerInner {
         self.inserting
     }
 
-    pub(crate) fn start_root(&mut self) {
-        self.inserting = true;
+    pub(crate) fn skipping(&self) -> bool {
+        self.writer.slot.borrow().first().map(|group| match group.data {
+            GroupKind::Group { skipping, .. } => {
+                skipping
+            }
+            _ => {
+                panic!()
+            }
+        }).unwrap_or(false)
+    }
+
+    pub(crate) fn skip_to_end(&self) {}
+
+    pub(crate) fn start_root(&mut self, first: bool) {
+        if first {
+            self.inserting = true;
+        }
+        {
+            let writer = &mut self.writer;
+            writer.slot_index_stack.clear();
+            writer.current_slot_index = 0;
+        }
         self.start_group(Self::ROOT_KEY);
     }
 
-    pub(crate) fn end_root(&mut self) {
+    pub(crate) fn end_root(&mut self, first: bool) {
         self.end_group(Self::ROOT_KEY);
-        self.inserting = false;
+        if first {
+            self.inserting = false;
+        }
+        {
+            let writer = &mut self.writer;
+            writer.slot_index_stack.clear();
+            writer.current_slot_index = 0;
+        }
     }
 
     pub(crate) fn start_node(&mut self) {
@@ -130,11 +159,11 @@ impl ComposerInner {
             GroupKind::Group {
                 hash,
                 depth: self.depth,
+                skipping: false,
                 slot_data: vec![].wrap_with_rc_refcell(),
             },
             None,
         );
-        self.writer.enter_group();
     }
 
     pub(crate) fn create_node(&mut self, factory: Box<dyn FnOnce(Rc<RefCell<LayoutNode>>)>) -> Rc<RefCell<LayoutNode>> {
@@ -178,7 +207,11 @@ impl ComposerInner {
 
     pub(crate) fn use_node(&mut self) -> Rc<RefCell<LayoutNode>> {
         self.validate_node_expected();
-        todo!()
+
+        let node = self.writer.use_layout_node();
+        self.writer.begin_insert_layout_node(node.clone());
+
+        node
     }
 
     pub(crate) fn record_fix_up(&mut self, fix_up: Box<dyn FnOnce()>) {
@@ -255,10 +288,13 @@ impl ComposerInner {
     }
 
     pub(crate) fn end_node(&mut self) {
-        self.writer.end_insert_layout_node();
-        self.register_insert_up_fix_up();
-
-        self.record_insert();
+        if self.inserting {
+            self.writer.end_insert_layout_node();
+            self.register_insert_up_fix_up();
+            self.record_insert();
+        } else {
+            self.writer.end_insert_layout_node();
+        }
     }
 
     pub(crate) fn validate_node_expected(&mut self) {
@@ -292,6 +328,9 @@ impl ComposerInner {
             self.invalidate_stack.push(recompose_scope_impl.clone());
             self.update_value(recompose_scope_impl.clone());
             recompose_scope_impl.borrow_mut().start(0);
+        } else {
+            self.writer.skip_slot();
+            // perform recompose scope update
         }
     }
 
@@ -299,8 +338,8 @@ impl ComposerInner {
         self.add_recompose_scope()
     }
 
-    pub(crate) fn end_restart_group(&mut self) {
-        self.invalidate_stack.pop();
+    pub(crate) fn end_restart_group(&mut self) -> Rc<RefCell<dyn ScopeUpdateScope>> {
+        self.invalidate_stack.pop().unwrap()
     }
 
     pub(crate) fn recompose_scope(&self) -> Option<Rc<RefCell<dyn RecomposeScope>>> {
@@ -332,8 +371,19 @@ impl ComposerInner {
         if self.inserting {
             self.writer.begin_insert_group(self.hash, self.depth);
         } else {
-            todo!()
+            match &self.writer.slot.borrow().get(self.writer.current_slot_index).unwrap().data {
+                GroupKind::Group { hash, .. } => {
+                    if self.hash != *hash {
+                        panic!()
+                    }
+                }
+                group_kind => {
+                    panic!("unexpect group kind found {:?}", group_kind)
+                }
+            }
         }
+
+        self.writer.enter_group();
     }
 
     pub(crate) fn end(&mut self, key: i64) {
@@ -402,7 +452,6 @@ impl Default for ComposerInner {
             insert_up_fix_up: vec![],
             deferred_changes: vec![],
             changes: vec![],
-            reader,
             writer,
             invalidate_stack: vec![],
         }

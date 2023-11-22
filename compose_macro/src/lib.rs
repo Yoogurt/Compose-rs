@@ -24,7 +24,6 @@ pub fn Composable(attribute: TokenStream, function: TokenStream) -> TokenStream 
     let function = parse_macro_input!(function as ItemFn);
     let attribute = parse_attribute(attribute);
 
-    quote::format_ident!()
     let mutable_composer_export = attribute.compose_mutable_descriptor();
 
     let signature = &function.sig;
@@ -47,58 +46,65 @@ pub fn Composable(attribute: TokenStream, function: TokenStream) -> TokenStream 
     let origin_function_name = &signature.ident;
     let function_name = Ident::new(
         &format!("__{}__compose_synthesis__", origin_function_name),
-        Span::mixed_site().into(),
+        Span::call_site().into(),
     );
     let function_body = function.block.as_ref();
 
     let hash = generate_hash_code();
 
+    let function_sig = &function.sig;
     let function_generics = &function.sig.generics;
-    let where_calcause = function_generics.where_clause.as_ref();
-    let output = &function.sig.output;
+    let where_calause = function_generics.where_clause.as_ref();
+    let return_type = &function.sig.output;
 
-    let start_group_stat = match output {
+    let start_group_stat = match return_type {
         ReturnType::Default => {
             quote! {
                  compose::foundation::composer::Composer::start_group(#hash);
-                 compose::foundation::composer::Composer::start_restart_group();
             }
         }
         _ => {
-            TokenStream::default().into()
+            quote! {
+                compile_error!("Composable should not return value")
+            }
         }
     };
 
-    let end_group_stat = match output {
+    let end_group_stat = match return_type {
         ReturnType::Default => {
             quote! {
-                compose::foundation::composer::Composer::end_restart_group();
+                // compose::foundation::composer::Composer::end_restart_group();
                 compose::foundation::composer::Composer::end_group(#hash);
             }
         }
         _ => {
-            TokenStream::default().into()
+            quote! {
+                compile_error!("Composable should not return value")
+            }
         }
     };
 
     let wrapped_function = if !function_inputs.is_empty() {
         (quote! {
-             #[inline]
-                #function_visibility fn #function_name #function_generics(#function_inputs_with_type) #output #where_calcause {
+                #[inline]
+                #function_visibility fn #function_name #function_generics(#function_inputs_with_type) #where_calause {
                     #start_group_stat
-                    let __result__ = { #function_body };
+                    #function_body
                     #end_group_stat
-                    __result__
                 }
         })
     } else {
         (quote! {
-             #[inline]
-                #function_visibility fn #function_name #function_generics() #output #where_calcause {
+                #[inline]
+                #function_visibility fn #function_name #function_generics() #where_calause {
+                    if compose::foundation::composer::Composer::skipping() {
+                        compose::foundation::composer::Composer::skip_to_end();
+                        return;
+                    }
+
                     #start_group_stat
-                    let __result__ = { #function_body };
+                    #function_body
                     #end_group_stat
-                    __result__
                 }
         })
     };
@@ -106,7 +112,7 @@ pub fn Composable(attribute: TokenStream, function: TokenStream) -> TokenStream 
     let result = if !function_inputs.is_empty() {
         (quote! {
             #[inline]
-            #function_visibility fn #origin_function_name #function_generics(#function_inputs_with_type) #output #where_calcause {
+            #function_visibility #function_sig {
                 #wrapped_function
 
                 #function_name(#(#function_inputs),*)
@@ -115,7 +121,7 @@ pub fn Composable(attribute: TokenStream, function: TokenStream) -> TokenStream 
     } else {
         (quote! {
             #[inline]
-            #function_visibility fn #origin_function_name #function_generics() #output #where_calcause {
+            #function_visibility #function_sig {
                 #wrapped_function
 
                 #function_name()

@@ -1,10 +1,25 @@
 use std::{cell::RefCell, rc::Rc};
+use std::ops::DerefMut;
 
-use crate::foundation::composer_inner::ComposerInner;
+use crate::foundation::composer_inner::{ComposerInner};
 use crate::foundation::constraint::Constraints;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::recompose_scope_impl::RecomposeScope;
 use crate::foundation::snapshot_value::SnapShotValue;
+
+pub trait ScopeUpdateScope {
+    fn update_scope(&mut self, block: Box<dyn FnMut()>);
+}
+
+pub trait ScopeUpdateScopeHelper {
+    fn update_scope(&mut self, block: impl FnMut() + 'static);
+}
+
+impl<T> ScopeUpdateScopeHelper for T where T: DerefMut<Target=dyn ScopeUpdateScope> {
+    fn update_scope(&mut self, block: impl FnMut() + 'static) {
+        self.deref_mut().update_scope(Box::new(block))
+    }
+}
 
 pub struct Composer {
     pub(crate) inner: RefCell<ComposerInner>,
@@ -116,11 +131,19 @@ impl Composer {
         COMPOSER.with(|local_composer| local_composer.inner.borrow().recompose_scope())
     }
 
-    pub fn do_compose(content: impl FnOnce()) {
+    pub fn do_compose(content: impl Fn()) {
         COMPOSER.with(|local_composer| {
-            local_composer.inner.borrow_mut().start_root();
+            local_composer.inner.borrow_mut().start_root(true);
             content();
-            local_composer.inner.borrow_mut().end_root();
+            local_composer.inner.borrow_mut().end_root(true);
+        });
+    }
+
+    pub fn do_compose_validate_structure(content: impl Fn()) {
+        COMPOSER.with(|local_composer| {
+            local_composer.inner.borrow_mut().start_root(false);
+            content();
+            local_composer.inner.borrow_mut().end_root(false);
         });
     }
 
@@ -130,15 +153,23 @@ impl Composer {
         });
     }
 
-    pub fn end_restart_group() {
+    pub fn end_restart_group() -> Rc<RefCell<dyn ScopeUpdateScope>> {
         COMPOSER.with(|local_composer| {
-            local_composer.inner.borrow_mut().end_restart_group();
-        });
+            local_composer.inner.borrow_mut().end_restart_group()
+        })
     }
 
-    pub fn skip_compose() {}
+    pub fn skipping() -> bool {
+        COMPOSER.with(|local_composer| {
+            local_composer.inner.borrow().skipping()
+        })
+    }
 
-    pub fn skip_to_group() {}
+    pub fn skip_to_end() {
+        COMPOSER.with(|local_composer| {
+            local_composer.inner.borrow().skip_to_end()
+        })
+    }
 }
 
 impl Default for Composer {

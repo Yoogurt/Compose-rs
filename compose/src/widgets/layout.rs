@@ -1,3 +1,4 @@
+use std::rc::Rc;
 use compose_macro::Composable;
 
 use crate as compose;
@@ -13,8 +14,8 @@ pub fn Layout(
 ) {
     ComposeNode(
         move |node| {
-            node.set_measure_policy(measure_policy);
-            node.set_modifier(modifier);
+            node.set_measure_policy(measure_policy.clone());
+            node.set_modifier(modifier.clone());
         },
         content,
     );

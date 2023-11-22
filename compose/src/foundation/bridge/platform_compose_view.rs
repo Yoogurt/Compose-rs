@@ -58,8 +58,10 @@ impl MacOSComposeView {
         self.root.borrow_mut().detach();
     }
 
-    pub fn set_content(&self, content: impl FnOnce()) {
-        Composer::do_compose(content);
+    pub fn set_content(&self, content: impl Fn()) {
+        Composer::do_compose(&content);
+        Composer::debug_print();
+        Composer::do_compose_validate_structure(content)
     }
 
     pub fn dispatch_measure(&mut self, width: usize, height: usize) {

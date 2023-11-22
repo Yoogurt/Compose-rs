@@ -14,7 +14,12 @@ pub(crate) enum GroupKindIndex {
 
 pub(crate) enum GroupKind {
     Empty,
-    Group { hash: i64, depth: usize, slot_data: Rc<RefCell<Vec<SlotTableType>>> },
+    Group {
+        hash: i64,
+        depth: usize,
+        skipping: bool,
+        slot_data: Rc<RefCell<Vec<SlotTableType>>>,
+    },
     LayoutNodeType(Rc<RefCell<LayoutNode>>),
     CustomType(Rc<RefCell<dyn Any>>),
 }
@@ -25,10 +30,11 @@ impl Debug for GroupKind {
             GroupKind::Empty => {
                 f.debug_struct("GroupKind::Empty").finish()
             }
-            GroupKind::Group { hash, depth, slot_data } => {
+            GroupKind::Group { hash, depth, skipping,slot_data } => {
                 f.debug_struct("GroupKind::Group")
                     .field("hash", hash)
                     .field("depth", depth)
+                    .field("skipping", skipping)
                     .field("slot_data", slot_data)
                     .finish()
             }

@@ -220,6 +220,4 @@ impl LayoutNode {
     }
 
     pub(crate) fn request_remeasure(&self) {}
-
-    fn draw(_canvas: &dyn Canvas) {}
 }
