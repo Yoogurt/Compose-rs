@@ -5,6 +5,7 @@ use std::ops::Deref;
 use std::rc::Rc;
 
 use crate::foundation::layout_node::LayoutNode;
+use crate::foundation::slot_table_type;
 use crate::foundation::slot_table_type::SlotTableType;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
@@ -82,6 +83,12 @@ impl SlotWriter {
         self.skip_slot();
     }
 
+    fn replace_slot_table_type(&mut self, slot_table_type: SlotTableType) -> SlotTableType {
+        let slot_table_type = std::mem::replace(&mut self.slot.borrow_mut()[self.current_slot_index], slot_table_type);
+        self.skip_slot();
+        slot_table_type
+    }
+
     pub(crate) fn begin_insert_group(&mut self, hash: u64, depth: usize) {
         let group_kind = GroupKind::Group {
             hash,
@@ -95,9 +102,22 @@ impl SlotWriter {
         });
     }
 
+    pub(crate) fn replace_group(&mut self, hash: u64, depth: usize) -> SlotTableType {
+        let group_kind = GroupKind::Group {
+            hash,
+            depth,
+            skipping: false,
+            slot_data: vec![].wrap_with_rc_refcell(),
+        };
+
+        self.replace_slot_table_type(SlotTableType {
+            data: group_kind,
+        })
+    }
+
     pub(crate) fn enter_group(&mut self) {
         self.slot_stack.push(self.slot.clone());
-        let slot = if let Some(slot_table_type) = self.slot.borrow().last() {
+        let slot = if let Some(slot_table_type) = self.slot.borrow().get(self.current_slot_index - 1) {
             match slot_table_type.data {
                 GroupKind::Group { ref slot_data, .. } => slot_data.clone(),
                 _ => panic!("not a group"),
@@ -135,11 +155,14 @@ impl SlotWriter {
         self.current_layout_node = Some(layout_node.clone());
     }
 
-    pub fn use_layout_node(&self) -> Rc<RefCell<LayoutNode>> {
-        match self.slot.borrow()[self.current_slot_index].data {
+    pub fn use_layout_node(&mut self) -> Rc<RefCell<LayoutNode>> {
+        let node = match self.slot.borrow()[self.current_slot_index].data {
             GroupKind::LayoutNodeType(ref layout_node) => layout_node.clone(),
             _ => panic!("not a layout node"),
-        }
+        };
+        self.skip_slot();
+
+        node
     }
 
     pub(crate) fn parent_layout_node(&self) -> Option<Rc<RefCell<LayoutNode>>> {

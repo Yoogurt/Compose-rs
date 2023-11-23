@@ -210,7 +210,6 @@ impl ComposerInner {
 
         let node = self.writer.use_layout_node();
         self.writer.begin_use_layout_node(node.clone());
-        self.writer.skip_slot();
 
         node
     }
@@ -339,8 +338,8 @@ impl ComposerInner {
         self.add_recompose_scope()
     }
 
-    pub(crate) fn end_restart_group(&mut self) -> Rc<RefCell<dyn ScopeUpdateScope>> {
-        self.invalidate_stack.pop().unwrap()
+    pub(crate) fn end_restart_group(&mut self) -> Option<Rc<RefCell<dyn ScopeUpdateScope>>> {
+        self.invalidate_stack.pop().map(|scope| scope as Rc<RefCell<dyn ScopeUpdateScope>>)
     }
 
     pub(crate) fn recompose_scope(&self) -> Option<Rc<RefCell<dyn RecomposeScope>>> {
@@ -366,28 +365,35 @@ impl ComposerInner {
         group_kind: GroupKind,
         data: Option<Box<dyn Any>>,
     ) {
+        dbg!(format!("enter:{}", key));
         self.validate_node_not_expected();
         self.update_compound_hash_enter(key);
 
         if self.inserting {
             self.writer.begin_insert_group(self.hash, self.depth);
         } else {
-            match &self.writer.slot.borrow().get(self.writer.current_slot_index).unwrap().data {
+            let group_ref = self.writer.slot.borrow();
+            let group = &group_ref.get(self.writer.current_slot_index).unwrap().data;
+            match group {
                 GroupKind::Group { hash, .. } => {
                     if self.hash != *hash {
-                        panic!()
+                        // perform update
+                        let slot_table_type = self.writer.replace_group(self.hash, self.depth);
                     }
                 }
                 group_kind => {
                     panic!("unexpect group kind found {:?}", group_kind)
                 }
             }
+            drop(group_ref);
+            self.writer.skip_slot();
         }
 
         self.writer.enter_group();
     }
 
     pub(crate) fn end(&mut self, key: u64) {
+        dbg!(format!("end:{}", key));
         self.update_compound_hash_exit(key);
         if self.inserting {
             self.writer.end_insert_group(GroupKindIndex::Group);

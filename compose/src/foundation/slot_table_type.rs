@@ -1,6 +1,7 @@
 use std::{any::Any, cell::RefCell, rc::Rc};
 use std::fmt::{Debug, Formatter};
 use std::hash::Hash;
+use crate::foundation::remember_observer::RememberObserverItem;
 
 use super::layout_node::LayoutNode;
 
@@ -24,13 +25,45 @@ pub(crate) enum GroupKind {
     CustomType(Rc<RefCell<dyn Any>>),
 }
 
+impl GroupKind {
+    pub(crate) fn visit_layout_node(&self, mut visitor: &mut impl FnMut(&Rc<RefCell<LayoutNode>>)) {
+        match self {
+            GroupKind::Group { slot_data, .. } => {
+                for slot_table_type in slot_data.borrow().iter() {
+                    slot_table_type.data.visit_layout_node(visitor);
+                }
+            }
+            GroupKind::LayoutNodeType(layout_node) => {
+                visitor(layout_node);
+            }
+            _ => {}
+        }
+    }
+
+    pub fn visit_remember_observer_item_mut(&self, mut visitor: impl FnMut(&mut RememberObserverItem)) {
+        match self {
+            GroupKind::Group { slot_data, .. } => {
+                for slot_table_type in slot_data.borrow().iter() {
+                    slot_table_type.data.visit_remember_observer_item_mut(&mut visitor);
+                }
+            }
+            GroupKind::CustomType(obj) => {
+                if let Some(remember_observer_item) = obj.borrow_mut().downcast_mut::<RememberObserverItem>() {
+                    visitor(remember_observer_item);
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
 impl Debug for GroupKind {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             GroupKind::Empty => {
                 f.debug_struct("GroupKind::Empty").finish()
             }
-            GroupKind::Group { hash, depth, skipping,slot_data } => {
+            GroupKind::Group { hash, depth, skipping, slot_data } => {
                 f.debug_struct("GroupKind::Group")
                     .field("hash", hash)
                     .field("depth", depth)

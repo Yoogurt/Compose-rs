@@ -153,7 +153,7 @@ impl Composer {
         });
     }
 
-    pub fn end_restart_group() -> Rc<RefCell<dyn ScopeUpdateScope>> {
+    pub fn end_restart_group() -> Option<Rc<RefCell<dyn ScopeUpdateScope>>> {
         COMPOSER.with(|local_composer| {
             local_composer.inner.borrow_mut().end_restart_group()
         })
