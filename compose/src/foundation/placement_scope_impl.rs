@@ -1,4 +1,5 @@
 use std::cell::RefMut;
+use crate::foundation::geometry::IntSize;
 
 use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::measure_scope::MeasureScope;
@@ -6,18 +7,21 @@ use crate::foundation::placeable::Placeable;
 use crate::foundation::placement_scope::PlacementScope;
 
 pub(crate) struct PlacementScopeImpl<'a> {
-    pub(crate) width: usize,
-    pub(crate) height: usize,
+    pub(crate) size: IntSize,
     pub(crate) measure_scope: &'a dyn MeasureScope,
 }
 
 impl PlacementScope for PlacementScopeImpl<'_> {
+    fn parent_size(&self) -> IntSize {
+        self.size
+    }
+
     fn parent_width(&self) -> usize {
-        self.width
+        self.size.width
     }
 
     fn parent_height(&self) -> usize {
-        self.height
+        self.size.height
     }
 
     fn parent_layout_direction(&self) -> LayoutDirection {
@@ -58,8 +62,7 @@ impl PlacementScope for PlacementScopeImpl<'_> {
 impl<'a> PlacementScopeImpl<'a> {
     pub(crate) fn new(width: usize, height: usize, measure_scope: &'a dyn MeasureScope) -> Self {
         PlacementScopeImpl {
-            width,
-            height,
+            size: IntSize::new(width, height),
             measure_scope,
         }
     }

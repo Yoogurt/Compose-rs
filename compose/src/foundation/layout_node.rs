@@ -2,6 +2,7 @@ use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::rc::{Rc, Weak};
 use std::sync::atomic::AtomicU32;
+use crate::foundation::compose_node_lifecycle_callback::ComposeNodeLifecycleCallback;
 
 use crate::foundation::geometry::Density;
 use crate::foundation::layout_node_container::LayoutNodeContainer;
@@ -220,4 +221,15 @@ impl LayoutNode {
     }
 
     pub(crate) fn request_remeasure(&self) {}
+}
+
+impl ComposeNodeLifecycleCallback for LayoutNode {
+    fn on_reuse(&mut self) {
+    }
+
+    fn on_deactivate(&mut self) {
+    }
+
+    fn on_release(&mut self) {
+    }
 }

@@ -1,7 +1,7 @@
 use std::{any::Any, cell::RefCell, rc::Rc};
 use std::fmt::{Debug, Formatter};
 use std::hash::Hash;
-use crate::foundation::remember_observer::RememberObserverItem;
+use crate::foundation::remember_observer::{RememberObserver, RememberObserverDelegate};
 
 use super::layout_node::LayoutNode;
 
@@ -10,7 +10,8 @@ pub(crate) enum GroupKindIndex {
     Empty = 0,
     Group = 1,
     LayoutNode = 2,
-    Custom = 3,
+    LifecycleObserver = 3,
+    Custom = 4,
 }
 
 pub(crate) enum GroupKind {
@@ -22,6 +23,8 @@ pub(crate) enum GroupKind {
         slot_data: Rc<RefCell<Vec<SlotTableType>>>,
     },
     LayoutNodeType(Rc<RefCell<LayoutNode>>),
+
+    LifecycleObserver(Rc<RefCell<dyn RememberObserver>>),
     CustomType(Rc<RefCell<dyn Any>>),
 }
 
@@ -40,17 +43,15 @@ impl GroupKind {
         }
     }
 
-    pub fn visit_remember_observer_item_mut(&self, mut visitor: impl FnMut(&mut RememberObserverItem)) {
+    pub fn visit_lifecycle_observer(&self, visitor: &mut impl FnMut(&Rc<RefCell<dyn RememberObserver>>)) {
         match self {
             GroupKind::Group { slot_data, .. } => {
                 for slot_table_type in slot_data.borrow().iter() {
-                    slot_table_type.data.visit_remember_observer_item_mut(&mut visitor);
+                    slot_table_type.data.visit_lifecycle_observer(visitor);
                 }
             }
-            GroupKind::CustomType(obj) => {
-                if let Some(remember_observer_item) = obj.borrow_mut().downcast_mut::<RememberObserverItem>() {
-                    visitor(remember_observer_item);
-                }
+            GroupKind::LifecycleObserver(obj) => {
+                visitor(obj);
             }
             _ => {}
         }
@@ -77,6 +78,11 @@ impl Debug for GroupKind {
                     .field("layout_node", &format!("LayoutNode({identify})"))
                     .finish()
             }
+            GroupKind::LifecycleObserver(observer) => {
+                f.debug_struct("GroupKind::LifecycleObserver")
+                    .field("observer", &observer.as_ptr())
+                    .finish()
+            }
             GroupKind::CustomType(obj) => {
                 f.debug_struct("GroupKind::CustomType")
                     .field("custom_type", &(obj.as_ptr()))
@@ -92,6 +98,7 @@ impl GroupKind {
             GroupKind::Empty => GroupKindIndex::Empty,
             GroupKind::Group { .. } => GroupKindIndex::Group,
             GroupKind::LayoutNodeType(_) => GroupKindIndex::LayoutNode,
+            GroupKind::LifecycleObserver(_) => GroupKindIndex::LifecycleObserver,
             GroupKind::CustomType(_) => GroupKindIndex::Custom,
         }
     }

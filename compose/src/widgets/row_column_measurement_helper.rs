@@ -66,7 +66,7 @@ impl_node_kind_parent_data!(HorizontalAlignModifier);
 
 impl ParentDataModifierNode for HorizontalAlignModifier {
     fn modify_parent_data(&mut self, _: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {
-        let mut parent_data = parent_data.cast_or_init(|| {
+        let mut parent_data = parent_data.cast_or(|| {
             RowColumnParentData::default()
         });
         parent_data.cross_axis_alignment = Some(CrossAxisAlignment::HORIZONTAL(self.alignment_horizontal));
@@ -85,7 +85,7 @@ impl_node_kind_parent_data!(VerticalAlignModifier);
 
 impl ParentDataModifierNode for VerticalAlignModifier {
     fn modify_parent_data(&mut self, _: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {
-        let mut parent_data = parent_data.cast_or_init(|| {
+        let mut parent_data = parent_data.cast_or(|| {
             RowColumnParentData::default()
         });
         parent_data.cross_axis_alignment = Some(CrossAxisAlignment::VERTICAL(self.alignment_vertical));
@@ -115,7 +115,7 @@ impl_node_kind_parent_data!(LayoutWeightNode);
 
 impl ParentDataModifierNode for LayoutWeightNode {
     fn modify_parent_data(&mut self, _: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {
-        let mut parent_data = parent_data.cast_or_init(|| {
+        let mut parent_data = parent_data.cast_or(|| {
             RowColumnParentData::default()
         });
         parent_data.weight = self.weight;

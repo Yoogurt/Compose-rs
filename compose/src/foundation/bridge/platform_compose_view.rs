@@ -59,7 +59,11 @@ impl MacOSComposeView {
     }
 
     pub fn set_content(&self, content: impl Fn()) {
-        Composer::do_compose(&content);
+        Composer::do_compose(content);
+    }
+
+    pub fn no_insert_set_content(&self, content: impl Fn()) {
+        Composer::do_compose_validate_structure(content);
     }
 
     pub fn dispatch_measure(&mut self, width: usize, height: usize) {

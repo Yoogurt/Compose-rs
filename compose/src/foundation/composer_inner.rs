@@ -5,10 +5,13 @@ use std::any::Any;
 use std::cell::{Ref, RefMut};
 use std::fmt::{Debug, Formatter};
 use std::ops::{Deref, DerefMut};
+use crate::foundation::compose_node_lifecycle_callback::ComposeNodeLifecycleCallback;
 use crate::foundation::derived_state::DerivedStateObserver;
+use crate::foundation::pending::Pending;
 use crate::foundation::recompose_scope_impl::RecomposeScope;
+use crate::foundation::remember_manager::{RememberEventDispatcher, RememberManager};
 
-use crate::foundation::slot_table::{SlotReader, SlotTable, SlotWriter};
+use crate::foundation::slot_table::{SlotTable, SlotReadWriter};
 use crate::foundation::slot_table_type::{GroupKindIndex, SlotTableType};
 use crate::foundation::snapshot_value::SnapShotValue;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
@@ -24,7 +27,7 @@ enum ChangeType {
 }
 
 struct Change {
-    change: Box<dyn FnOnce()>,
+    change: Box<dyn FnOnce(&mut dyn RememberManager)>,
     change_type: ChangeType,
     sequence: usize,
 }
@@ -33,7 +36,7 @@ impl Debug for Change {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Change")
             .field("change_type", &self.change_type)
-            .field("change", &(self.change.as_ref() as *const dyn FnOnce()))
+            .field("change", &(self.change.as_ref() as *const dyn FnOnce(_)))
             .field("sequence", &self.sequence)
             .finish()
     }
@@ -50,12 +53,16 @@ pub(crate) struct ComposerInner {
     pub(crate) layout_node_stack: Vec<Rc<RefCell<LayoutNode>>>,
 
     pub(crate) slot_table: SlotTable,
-    pub(crate) writer: SlotWriter,
+
+    pub(crate) read_writer: SlotReadWriter,
 
     fix_up: Vec<Change>,
     insert_up_fix_up: Vec<Change>,
     deferred_changes: Vec<Change>,
     changes: Vec<Change>,
+    pending_stack: Vec<Option<Pending>>,
+
+    remember_dispatcher: RememberEventDispatcher,
 
     invalidate_stack: Vec<Rc<RefCell<RecomposeScopeImpl>>>,
 }
@@ -65,8 +72,8 @@ impl Debug for ComposerInner {
         f.debug_struct("Composer")
             .field("hash", &self.hash)
             .field("depth", &self.depth)
-            .field("inserting", &self.inserting)
             .field("slot_table", &self.slot_table)
+            .field("inserting", &self.inserting)
             .field("fix_up", &self.fix_up)
             .field("insert_up_fix_up", &self.insert_up_fix_up)
             .field("deferred_changes", &self.deferred_changes)
@@ -107,7 +114,7 @@ impl ComposerInner {
     }
 
     pub(crate) fn skipping(&self) -> bool {
-        self.writer.slot.borrow().first().map(|group| match group.data {
+        self.read_writer.slot.borrow().first().map(|group| match group.data {
             GroupKind::Group { skipping, .. } => {
                 skipping
             }
@@ -119,25 +126,19 @@ impl ComposerInner {
 
     pub(crate) fn skip_to_end(&self) {}
 
-    pub(crate) fn start_root(&mut self, first: bool) {
-        if first {
-            self.inserting = true;
-        }
+    pub(crate) fn start_root(&mut self) {
         {
-            let writer = &mut self.writer;
+            let writer = &mut self.read_writer;
             writer.slot_index_stack.clear();
             writer.current_slot_index = 0;
         }
         self.start_group(Self::ROOT_KEY);
     }
 
-    pub(crate) fn end_root(&mut self, first: bool) {
+    pub(crate) fn end_root(&mut self) {
         self.end_group(Self::ROOT_KEY);
-        if first {
-            self.inserting = false;
-        }
         {
-            let writer = &mut self.writer;
+            let writer = &mut self.read_writer;
             writer.slot_index_stack.clear();
             writer.current_slot_index = 0;
         }
@@ -148,7 +149,7 @@ impl ComposerInner {
     }
 
     pub(crate) fn end_group(&mut self, hash: u64) {
-        self.writer.exit_group();
+        self.read_writer.exit_group();
         self.end(hash);
     }
 
@@ -166,19 +167,19 @@ impl ComposerInner {
         );
     }
 
-    pub(crate) fn create_node(&mut self, factory: Box<dyn FnOnce(Rc<RefCell<LayoutNode>>)>) -> Rc<RefCell<LayoutNode>> {
+    pub(crate) fn create_node(&mut self, factory: impl FnOnce(Rc<RefCell<LayoutNode>>) + 'static) -> Rc<RefCell<LayoutNode>> {
         self.validate_node_expected();
 
         let node = LayoutNode::new();
         {
             let node = node.clone();
-            self.record_fix_up(Box::new(move || {
+            self.record_fix_up(move |_| {
                 factory(node);
-            }));
+            });
         }
-        self.writer.begin_insert_layout_node(node.clone());
+        self.read_writer.begin_insert_layout_node(node.clone());
 
-        let parent = self.writer.parent_layout_node();
+        let parent = self.read_writer.parent_layout_node();
 
         {
             let node = node.clone();
@@ -190,14 +191,14 @@ impl ComposerInner {
                         return node;
                     }
 
-                    self.record_insert_up_fix_up(Box::new(move || {
+                    self.record_insert_up_fix_up(move |_| {
                         LayoutNode::adopt_child(&root, &node, true);
-                    }));
+                    });
                 }
                 Some(parent) => {
-                    self.record_insert_up_fix_up(Box::new(move || {
+                    self.record_insert_up_fix_up(move |_| {
                         LayoutNode::adopt_child(&parent, &node, false);
-                    }));
+                    });
                 }
             }
         }
@@ -208,33 +209,38 @@ impl ComposerInner {
     pub(crate) fn use_node(&mut self) -> Rc<RefCell<LayoutNode>> {
         self.validate_node_expected();
 
-        let node = self.writer.use_layout_node();
-        self.writer.begin_use_layout_node(node.clone());
+        let node = self.read_writer.use_layout_node();
+        self.read_writer.begin_use_layout_node(node.clone());
+
+        let node_ref = node.clone();
+        self.record_appiler_operation(move |_| {
+            node_ref.borrow_mut().on_reuse();
+        });
 
         node
     }
 
-    pub(crate) fn record_fix_up(&mut self, fix_up: Box<dyn FnOnce()>) {
+    pub(crate) fn record_fix_up(&mut self, fix_up: impl FnOnce(&mut dyn RememberManager) + 'static) {
         self.fix_up.push(Change {
-            change: fix_up,
+            change: Box::new(fix_up),
             change_type: ChangeType::FixUp,
             sequence: self.sequence,
         });
         self.sequence += 1;
     }
 
-    pub(crate) fn record_insert_up_fix_up(&mut self, insert_up_fix_up: Box<dyn FnOnce()>) {
+    pub(crate) fn record_insert_up_fix_up(&mut self, insert_up_fix_up: impl FnOnce(&mut dyn RememberManager) + 'static) {
         self.insert_up_fix_up.push(Change {
-            change: insert_up_fix_up,
+            change: Box::new(insert_up_fix_up),
             change_type: ChangeType::InsertUpFixUp,
             sequence: self.sequence,
         });
         self.sequence += 1;
     }
 
-    pub(crate) fn record_deferred_change(&mut self, deferred_change: Box<dyn FnOnce()>) {
+    pub(crate) fn record_deferred_change(&mut self, deferred_change: impl FnOnce(&mut dyn RememberManager) + 'static) {
         self.deferred_changes.push(Change {
-            change: deferred_change,
+            change: Box::new(deferred_change),
             change_type: ChangeType::DeferredChange,
             sequence: self.sequence,
         });
@@ -244,9 +250,10 @@ impl ComposerInner {
     pub(crate) fn apply_changes(&mut self) {
         let mut changes = Vec::<Change>::new();
         std::mem::swap(&mut self.changes, &mut changes);
+
         changes.into_iter().for_each(|change| {
             println!("apply change sequence: {} , type: {:?}", change.sequence, change.change_type);
-            (change.change)();
+            (change.change)(&mut self.remember_dispatcher);
         });
     }
 
@@ -259,13 +266,22 @@ impl ComposerInner {
     pub(crate) fn apply_deferred_changes(&mut self) {
         let mut deferred_changes = Vec::<Change>::new();
         std::mem::swap(&mut self.deferred_changes, &mut deferred_changes);
+
         deferred_changes.into_iter().for_each(|change| {
             println!("apply deferred change sequence: {} , type: {:?}", change.sequence, change.change_type);
-            (change.change)();
+            (change.change)(&mut self.remember_dispatcher);
         });
     }
 
-    fn record_slot_editing_operation(&mut self, action: impl FnOnce() + 'static) {
+    fn record_appiler_operation(&mut self, action: impl FnOnce(&mut dyn RememberManager) + 'static) {
+        self.record(action);
+    }
+
+    fn record_slot_editing_operation(&mut self, action: impl FnOnce(&mut dyn RememberManager) + 'static) {
+        self.record(action);
+    }
+
+    fn record(&mut self, action: impl FnOnce(&mut dyn RememberManager) + 'static) {
         self.changes.push(Change {
             change: Box::new(action),
             change_type: ChangeType::Changes,
@@ -278,22 +294,25 @@ impl ComposerInner {
             let mut fix_ups: Vec<Change> = vec![];
             std::mem::swap(&mut fix_ups, &mut self.fix_up);
 
-            self.record_slot_editing_operation(move || {
+            self.record_slot_editing_operation(move |_| {
+                let mut remember_manager = RememberEventDispatcher::new();
+                let remember_manager_mut = &mut remember_manager;
+
                 fix_ups.into_iter().for_each(|change| {
                     println!("apply change sequence: {} , type: {:?}", change.sequence, change.change_type);
-                    (change.change)();
+                    (change.change)(remember_manager_mut);
                 });
             });
         }
     }
 
     pub(crate) fn end_node(&mut self) {
-        if self.inserting {
-            self.writer.end_insert_layout_node();
+        if self.inserting() {
+            self.read_writer.end_insert_layout_node();
             self.register_insert_up_fix_up();
             self.record_insert();
         } else {
-            self.writer.end_insert_layout_node();
+            self.read_writer.end_insert_layout_node();
         }
     }
 
@@ -314,8 +333,11 @@ impl ComposerInner {
         if self.depth != 0 || self.hash != 0 {
             panic!("validate group fail")
         }
+        if self.inserting {
+            panic!("validate group inserting")
+        }
 
-        self.writer.validate();
+        self.read_writer.validate();
     }
 
     pub(crate) fn debug_print(&self) {
@@ -323,13 +345,13 @@ impl ComposerInner {
     }
 
     fn add_recompose_scope(&mut self) {
-        if self.inserting {
+        if self.inserting() {
             let recompose_scope_impl = RecomposeScopeImpl::new().wrap_with_rc_refcell();
             self.invalidate_stack.push(recompose_scope_impl.clone());
             self.update_value(recompose_scope_impl.clone());
             recompose_scope_impl.borrow_mut().start(0);
         } else {
-            self.writer.skip_slot();
+            self.read_writer.skip_slot();
             // perform recompose scope update
         }
     }
@@ -365,43 +387,75 @@ impl ComposerInner {
         group_kind: GroupKind,
         data: Option<Box<dyn Any>>,
     ) {
-        dbg!(format!("enter:{}", key));
         self.validate_node_not_expected();
         self.update_compound_hash_enter(key);
 
-        if self.inserting {
-            self.writer.begin_insert_group(self.hash, self.depth);
+        if self.inserting() {
+            self.read_writer.begin_empty();
+            self.read_writer.begin_insert_group(self.hash, self.depth);
         } else {
-            let group_ref = self.writer.slot.borrow();
-            let group = &group_ref.get(self.writer.current_slot_index).unwrap().data;
-            match group {
-                GroupKind::Group { hash, .. } => {
-                    if self.hash != *hash {
-                        // perform update
-                        let slot_table_type = self.writer.replace_group(self.hash, self.depth);
+            let group_ref = self.read_writer.slot.borrow();
+            let last_slot_table_type = group_ref.get(self.read_writer.current_slot_index);
+            let need_insert_group = last_slot_table_type.is_none();
+            let need_replace_group = match last_slot_table_type {
+                Some(slot_table_type) => {
+                    match slot_table_type.data {
+                        GroupKind::Group { hash, depth, .. } => {
+                            hash != self.hash || depth != self.depth
+                        }
+                        _ => {
+                            panic!("not a group")
+                        }
                     }
                 }
-                group_kind => {
-                    panic!("unexpect group kind found {:?}", group_kind)
+
+                None => {
+                    false
                 }
-            }
+            };
             drop(group_ref);
-            self.writer.skip_slot();
+            if need_insert_group {
+                self.read_writer.begin_empty();
+                self.read_writer.begin_insert_group(self.hash, self.depth);
+                self.inserting = true;
+            } else if need_replace_group {
+                let slot_table_type = self.read_writer.replace_group(self.hash, self.depth);
+                self.read_writer.begin_empty();
+                self.inserting = true;
+            } else {
+                self.read_writer.skip_slot();
+            }
         }
 
-        self.writer.enter_group();
+        self.read_writer.enter_group();
     }
 
     pub(crate) fn end(&mut self, key: u64) {
-        dbg!(format!("end:{}", key));
         self.update_compound_hash_exit(key);
-        if self.inserting {
-            self.writer.end_insert_group(GroupKindIndex::Group);
+        if self.inserting() {
+            self.read_writer.end_empty();
+            self.read_writer.end_insert_group(GroupKindIndex::Group);
+
+            if !self.read_writer.in_empty() {
+                self.inserting = false;
+            }
+        }
+
+        while !self.read_writer.is_group_end() {
+            let slot_to_remove = self.read_writer.pop_current_slot();
+
+            slot_to_remove.data.visit_layout_node(&mut |layout_node| {
+                self.remember_dispatcher.deactivate(layout_node.clone())
+            });
+
+            slot_to_remove.data.visit_lifecycle_observer(&mut |item| {
+                self.remember_dispatcher.forgetting(item.clone())
+            });
         }
     }
 
     fn next_slot(&mut self) -> Option<&dyn Any> {
-        if self.inserting {
+        if self.inserting() {
             None
         } else {
             todo!()
@@ -409,8 +463,8 @@ impl ComposerInner {
     }
 
     fn update_value(&mut self, value: Rc<RefCell<dyn Any>>) {
-        if self.inserting {
-            self.writer.update(value);
+        if self.inserting() {
+            self.read_writer.update(value);
         } else {
             todo!()
         }
@@ -443,8 +497,7 @@ impl ComposerInner {
 impl Default for ComposerInner {
     fn default() -> Self {
         let mut slot_table = SlotTable::default();
-        let reader = slot_table.open_reader();
-        let writer = slot_table.open_writer();
+        let read_writer = slot_table.open_read_writer();
 
         Self {
             hash: 0,
@@ -459,8 +512,10 @@ impl Default for ComposerInner {
             insert_up_fix_up: vec![],
             deferred_changes: vec![],
             changes: vec![],
-            writer,
+            pending_stack: vec![],
+            read_writer,
             invalidate_stack: vec![],
+            remember_dispatcher: RememberEventDispatcher::new(),
         }
     }
 }

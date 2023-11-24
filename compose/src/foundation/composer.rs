@@ -5,6 +5,7 @@ use crate::foundation::composer_inner::{ComposerInner};
 use crate::foundation::constraint::Constraints;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::recompose_scope_impl::RecomposeScope;
+use crate::foundation::remember_manager::RememberManager;
 use crate::foundation::snapshot_value::SnapShotValue;
 
 pub trait ScopeUpdateScope {
@@ -60,18 +61,18 @@ impl Composer {
     }
 
     pub(crate) fn create_node(factory: impl FnOnce(Rc<RefCell<LayoutNode>>) + 'static) -> Rc<RefCell<LayoutNode>> {
-        COMPOSER.with(move |local_composer| local_composer.inner.borrow_mut().create_node(Box::new(factory)))
+        COMPOSER.with(move |local_composer| local_composer.inner.borrow_mut().create_node(factory))
     }
 
     pub(crate) fn use_node() -> Rc<RefCell<LayoutNode>> {
         COMPOSER.with(|local_composer| local_composer.inner.borrow_mut().use_node())
     }
 
-    pub(crate) fn record_fix_up(fix_up: Box<dyn FnOnce()>) {
+    pub(crate) fn record_fix_up(fix_up:impl FnOnce(&mut dyn RememberManager) + 'static) {
         COMPOSER.with(move |local_composer| local_composer.inner.borrow_mut().record_fix_up(fix_up))
     }
 
-    pub(crate) fn record_insert_up_fix_up(insert_up: Box<dyn FnOnce()>) {
+    pub(crate) fn record_insert_up_fix_up(insert_up: impl FnOnce(&mut dyn RememberManager) + 'static) {
         COMPOSER.with(move |local_composer| {
             local_composer
                 .inner
@@ -80,7 +81,7 @@ impl Composer {
         })
     }
 
-    pub(crate) fn record_deferred_change(&mut self, derred_change: Box<dyn FnOnce()>) {
+    pub(crate) fn record_deferred_change(&mut self, derred_change: impl FnOnce(&mut dyn RememberManager) + 'static) {
         COMPOSER.with(move |local_composer| {
             local_composer
                 .inner
@@ -133,17 +134,17 @@ impl Composer {
 
     pub fn do_compose(content: impl Fn()) {
         COMPOSER.with(|local_composer| {
-            local_composer.inner.borrow_mut().start_root(true);
+            local_composer.inner.borrow_mut().start_root();
             content();
-            local_composer.inner.borrow_mut().end_root(true);
+            local_composer.inner.borrow_mut().end_root();
         });
     }
 
     pub fn do_compose_validate_structure(content: impl Fn()) {
         COMPOSER.with(|local_composer| {
-            local_composer.inner.borrow_mut().start_root(false);
+            local_composer.inner.borrow_mut().start_root();
             content();
-            local_composer.inner.borrow_mut().end_root(false);
+            local_composer.inner.borrow_mut().end_root();
         });
     }
 

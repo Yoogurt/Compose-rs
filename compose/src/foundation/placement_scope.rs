@@ -1,9 +1,11 @@
 use std::cell::RefMut;
+use crate::foundation::geometry::IntSize;
 
 use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::placeable::Placeable;
 
 pub trait PlacementScope {
+    fn parent_size(&self) -> IntSize;
     fn parent_width(&self) -> usize;
     fn parent_height(&self) -> usize;
 

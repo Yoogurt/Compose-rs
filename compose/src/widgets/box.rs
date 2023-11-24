@@ -12,7 +12,7 @@ use crate::foundation::{
     constraint::Constraints, measurable::Measurable,
     measure_scope::MeasureScope, modifier::Modifier,
 };
-use crate::foundation::geometry::Density;
+use crate::foundation::geometry::{Density, IntSize};
 use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::measurable::{MultiChildrenMeasurePolicy, MultiChildrenMeasurePolicyDelegate};
 use crate::foundation::measure_scope::{empty_place_action, MeasureScopeLayoutAction};
@@ -65,18 +65,11 @@ impl BoxMeasurableTrait for &mut dyn Measurable {
     }
 
     fn alignment(&self) -> Option<Alignment> {
-        self.box_child_data_node().map(|child_data| {
-            child_data.alignment
-        })
+        self.box_child_data_node().map(|child_data| child_data.alignment)
     }
 
     fn matches_parent_size(&self) -> bool {
-        let box_child_data_node = self.box_child_data_node();
-        if let Some(node) = box_child_data_node {
-            node.match_parent_size
-        } else {
-            false
-        }
+        self.box_child_data_node().map(|child_data| child_data.match_parent_size).unwrap_or(false)
     }
 }
 
@@ -99,7 +92,7 @@ impl_node_kind_parent_data!(BoxChildDataModifierNode);
 
 impl ParentDataModifierNode for BoxChildDataModifierNode {
     fn modify_parent_data(&mut self, _: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {
-        Some(parent_data.cast_or_init(|| { self.box_child_data_node.clone() }))
+        Some(parent_data.cast_or(|| self.box_child_data_node.clone()))
     }
 }
 
@@ -113,7 +106,7 @@ fn box_child_data(alignment: Alignment, match_parent_size: bool) -> Modifier {
 
             box_child_data_node
         }),
-        update: modifier_node_element_updater(move |mut box_child_data_node: &mut BoxChildDataModifierNode| {
+        update: modifier_node_element_updater(move |box_child_data_node: &mut BoxChildDataModifierNode| {
             box_child_data_node.box_child_data_node.alignment = alignment;
             box_child_data_node.box_child_data_node.match_parent_size = match_parent_size;
         }),
@@ -122,10 +115,10 @@ fn box_child_data(alignment: Alignment, match_parent_size: bool) -> Modifier {
 
 fn place_in_box(placeable: &mut dyn Placeable,
                 layout_direction: LayoutDirection,
-                box_width: usize, box_height: usize,
+                box_size: IntSize,
                 alignment: Alignment) {
-    let position = alignment.align(placeable.get_size(), (box_width, box_height).into(), layout_direction);
-    placeable.place_at((position.x, position.y).into(), 0.0);
+    let position = alignment.align(placeable.get_size(), box_size, layout_direction);
+    placeable.place_at(position, 0.0);
 }
 
 fn remember_box_measure_policy(alignment: Alignment, propagate_min_constraint: bool) -> MultiChildrenMeasurePolicy {
@@ -209,16 +202,17 @@ fn remember_box_measure_policy(alignment: Alignment, propagate_min_constraint: b
                     child.alignment().unwrap_or(alignment)
                 }).collect::<Vec<Alignment>>();
 
-                measure_scope.layout((box_width, box_height), (move |scope: &dyn PlacementScope| {
+                measure_scope.layout((box_width, box_height), (move |scope| {
                     placeables.iter_mut().enumerate().for_each(|(index, placeable)| {
-                        place_in_box(placeable.as_mut().unwrap().borrow_mut().deref_mut(),
+                        let mut placeable = placeable.as_mut().unwrap().borrow_mut();
+
+                        place_in_box(placeable.deref_mut(),
                                      layout_direction,
-                                     box_width,
-                                     box_height,
+                                     scope.parent_size(),
                                      box_child_data[index],
                         );
                     })
-                }).wrap_with_box())
+                }))
             }
         }
     })

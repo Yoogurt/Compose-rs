@@ -61,3 +61,6 @@ mod remember_observer;
 pub mod recompose_scope_impl;
 mod derived_state;
 pub mod spacer;
+mod pending;
+mod remember_manager;
+mod compose_node_lifecycle_callback;

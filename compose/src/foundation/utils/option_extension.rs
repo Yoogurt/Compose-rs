@@ -16,11 +16,11 @@ impl<T> OptionThen<T> for Option<T> {
 }
 
 pub(crate) trait OptionalInstanceConverter {
-    fn cast_or_init<R>(self, init: impl FnOnce() -> R) -> Box<R> where R: Sized + 'static;
+    fn cast_or<R>(self, init: impl FnOnce() -> R) -> Box<R> where R: Sized + 'static;
 }
 
 impl OptionalInstanceConverter for Option<Box<dyn Any>> {
-    fn cast_or_init<R>(self, init: impl FnOnce() -> R) -> Box<R> where R: Sized + 'static {
+    fn cast_or<R>(self, init: impl FnOnce() -> R) -> Box<R> where R: Sized + 'static {
         match self {
             None => {
                 init().wrap_with_box()

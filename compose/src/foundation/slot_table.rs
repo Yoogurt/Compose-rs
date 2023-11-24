@@ -24,23 +24,32 @@ pub(crate) struct SlotTable {
     pub(crate) writer: usize,
 }
 
-pub(crate) struct SlotReader {
-    slot: Rc<RefCell<Vec<SlotTableType>>>,
-    slot_stack: Vec<Rc<RefCell<Vec<SlotTableType>>>>,
-    current_slot_stack: Vec<usize>,
+pub(crate) struct SlotReadWriter {
     empty_count: usize,
-    current_slot: usize,
+    pub(crate) slot: Rc<RefCell<Vec<SlotTableType>>>,
+    pub(crate) current_slot_index: usize,
+    pub(crate) slot_index_stack: Vec<usize>,
+    pub(crate) slot_stack: Vec<Rc<RefCell<Vec<SlotTableType>>>>,
+
+    pub(crate) current_layout_node: Option<Rc<RefCell<LayoutNode>>>,
+    pub(crate) layout_node_stack: Vec<Rc<RefCell<LayoutNode>>>,
 }
 
-impl SlotReader {
+impl SlotReadWriter {
     pub(crate) fn new(slot: Rc<RefCell<Vec<SlotTableType>>>) -> Self {
         Self {
-            slot,
-            slot_stack: vec![],
-            current_slot_stack: vec![],
-            current_slot: 0,
             empty_count: 0,
+            slot,
+            current_slot_index: 0,
+            slot_index_stack: vec![],
+            slot_stack: vec![],
+            current_layout_node: None,
+            layout_node_stack: vec![],
         }
+    }
+
+    pub(crate) fn in_empty(&self) -> bool {
+        self.empty_count > 0
     }
 
     pub(crate) fn begin_empty(&mut self) {
@@ -53,29 +62,6 @@ impl SlotReader {
         }
 
         self.empty_count -= 1;
-    }
-}
-
-pub(crate) struct SlotWriter {
-    pub(crate) slot: Rc<RefCell<Vec<SlotTableType>>>,
-    pub(crate) current_slot_index: usize,
-    pub(crate) slot_index_stack: Vec<usize>,
-    pub(crate) slot_stack: Vec<Rc<RefCell<Vec<SlotTableType>>>>,
-
-    pub(crate) current_layout_node: Option<Rc<RefCell<LayoutNode>>>,
-    pub(crate) layout_node_stack: Vec<Rc<RefCell<LayoutNode>>>,
-}
-
-impl SlotWriter {
-    pub(crate) fn new(slot: Rc<RefCell<Vec<SlotTableType>>>) -> Self {
-        Self {
-            slot,
-            current_slot_index: 0,
-            slot_index_stack: vec![],
-            slot_stack: vec![],
-            current_layout_node: None,
-            layout_node_stack: vec![],
-        }
     }
 
     fn insert_slot_table_type(&mut self, slot_table_type: SlotTableType) {
@@ -183,10 +169,18 @@ impl SlotWriter {
         self.current_slot_index += 1;
     }
 
+    pub fn pop_current_slot(&mut self) -> SlotTableType {
+        self.slot.borrow_mut().remove(self.current_slot_index)
+    }
+
     pub(crate) fn update(&mut self, value: Rc<RefCell<dyn Any>>) {
         self.insert_slot_table_type(SlotTableType {
             data: GroupKind::CustomType(value),
         });
+    }
+
+    pub(crate) fn is_group_end(&self) -> bool {
+        self.slot.borrow().len() - self.current_slot_index == 0
     }
 }
 
@@ -210,13 +204,8 @@ impl Deref for GroupKindBorrowGuard<'_> {
 }
 
 impl SlotTable {
-    pub(crate) fn open_reader(&mut self) -> SlotReader {
-        self.readers += 1;
-        SlotReader::new(self.slots.clone())
-    }
-
-    pub(crate) fn open_writer(&mut self) -> SlotWriter {
+    pub(crate) fn open_read_writer(&mut self) -> SlotReadWriter {
         self.writer += 1;
-        SlotWriter::new(self.slots.clone())
+        SlotReadWriter::new(self.slots.clone())
     }
 }

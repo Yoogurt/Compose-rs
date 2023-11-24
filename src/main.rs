@@ -17,30 +17,28 @@ use compose::foundation::ui::graphics::color::Color;
 use compose::widgets::r#box::BoxLayout;
 use compose::widgets::row::{Row, RowParams};
 use compose_macro::Composable;
-use minifb::{Key, KeyRepeat, Scale, ScaleMode, Window, WindowOptions};
+use minifb::{Scale, ScaleMode, Window, WindowOptions};
 use skia_safe::{AlphaType, ColorSpace, ColorType, ImageInfo, surfaces,
 };
 
-#[Composable]
 fn test_widget() {
     Row(Modifier.padding_top(100.dp()).padding_start(50.dp()).width(200.dp()).height(200.dp()).background(Color::BLUE), RowParams {
         ..Default::default()
     }, |row_scope| {
         BoxLayout(Modifier.height(100.dp()).weight(row_scope, 1f32).vertical_align(row_scope, Alignment::CENTER_VERTICALLY).background(Color::YELLOW), |_| {});
+        Spacer(Modifier.width(50.dp()));
     });
 }
 
-#[Composable]
 fn test_widget_move() {
     Row(Modifier.padding_top(100.dp()).padding_start(50.dp()).width(200.dp()).height(200.dp()).background(Color::BLUE), RowParams {
         ..Default::default()
     }, |row_scope| {
-        Spacer(Modifier.width(50.dp()));
         BoxLayout(Modifier.height(100.dp()).weight(row_scope, 1f32).vertical_align(row_scope, Alignment::CENTER_VERTICALLY).background(Color::YELLOW), |_| {});
     });
 }
 
-fn run_skia_render_engine(content: impl Fn()) {
+fn run_skia_render_engine(content: impl Fn(), diff: impl Fn()) {
     let mut windows = Window::new(
         "Compose-rs",
         800,
@@ -75,27 +73,38 @@ fn run_skia_render_engine(content: impl Fn()) {
     let mut canvas = new_canvas(surface.canvas());
     let mut compose_view_rc = MacOSComposeView::new();
     let mut compose_view = compose_view_rc.borrow_mut();
-    compose_view.set_content(content);
 
+    compose_view.set_content(content);
     drop(compose_view);
 
+    Composer::apply_changes();
+    Composer::apply_deferred_changes();
+
+    Composer::debug_print();
+
+    let mut compose_view = compose_view_rc.borrow_mut();
+    compose_view.no_insert_set_content(diff);
+
+    drop(compose_view);
     Composer::apply_changes();
     Composer::apply_deferred_changes();
 
     let mut compose_view = compose_view_rc.borrow_mut();
 
     // while windows.is_open() && !windows.is_key_pressed(Key::Escape, KeyRepeat::No) {
-    compose_view.dispatch_measure(800, 500);
-    compose_view.dispatch_layout();
-    compose_view.dispatch_draw(&mut canvas);
-    windows.update_with_buffer(buffer.as_slice(), 800, 500).unwrap();
-    std::thread::sleep(Duration::from_millis(100));
+    //     compose_view.dispatch_measure(800, 500);
+    //     compose_view.dispatch_layout();
+    //     compose_view.dispatch_draw(&mut canvas);
+    //     windows.update_with_buffer(buffer.as_slice(), 800, 500).unwrap();
+    //     std::thread::sleep(Duration::from_millis(100));
     // }
 }
 
 fn main() {
     run_skia_render_engine(|| {
         test_widget();
+    }, || {
+        test_widget_move();
     });
 
     Composer::validate_group();
