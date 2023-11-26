@@ -191,9 +191,21 @@ impl LayoutNode {
         }
     }
 
-    pub(crate) fn remove_child(
-        self_: &Rc<RefCell<LayoutNode>>,
-    ) {}
+    pub(crate) fn set_parent(&self, parent: Option<Weak<RefCell<LayoutNode>>>) {
+        self.node_chain.borrow_mut().set_parent(parent)
+    }
+
+    pub(crate) fn on_remove_child(&self,
+                                  child: &Rc<RefCell<LayoutNode>>,
+    ) {
+        let mut child = child.borrow_mut();
+        if self.owner.is_some() {
+            child.detach();
+        }
+
+        child.set_parent(None);
+        child.get_outer_coordinator().borrow_mut().set_wrapped_by(None);
+    }
 
     pub fn as_remeasurable(&self) -> Rc<RefCell<dyn StatefulRemeasurable>> {
         self.layout_node_layout_delegate
@@ -221,15 +233,29 @@ impl LayoutNode {
     }
 
     pub(crate) fn request_remeasure(&self) {}
+
+    pub(crate) fn remove_at(&mut self, index: usize, count: usize) {
+        let mut children = self.children.borrow_mut();
+        for i in (index + count - 1)..=(index) {
+            let child = children.remove(i);
+            self.on_remove_child(&child);
+        }
+    }
+
+    pub(crate) fn remove_all(&mut self) {
+        let mut children = self.children.borrow_mut();
+        children.iter().rev().for_each(|child| {
+            self.on_remove_child(child);
+        });
+
+        children.clear();
+    }
 }
 
 impl ComposeNodeLifecycleCallback for LayoutNode {
-    fn on_reuse(&mut self) {
-    }
+    fn on_reuse(&mut self) {}
 
-    fn on_deactivate(&mut self) {
-    }
+    fn on_deactivate(&mut self) {}
 
-    fn on_release(&mut self) {
-    }
+    fn on_release(&mut self) {}
 }

@@ -15,4 +15,6 @@ pub(crate) trait Owner {
     fn on_request_relayout(&mut self, layout_node: Weak<RefCell<LayoutNode>>);
     fn on_attach(&self, layout_node: &LayoutNode);
     fn on_detach(&self, layout_node: &LayoutNode);
+
+    fn on_end_apply_changes(&mut self) {}
 }

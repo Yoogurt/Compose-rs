@@ -12,3 +12,11 @@ skia-safe = "0.66.2"
 lazy_static = "1.4.0"
 auto-delegate = "0.0.9"
 log = "0.4.20"
+
+[target.'cfg(windows)'.dependencies]
+minifb = "0.25.0"
+skia-safe = "0.66.2"
+
+[target.'cfg(macos)'.dependencies]
+minifb = "0.25.0"
+skia-safe = "0.66.2"

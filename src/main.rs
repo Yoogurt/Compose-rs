@@ -7,6 +7,7 @@ use std::time::Duration;
 use compose::foundation::background::BackgroundModifier;
 use compose::foundation::bridge::platform_compose_view::MacOSComposeView;
 use compose::foundation::composer::{Composer, ScopeUpdateScopeHelper};
+use compose::foundation::desktop::window::DesktopWindow;
 use compose::foundation::drawing::canvas_impl::new_canvas;
 use compose::foundation::geometry::IntoDp;
 use compose::foundation::layout::size_modifier::SizeModifier;
@@ -16,8 +17,7 @@ use compose::foundation::ui::align::Alignment;
 use compose::foundation::ui::graphics::color::Color;
 use compose::widgets::r#box::BoxLayout;
 use compose::widgets::row::{Row, RowParams};
-use compose_macro::Composable;
-use minifb::{Scale, ScaleMode, Window, WindowOptions};
+use minifb::{Key, KeyRepeat, Scale, ScaleMode, Window, WindowOptions};
 use skia_safe::{AlphaType, ColorSpace, ColorType, ImageInfo, surfaces,
 };
 
@@ -34,6 +34,7 @@ fn test_widget_move() {
     Row(Modifier.padding_top(100.dp()).padding_start(50.dp()).width(200.dp()).height(200.dp()).background(Color::BLUE), RowParams {
         ..Default::default()
     }, |row_scope| {
+        Spacer(Modifier.width(50.dp()));
         BoxLayout(Modifier.height(100.dp()).weight(row_scope, 1f32).vertical_align(row_scope, Alignment::CENTER_VERTICALLY).background(Color::YELLOW), |_| {});
     });
 }
@@ -91,17 +92,17 @@ fn run_skia_render_engine(content: impl Fn(), diff: impl Fn()) {
 
     let mut compose_view = compose_view_rc.borrow_mut();
 
-    // while windows.is_open() && !windows.is_key_pressed(Key::Escape, KeyRepeat::No) {
-    //     compose_view.dispatch_measure(800, 500);
-    //     compose_view.dispatch_layout();
-    //     compose_view.dispatch_draw(&mut canvas);
-    //     windows.update_with_buffer(buffer.as_slice(), 800, 500).unwrap();
-    //     std::thread::sleep(Duration::from_millis(100));
-    // }
+    while windows.is_open() && !windows.is_key_pressed(Key::Escape, KeyRepeat::No) {
+        compose_view.dispatch_measure(800, 500);
+        compose_view.dispatch_layout();
+        compose_view.dispatch_draw(&mut canvas);
+        windows.update_with_buffer(buffer.as_slice(), 800, 500).unwrap();
+        std::thread::sleep(Duration::from_millis(100));
+    }
 }
 
 fn main() {
-    run_skia_render_engine(|| {
+    DesktopWindow(Default::default(), || {
         test_widget();
     }, || {
         test_widget_move();
@@ -111,4 +112,5 @@ fn main() {
     Composer::debug_print();
     Composer::destroy();
     compose::foundation::memory::leak_token::validate_leak();
+
 }

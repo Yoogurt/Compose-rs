@@ -5,7 +5,9 @@ use std::any::Any;
 use std::cell::{Ref, RefMut};
 use std::fmt::{Debug, Formatter};
 use std::ops::{Deref, DerefMut};
+use crate::foundation::application_appiler::ApplicationApplier;
 use crate::foundation::compose_node_lifecycle_callback::ComposeNodeLifecycleCallback;
+use crate::foundation::composition::Composition;
 use crate::foundation::derived_state::DerivedStateObserver;
 use crate::foundation::pending::Pending;
 use crate::foundation::recompose_scope_impl::RecomposeScope;
@@ -19,17 +21,17 @@ use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use super::{constraint::Constraints, layout_node::LayoutNode, slot_table_type::GroupKind};
 
 #[derive(Debug)]
-enum ChangeType {
+pub(crate) enum ChangeType {
     Changes,
     FixUp,
     InsertUpFixUp,
     DeferredChange,
 }
 
-struct Change {
-    change: Box<dyn FnOnce(&mut dyn RememberManager)>,
-    change_type: ChangeType,
-    sequence: usize,
+pub(crate) struct Change {
+    pub(crate) change: Box<dyn FnOnce(&mut dyn RememberManager)>,
+    pub(crate) change_type: ChangeType,
+    // sequence: usize,
 }
 
 impl Debug for Change {
@@ -37,12 +39,12 @@ impl Debug for Change {
         f.debug_struct("Change")
             .field("change_type", &self.change_type)
             .field("change", &(self.change.as_ref() as *const dyn FnOnce(_)))
-            .field("sequence", &self.sequence)
+            // .field("sequence", &self.sequence)
             .finish()
     }
 }
 
-pub(crate) struct ComposerInner {
+pub(crate) struct ComposerImpl {
     pub(crate) hash: u64,
     pub(crate) depth: usize,
     pub(crate) node_expected: bool,
@@ -51,6 +53,7 @@ pub(crate) struct ComposerInner {
     pub(crate) inserting: bool,
     pub(crate) root: Option<Rc<RefCell<LayoutNode>>>,
     pub(crate) layout_node_stack: Vec<Rc<RefCell<LayoutNode>>>,
+    pub(crate) composition: Composition,
 
     pub(crate) slot_table: SlotTable,
 
@@ -62,12 +65,10 @@ pub(crate) struct ComposerInner {
     changes: Vec<Change>,
     pending_stack: Vec<Option<Pending>>,
 
-    remember_dispatcher: RememberEventDispatcher,
-
     invalidate_stack: Vec<Rc<RefCell<RecomposeScopeImpl>>>,
 }
 
-impl Debug for ComposerInner {
+impl Debug for ComposerImpl {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Composer")
             .field("hash", &self.hash)
@@ -81,7 +82,7 @@ impl Debug for ComposerInner {
     }
 }
 
-impl ComposerInner {
+impl ComposerImpl {
     const ROOT_KEY: u64 = 100;
     const NODE_KEY: u64 = 125;
 
@@ -213,7 +214,7 @@ impl ComposerInner {
         self.read_writer.begin_use_layout_node(node.clone());
 
         let node_ref = node.clone();
-        self.record_appiler_operation(move |_| {
+        self.record_applier_operation(move |_| {
             node_ref.borrow_mut().on_reuse();
         });
 
@@ -224,7 +225,7 @@ impl ComposerInner {
         self.fix_up.push(Change {
             change: Box::new(fix_up),
             change_type: ChangeType::FixUp,
-            sequence: self.sequence,
+            // sequence: self.sequence,
         });
         self.sequence += 1;
     }
@@ -233,7 +234,7 @@ impl ComposerInner {
         self.insert_up_fix_up.push(Change {
             change: Box::new(insert_up_fix_up),
             change_type: ChangeType::InsertUpFixUp,
-            sequence: self.sequence,
+            // sequence: self.sequence,
         });
         self.sequence += 1;
     }
@@ -242,19 +243,9 @@ impl ComposerInner {
         self.deferred_changes.push(Change {
             change: Box::new(deferred_change),
             change_type: ChangeType::DeferredChange,
-            sequence: self.sequence,
+            // sequence: self.sequence,
         });
         self.sequence += 1;
-    }
-
-    pub(crate) fn apply_changes(&mut self) {
-        let mut changes = Vec::<Change>::new();
-        std::mem::swap(&mut self.changes, &mut changes);
-
-        changes.into_iter().for_each(|change| {
-            println!("apply change sequence: {} , type: {:?}", change.sequence, change.change_type);
-            (change.change)(&mut self.remember_dispatcher);
-        });
     }
 
     pub(crate) fn register_insert_up_fix_up(&mut self) {
@@ -267,26 +258,18 @@ impl ComposerInner {
         let mut deferred_changes = Vec::<Change>::new();
         std::mem::swap(&mut self.deferred_changes, &mut deferred_changes);
 
+        let mut remember_dispatcher = RememberEventDispatcher::new();
         deferred_changes.into_iter().for_each(|change| {
-            println!("apply deferred change sequence: {} , type: {:?}", change.sequence, change.change_type);
-            (change.change)(&mut self.remember_dispatcher);
+            (change.change)(&mut remember_dispatcher);
         });
     }
 
-    fn record_appiler_operation(&mut self, action: impl FnOnce(&mut dyn RememberManager) + 'static) {
-        self.record(action);
+    fn record_applier_operation(&mut self, action: impl FnOnce(&mut dyn RememberManager) + 'static) {
+        self.composition.record(action)
     }
 
     fn record_slot_editing_operation(&mut self, action: impl FnOnce(&mut dyn RememberManager) + 'static) {
-        self.record(action);
-    }
-
-    fn record(&mut self, action: impl FnOnce(&mut dyn RememberManager) + 'static) {
-        self.changes.push(Change {
-            change: Box::new(action),
-            change_type: ChangeType::Changes,
-            sequence: self.sequence,
-        });
+        self.composition.record(action)
     }
 
     fn record_insert(&mut self) {
@@ -294,13 +277,9 @@ impl ComposerInner {
             let mut fix_ups: Vec<Change> = vec![];
             std::mem::swap(&mut fix_ups, &mut self.fix_up);
 
-            self.record_slot_editing_operation(move |_| {
-                let mut remember_manager = RememberEventDispatcher::new();
-                let remember_manager_mut = &mut remember_manager;
-
+            self.record_slot_editing_operation(move |remember_manager| {
                 fix_ups.into_iter().for_each(|change| {
-                    println!("apply change sequence: {} , type: {:?}", change.sequence, change.change_type);
-                    (change.change)(remember_manager_mut);
+                    (change.change)(remember_manager);
                 });
             });
         }
@@ -445,11 +424,11 @@ impl ComposerInner {
             let slot_to_remove = self.read_writer.pop_current_slot();
 
             slot_to_remove.data.visit_layout_node(&mut |layout_node| {
-                self.remember_dispatcher.deactivate(layout_node.clone())
+                // self.remember_dispatcher.deactivate(layout_node.clone())
             });
 
             slot_to_remove.data.visit_lifecycle_observer(&mut |item| {
-                self.remember_dispatcher.forgetting(item.clone())
+                // self.remember_dispatcher.forgetting(item.clone())
             });
         }
     }
@@ -492,9 +471,17 @@ impl ComposerInner {
 
         true
     }
+
+    pub(crate) fn has_pending_changes(&self) -> bool {
+        !self.changes.is_empty()
+    }
+
+    pub(crate) fn apply_changes(&mut self) {
+        self.composition.apply_changes();
+    }
 }
 
-impl Default for ComposerInner {
+impl Default for ComposerImpl {
     fn default() -> Self {
         let mut slot_table = SlotTable::default();
         let read_writer = slot_table.open_read_writer();
@@ -506,7 +493,7 @@ impl Default for ComposerInner {
             node_expected: false,
             inserting: false,
             layout_node_stack: vec![],
-            slot_table: slot_table,
+            slot_table,
             root: None,
             fix_up: vec![],
             insert_up_fix_up: vec![],
@@ -515,12 +502,12 @@ impl Default for ComposerInner {
             pending_stack: vec![],
             read_writer,
             invalidate_stack: vec![],
-            remember_dispatcher: RememberEventDispatcher::new(),
+            composition: Composition::new(ApplicationApplier::new())
         }
     }
 }
 
-impl DerivedStateObserver for ComposerInner {
+impl DerivedStateObserver for ComposerImpl {
     fn start(&mut self) {
         todo!()
     }

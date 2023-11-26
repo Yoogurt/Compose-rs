@@ -8,3 +8,4 @@ minifb = "0.25.0"
 skia-safe = "0.66.2"
 compose = { version = "0.1.0", path = "compose" }
 compose_macro = { version = "0.1.0", path = "compose_macro" }
+tokio = { version = "1.34.0", features = ["full"] }
