@@ -1,7 +1,8 @@
 use auto_delegate::{delegate, Delegate};
+use std::any::Any;
 
 #[delegate]
-pub(crate) trait Applier<N> {
+pub(crate) trait Applier<N> where N: Any + 'static {
     fn get_current(&self) -> &N;
     fn on_begin_changes(&self) {}
     fn on_end_changes(&self) {}
@@ -9,13 +10,11 @@ pub(crate) trait Applier<N> {
     fn up(&mut self);
     fn clear(&mut self);
 
-    fn insert_top_down(&self) {
+    fn insert_top_down(&self, instace: N) {
         unimplemented!()
     }
 
-    fn insert_bottom_up(&self) {
-        unimplemented!()
-    }
+    fn insert_bottom_up(&self, instace: N) { unimplemented!() }
 
     fn remove(&self, index: usize, count: usize) {
         unimplemented!()
@@ -43,7 +42,7 @@ impl<T> AbstractApplier<T> where T: Clone {
     }
 }
 
-impl<T> Applier<T> for AbstractApplier<T> where T: Clone {
+impl<T> Applier<T> for AbstractApplier<T> where T: Any + Clone {
     fn get_current(&self) -> &T {
         &self.current
     }

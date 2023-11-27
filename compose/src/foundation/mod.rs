@@ -68,4 +68,5 @@ mod applier;
 mod ui_applier;
 pub mod desktop;
 pub(crate) mod composition;
-mod application_appiler;
+mod application_applier;
+mod updater;

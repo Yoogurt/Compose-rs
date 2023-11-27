@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::cmp::Ordering;
+use std::ops::Deref;
 use std::rc::{Rc, Weak};
 use std::sync::atomic::AtomicU32;
 use crate::foundation::compose_node_lifecycle_callback::ComposeNodeLifecycleCallback;
@@ -13,6 +14,7 @@ use crate::foundation::node::Owner;
 use crate::foundation::node_coordinator::NodeCoordinator;
 use crate::foundation::usage_by_parent::UsageByParent;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
+use crate::foundation::utils::self_reference::SelfReference;
 
 use super::{layout_state::LayoutState, node_chain::NodeChain};
 use super::canvas::Canvas;
@@ -36,6 +38,14 @@ pub(crate) struct LayoutNode {
 
     pub(crate) owner: Option<Weak<RefCell<dyn Owner>>>,
     pub(crate) identify: u32,
+
+    pub(crate) weak_self: Weak<RefCell<Self>>,
+}
+
+impl SelfReference for LayoutNode {
+    fn get_self(&self) -> Weak<RefCell<Self>> {
+        self.weak_self.clone()
+    }
 }
 
 impl LayoutNode {
@@ -50,10 +60,16 @@ impl LayoutNode {
             layout_state: LayoutState::Idle.wrap_with_rc_refcell(),
 
             owner: None,
+            weak_self: Weak::default(),
             identify: IDENTIFY.with(|identity| identity.fetch_add(1, std::sync::atomic::Ordering::SeqCst)),
         };
 
         let node = node.wrap_with_rc_refcell();
+        {
+            let mut node_mut = node.borrow_mut();
+            node_mut.weak_self = Rc::downgrade(&node);
+        }
+
         {
             let node_ref = node.borrow();
             let identify = node_ref.identify;
@@ -249,6 +265,29 @@ impl LayoutNode {
         });
 
         children.clear();
+    }
+
+    pub(crate) fn insert_at(&mut self, index: usize, node: Rc<RefCell<LayoutNode>>) {
+        let mut node_mut = node.borrow_mut();
+        if node_mut.get_parent().is_some() {
+            panic!("Cannot insert {:?} because it already has a parent.", node);
+        }
+
+        if node_mut.owner.is_some() {
+            panic!("Cannot insert {:?} because it already has an owner.", node);
+        }
+
+        node_mut.set_parent(Some(self.get_self()));
+
+        self.children.borrow_mut().insert(index, node.clone());
+
+        let owner = self.owner.as_ref().and_then(|owner| owner.upgrade());
+        match owner {
+            Some(owner) => {
+                node_mut.attach(Some(self), Rc::downgrade(&owner));
+            }
+            _ => {}
+        }
     }
 }
 

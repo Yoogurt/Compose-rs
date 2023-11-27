@@ -1,27 +1,40 @@
+use crate::foundation::composer_impl::ApplierInType;
 use std::any::Any;
+use std::cell::RefCell;
+use std::ops::Deref;
+use std::rc::Rc;
 use crate::foundation::applier::Applier;
 use crate::foundation::composer_impl::{Change, ChangeType};
+use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::remember_manager::{RememberEventDispatcher, RememberManager};
 use crate::foundation::utils::box_wrapper::WrapWithBox;
 
 pub(crate) struct Composition {
-    applier: Box<dyn Applier<dyn Any>>,
+    applier: Box<dyn Applier<Rc<RefCell<LayoutNode>>>>,
     changes: Vec<Change>,
+    deferred_changes: Vec<Change>,
 }
 
 impl Composition {
-    pub(crate) fn new(applier: impl Applier<dyn Any>) -> Self {
+    pub(crate) fn new(applier: impl Applier<Rc<RefCell<LayoutNode>>> + 'static) -> Self {
         Self {
             applier: applier.wrap_with_box(),
             changes: Vec::new(),
+            deferred_changes: vec![],
         }
     }
 
-    pub(crate) fn record(&mut self, action: impl FnOnce(&mut dyn RememberManager) + 'static) {
+    pub(crate) fn record(&mut self, action: impl FnOnce(&dyn Applier<ApplierInType>, &mut dyn RememberManager) + 'static) {
         self.changes.push(Change {
             change: Box::new(action),
             change_type: ChangeType::Changes,
-            // sequence: self.sequence,
+        });
+    }
+
+    pub(crate) fn record_deferred_change(&mut self, deferred_change: impl FnOnce(&dyn Applier<ApplierInType>, &mut dyn RememberManager) + 'static) {
+        self.deferred_changes.push(Change {
+            change: Box::new(deferred_change),
+            change_type: ChangeType::DeferredChange,
         });
     }
 
@@ -29,9 +42,23 @@ impl Composition {
         let mut changes = Vec::<Change>::new();
         std::mem::swap(&mut self.changes, &mut changes);
 
+        self.applier.on_begin_changes();
+
         let mut remember_dispatcher = RememberEventDispatcher::new();
         changes.into_iter().for_each(|change| {
-            (change.change)(&mut remember_dispatcher);
+            (change.change)(self.applier.deref(), &mut remember_dispatcher);
+        });
+
+        self.applier.on_end_changes();
+    }
+
+    pub(crate) fn apply_deferred_changes(&mut self) {
+        let mut deferred_changes = Vec::<Change>::new();
+        std::mem::swap(&mut self.deferred_changes, &mut deferred_changes);
+
+        let mut remember_dispatcher = RememberEventDispatcher::new();
+        deferred_changes.into_iter().for_each(|change| {
+            (change.change)(self.applier.deref(), &mut remember_dispatcher);
         });
     }
 }

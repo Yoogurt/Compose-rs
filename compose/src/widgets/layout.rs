@@ -13,9 +13,13 @@ pub fn Layout(
     content: impl FnMut(),
 ) {
     ComposeNode(
-        move |node| {
-            node.set_measure_policy(measure_policy.clone());
-            node.set_modifier(modifier.clone());
+        move |updater| {
+            updater.set(measure_policy, |node, measure_policy| {
+                node.set_measure_policy(measure_policy);
+            });
+            updater.set(modifier, |node, modifier| {
+                node.set_modifier(modifier);
+            })
         },
         content,
     );

@@ -59,7 +59,7 @@ impl MacOSComposeView {
     }
 
     pub fn set_content(&self, content: impl Fn()) {
-        Composer::do_compose(content);
+        Composer::do_set_content(content);
     }
 
     pub fn no_insert_set_content(&self, content: impl Fn()) {
