@@ -2,6 +2,7 @@ use std::cell::{Ref, RefCell, RefMut};
 use std::rc::Rc;
 
 use crate::foundation::constraint::Constraints;
+use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::layout_node_container::LayoutNodeContainer;
 use crate::foundation::layout_state::LayoutState;
 use crate::foundation::measurable::Measurable;
@@ -93,6 +94,12 @@ impl LayoutNodeLayoutDelegate {
             _ = self.nodes.as_ref().unwrap().borrow().get_parent()
                 .and_then(|parent| parent.upgrade())
                 .then(|parent| parent.borrow().request_remeasure());
+        }
+    }
+
+    pub(crate) fn update_parent_data_with_parent(&self, parent: Option<&LayoutNode>) {
+        if self.measure_pass_delegate.borrow_mut().update_parent_data() {
+            _ = parent.then(|parent| parent.request_remeasure());
         }
     }
 }

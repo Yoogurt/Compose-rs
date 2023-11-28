@@ -1,7 +1,7 @@
 use crate::foundation::composer_impl::ApplierInType;
 use std::any::Any;
 use std::cell::RefCell;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
 use crate::foundation::applier::Applier;
 use crate::foundation::composer_impl::{Change, ChangeType};
@@ -24,14 +24,14 @@ impl Composition {
         }
     }
 
-    pub(crate) fn record(&mut self, action: impl FnOnce(&dyn Applier<ApplierInType>, &mut dyn RememberManager) + 'static) {
+    pub(crate) fn record(&mut self, action: impl FnOnce(&mut dyn Applier<ApplierInType>, &mut dyn RememberManager) + 'static) {
         self.changes.push(Change {
             change: Box::new(action),
             change_type: ChangeType::Changes,
         });
     }
 
-    pub(crate) fn record_deferred_change(&mut self, deferred_change: impl FnOnce(&dyn Applier<ApplierInType>, &mut dyn RememberManager) + 'static) {
+    pub(crate) fn record_deferred_change(&mut self, deferred_change: impl FnOnce(&mut dyn Applier<ApplierInType>, &mut dyn RememberManager) + 'static) {
         self.deferred_changes.push(Change {
             change: Box::new(deferred_change),
             change_type: ChangeType::DeferredChange,
@@ -46,7 +46,7 @@ impl Composition {
 
         let mut remember_dispatcher = RememberEventDispatcher::new();
         changes.into_iter().for_each(|change| {
-            (change.change)(self.applier.deref(), &mut remember_dispatcher);
+            (change.change)(self.applier.deref_mut(), &mut remember_dispatcher);
         });
 
         self.applier.on_end_changes();
@@ -58,7 +58,7 @@ impl Composition {
 
         let mut remember_dispatcher = RememberEventDispatcher::new();
         deferred_changes.into_iter().for_each(|change| {
-            (change.change)(self.applier.deref(), &mut remember_dispatcher);
+            (change.change)(self.applier.deref_mut(), &mut remember_dispatcher);
         });
     }
 }

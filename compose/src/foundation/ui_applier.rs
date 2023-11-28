@@ -51,11 +51,10 @@ impl Applier<Rc<RefCell<LayoutNode>>> for UiApplier {
         self.applier_impl.root.borrow_mut().remove_all();
     }
 
-    fn insert_top_down(&self, instace: Rc<RefCell<LayoutNode>>) {
-    }
+    fn insert_top_down(&self, index: usize, instance: Rc<RefCell<LayoutNode>>) {}
 
-    fn insert_bottom_up(&self, instace: Rc<RefCell<LayoutNode>>) {
-        // self.get_current().borrow_mut().insert_at()
+    fn insert_bottom_up(&self, index: usize, instance: Rc<RefCell<LayoutNode>>) {
+        self.get_current().borrow_mut().insert_at(index, instance)
     }
 
     fn remove(&self, index: usize, count: usize) {

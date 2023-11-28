@@ -55,7 +55,10 @@ impl Composer {
     }
 
     pub fn destroy() {
-        Self::static_dispatch_mut(|composer| composer.destroy())
+        Self::static_dispatch_mut(|composer| composer.destroy());
+        COMPOSER.with(|local_composer| {
+            local_composer.borrow_mut().compose_impl = None;
+        })
     }
 
     pub(crate) fn detach_root_layout_node() {
@@ -78,15 +81,15 @@ impl Composer {
         Self::static_dispatch_mut(move |composer| composer.use_node())
     }
 
-    fn record_fix_up(fix_up: impl FnOnce(&dyn Applier<Rc<RefCell<LayoutNode>>>, &mut dyn RememberManager) + 'static) {
+    fn record_fix_up(fix_up: impl FnOnce(&mut dyn Applier<Rc<RefCell<LayoutNode>>>, &mut dyn RememberManager) + 'static) {
         Self::static_dispatch_mut(move |composer| composer.record_fix_up(fix_up))
     }
 
-    fn record_insert_up_fix_up(insert_up: impl FnOnce(&dyn Applier<ApplierInType>, &mut dyn RememberManager) + 'static) {
+    fn record_insert_up_fix_up(insert_up: impl FnOnce(&mut dyn Applier<ApplierInType>, &mut dyn RememberManager) + 'static) {
         Self::static_dispatch_mut(move |composer| composer.record_insert_up_fix_up(insert_up))
     }
 
-    pub(crate) fn record_deferred_change(&mut self, derred_change: impl FnOnce(&dyn Applier<ApplierInType>, &mut dyn RememberManager) + 'static) {
+    pub(crate) fn record_deferred_change(&mut self, derred_change: impl FnOnce(&mut dyn Applier<ApplierInType>, &mut dyn RememberManager) + 'static) {
         Self::static_dispatch_mut(move |composer| composer.record_deferred_change(derred_change))
     }
 

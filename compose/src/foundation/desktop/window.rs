@@ -73,14 +73,14 @@ pub fn DesktopWindow(option: DesktopWindowOption,
     Composer::apply_changes();
     Composer::apply_deferred_changes();
 
-    Composer::debug_print();
-
     let mut compose_view = compose_view_rc.borrow_mut();
     compose_view.no_insert_set_content(diff);
 
     drop(compose_view);
     Composer::apply_changes();
     Composer::apply_deferred_changes();
+
+    Composer::debug_print();
 
     let mut compose_view = compose_view_rc.borrow_mut();
 

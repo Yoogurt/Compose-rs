@@ -113,7 +113,7 @@ impl LayoutNode {
             child.borrow_mut().attach(Some(self), owner.clone());
         });
 
-        self.layout_node_layout_delegate.borrow().update_parent_data();
+        self.layout_node_layout_delegate.borrow().update_parent_data_with_parent(parent);
     }
 
     pub fn detach(&mut self) {

@@ -1,5 +1,5 @@
 use std::{any::Any, cell::RefCell, rc::Rc};
-use std::fmt::{Debug, Formatter};
+use std::fmt::{Debug, Formatter, Write};
 use std::hash::Hash;
 use crate::foundation::modifier::NodeKind;
 use crate::foundation::remember_observer::{RememberObserver, RememberObserverDelegate};
@@ -9,7 +9,8 @@ use super::layout_node::LayoutNode;
 
 #[derive(Debug, Hash, PartialEq, Eq)]
 pub(crate) enum GroupKindIndex {
-    Empty = 0,
+    // Empty = 0,
+    Hash = 0,
     Group = 1,
     LayoutNode = 2,
     LifecycleObserver = 3,
@@ -17,17 +18,45 @@ pub(crate) enum GroupKindIndex {
 }
 
 pub(crate) enum GroupKind {
-    Empty,
+    // Empty,
+    Hash(u64),
     Group {
-        hash: u64,
+        key: u64,
         depth: usize,
         skipping: bool,
-        slot_data: Rc<RefCell<Vec<SlotTableData>>>,
+        slot_data: Rc<RefCell<Vec<Slot>>>,
     },
-    Node(Option<Rc<RefCell<LayoutNode>>>),
 
+    Node { node: Option<Rc<RefCell<LayoutNode>>>, slot_data: Rc<RefCell<Vec<Slot>>> },
     LifecycleObserver(Rc<RefCell<dyn RememberObserver>>),
+
     CustomType(Rc<RefCell<dyn Any>>),
+}
+
+impl GroupKind {
+    pub fn Node() -> GroupKind {
+        GroupKind::Node { node: None, slot_data: vec![].wrap_with_rc_refcell() }
+    }
+    pub fn update_node(&mut self, layout_node: Rc<RefCell<LayoutNode>>) {
+        match self {
+            GroupKind::Node { node, .. } => {
+                *node = Some(layout_node)
+            }
+            _ => {
+                panic!("update node from wrong group kind")
+            }
+        }
+    }
+    pub fn node(&self) -> Rc<RefCell<LayoutNode>> {
+        match self {
+            GroupKind::Node { node, .. } => {
+                node.as_ref().unwrap().clone()
+            }
+            _ => {
+                panic!("update node from wrong group kind")
+            }
+        }
+    }
 }
 
 impl From<GroupKind> for Rc<RefCell<GroupKind>> {
@@ -44,7 +73,7 @@ impl GroupKind {
                     // slot_table_type.data.visit_layout_node(visitor);
                 }
             }
-            GroupKind::Node(layout_node) => {
+            GroupKind::Node { node, .. } => {
                 // visitor(layout_node);
             }
             _ => {}
@@ -71,15 +100,22 @@ impl GroupKind {
             _ => { false }
         }
     }
+
+    pub fn is_group(&self) -> bool {
+        match self {
+            GroupKind::Group { .. } => { true }
+            _ => { false }
+        }
+    }
 }
 
 impl Debug for GroupKind {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            GroupKind::Empty => {
-                f.debug_struct("GroupKind::Empty").finish()
+            GroupKind::Hash(key) => {
+                f.write_str(&format!("GroupKind::Hash({})", key))
             }
-            GroupKind::Group { hash, depth, skipping, slot_data } => {
+            GroupKind::Group { key: hash, depth, skipping, slot_data } => {
                 f.debug_struct("GroupKind::Group")
                     .field("hash", hash)
                     .field("depth", depth)
@@ -87,11 +123,19 @@ impl Debug for GroupKind {
                     .field("slot_data", slot_data)
                     .finish()
             }
-            GroupKind::Node(layout_node) => {
-                let identify = layout_node.as_ref().unwrap().borrow().identify;
-                f.debug_struct("GroupKind::LayoutNodeType")
-                    .field("layout_node", &format!("LayoutNode({identify})"))
-                    .finish()
+            GroupKind::Node { node, slot_data } => {
+                match node.as_ref() {
+                    Some(node) => {
+                        let identify = node.borrow().identify;
+                        f.debug_struct("GroupKind::Node")
+                            .field("node", &format!("LayoutNode({identify})"))
+                            .field("slot_data", slot_data)
+                            .finish()
+                    }
+                    _ => {
+                        f.debug_struct("GroupKind::Node").field("node", &"(Not Attach)").finish()
+                    }
+                }
             }
             GroupKind::LifecycleObserver(observer) => {
                 f.debug_struct("GroupKind::LifecycleObserver")
@@ -110,13 +154,13 @@ impl Debug for GroupKind {
 impl GroupKind {
     pub(crate) fn index(&self) -> GroupKindIndex {
         match self {
-            GroupKind::Empty => GroupKindIndex::Empty,
+            GroupKind::Hash(..) => { GroupKindIndex::Hash }
             GroupKind::Group { .. } => GroupKindIndex::Group,
-            GroupKind::Node(_) => GroupKindIndex::LayoutNode,
+            GroupKind::Node { .. } => GroupKindIndex::LayoutNode,
             GroupKind::LifecycleObserver(_) => GroupKindIndex::LifecycleObserver,
             GroupKind::CustomType(_) => GroupKindIndex::Custom,
         }
     }
 }
 
-pub(crate) type SlotTableData = Rc<RefCell<GroupKind>>;
+pub(crate) type Slot = Rc<RefCell<GroupKind>>;

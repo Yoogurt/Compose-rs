@@ -10,11 +10,11 @@ pub(crate) trait Applier<N> where N: Any + 'static {
     fn up(&mut self);
     fn clear(&mut self);
 
-    fn insert_top_down(&self, instace: N) {
+    fn insert_top_down(&self, index: usize, instance: N) {
         unimplemented!()
     }
 
-    fn insert_bottom_up(&self, instace: N) { unimplemented!() }
+    fn insert_bottom_up(&self, index: usize, instance: N) { unimplemented!() }
 
     fn remove(&self, index: usize, count: usize) {
         unimplemented!()
