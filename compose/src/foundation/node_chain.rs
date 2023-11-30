@@ -300,7 +300,7 @@ impl NodeChain {
 
                 let mut node = padded_head.clone();
                 while index < after_size {
-                    let parent = node.clone();
+                    let parent = node;
                     node = Self::create_and_insert_node_as_child(&mut after[index], parent);
                     index += 1;
                 }

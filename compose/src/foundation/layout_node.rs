@@ -130,6 +130,9 @@ impl LayoutNode {
         }
     }
 
+    pub(crate) fn is_attached(&self) -> bool {
+        self.owner.is_some()
+    }
 
     fn z_comparator(left: &Rc<RefCell<LayoutNode>>, right: &Rc<RefCell<LayoutNode>>) -> Ordering {
         left.borrow().get_measure_pass_delegate().borrow().z_index.partial_cmp(&right.borrow().get_measure_pass_delegate().borrow().z_index).unwrap()

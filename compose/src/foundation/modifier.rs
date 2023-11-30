@@ -11,7 +11,7 @@ use compose_foundation_macro::{Leak, ModifierElement};
 
 use crate::foundation::delegatable_node::{DelegatableKind, DelegatableNode};
 use crate::foundation::node_coordinator::NodeCoordinator;
-use crate::foundation::oop::{AnyConverter, DrawModifierNodeConverter, ParentDataModifierNodeConverter};
+use crate::foundation::oop::{AnyConverter, DrawModifierNodeConverter, LayoutAwareModifierNodeConverter, ParentDataModifierNodeConverter};
 use crate::foundation::oop::LayoutModifierNodeConverter;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
@@ -63,6 +63,23 @@ macro_rules! impl_node_kind_any {
 }
 
 #[macro_export]
+macro_rules! impl_node_kind_for_type {
+    ($tt:tt, $expr:expr) => {
+         impl crate::foundation::modifier::NodeKindPatch for $tt {
+            fn get_node_kind(&self) -> crate::foundation::modifier::NodeKind {
+                $expr
+            }
+        }
+
+        impl crate::foundation::delegatable_node::DelegatableNode for $tt {
+            fn get_node(&self) -> crate::foundation::delegatable_node::DelegatableKind {
+                crate::foundation::delegatable_node::DelegatableKind::This
+            }
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! impl_node_kind_parent_data {
     ($tt:tt) => {
         impl crate::foundation::modifier::NodeKindPatch for $tt {
@@ -106,7 +123,7 @@ pub trait NodeKindParentData: NodeKindPatch {
     }
 }
 
-pub trait ModifierElement: AnyConverter + LayoutModifierNodeConverter + DrawModifierNodeConverter + ParentDataModifierNodeConverter + NodeKindPatch + Debug {
+pub trait ModifierElement: AnyConverter + LayoutModifierNodeConverter + DrawModifierNodeConverter + ParentDataModifierNodeConverter + LayoutAwareModifierNodeConverter + NodeKindPatch + Debug {
     fn as_modifier_element(&self) -> &dyn ModifierElement;
     fn as_modifier_element_mut(&mut self) -> &mut dyn ModifierElement;
 }

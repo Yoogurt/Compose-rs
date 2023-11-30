@@ -104,6 +104,7 @@ pub fn ModifierElement(struct_token_stream: TokenStream) -> TokenStream {
         ("LayoutModifierNodeConverter", "as_layout_modifier_node", "as_layout_modifier_node_mut", "LayoutModifierNode"),
         ("DrawModifierNodeConverter", "as_draw_modifier_node", "as_draw_modifier_node_mut", "DrawModifierNode"),
         ("ParentDataModifierNodeConverter", "as_parent_data_modifier_node", "as_parent_data_modifier_node_mut", "ParentDataModifierNode"),
+        ("LayoutAwareModifierNodeConverter", "as_layout_aware_modifier_node", "as_layout_aware_modifier_node_mut", "LayoutAwareModifierNode"),
     ];
 
     let mut mapping = converter.into_iter().map(|value| (value.0, (value.1, value.2, value.3, false))).collect::<HashMap<&str, (&str, &str, &str, bool)>>();

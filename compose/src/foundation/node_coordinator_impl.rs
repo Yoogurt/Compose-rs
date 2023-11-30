@@ -8,8 +8,10 @@ use auto_delegate::Delegate;
 use compose_foundation_macro::{AnyConverter, Leak};
 
 use crate::foundation::canvas::Canvas;
+use crate::foundation::composer::Composer;
 use crate::foundation::geometry::{IntOffset, IntSize};
 use crate::foundation::intrinsic_measurable::IntrinsicMeasurable;
+use crate::foundation::layout::layout_coordinates::LayoutCoordinates;
 use crate::foundation::look_ahead_capable_placeable::LookaheadCapablePlaceable;
 use crate::foundation::look_ahead_capable_placeable_impl::LookaheadCapablePlaceableImpl;
 use crate::foundation::measure_result::{MeasureResult, MeasureResultProvider};
@@ -182,9 +184,25 @@ impl MeasureResultProvider for NodeCoordinatorImpl {
     }
 }
 
+impl LayoutCoordinates for NodeCoordinatorImpl {
+    fn size(&self) -> IntSize {
+        self.get_measured_size()
+    }
+
+    fn is_attached(&self) -> bool {
+       self.layout_node.upgrade().map(|layout_node| layout_node.borrow().is_attached()).unwrap_or(false)
+    }
+}
+
 impl NodeCoordinator for NodeCoordinatorImpl {
     fn as_node_coordinator(&self) -> &dyn NodeCoordinator {
         self
+    }
+
+    fn on_placed(&self) {
+        self.visit_nodes(NodeKind::LayoutAware, |modifier_node| {
+            modifier_node.borrow().as_layout_aware_modifier_node().unwrap().on_placed(self);
+        });
     }
 }
 
@@ -247,6 +265,9 @@ impl NodeCoordinatorImpl {
             self.get_wrapped_by().and_then(|wrapped_by| {
                 let tail = wrapped_by.borrow().get_tail();
                 if include_tail {
+                    dbg!(self);
+                    dbg!("wrapped_by", &wrapped_by);
+                    dbg!("wrapped_by child", tail.borrow().get_child());
                     tail.borrow().get_child()
                 } else {
                     Some(tail)
@@ -270,7 +291,6 @@ impl NodeCoordinatorImpl {
 
         let mut node = self.head_node(include_tail);
 
-        dbg!(&node);
         while let Some(visit) = node {
             if visit.borrow().get_node_kind() as u32 & mask != 0 {
                 block(&visit);
@@ -287,7 +307,6 @@ impl NodeCoordinatorImpl {
     fn head(&self, node_kind: NodeKind) -> Option<Rc<RefCell<dyn ModifierNode>>> {
         let mut stop_node = self.get_tail();
         let include_tail = (node_kind as u32 & NodeKind::LayoutAware as u32) != 0;
-        // dbg!(&stop_node);
         if !include_tail {
             let node = match stop_node.borrow().get_parent() {
                 Some(parent) => { parent }

@@ -1,7 +1,10 @@
 #![allow(warnings)]
 
+use std::cell::RefCell;
 use std::default::Default as STDefault;
 use std::hash::Hash;
+use std::rc::Rc;
+use compose::foundation::background;
 
 use compose::foundation::background::BackgroundModifier;
 use compose::foundation::composer::{Composer, ScopeUpdateScopeHelper};
@@ -10,6 +13,7 @@ use compose::foundation::geometry::IntoDp;
 use compose::foundation::layout::size_modifier::SizeModifier;
 use compose::foundation::modifier::Modifier;
 use compose::foundation::spacer::Spacer;
+use compose::foundation::ui::align;
 use compose::foundation::ui::align::{Alignment, AlignmentHorizontal};
 use compose::foundation::ui::graphics::color::Color;
 use compose::widgets::r#box::BoxLayout;
@@ -19,9 +23,11 @@ use skia_safe::{AlphaType, ColorSpace, ColorType, ImageInfo, surfaces,
 };
 
 fn test_widget() {
-    BoxLayout(Modifier.padding_top(100.dp()).padding_start(50.dp()).width(200.dp()).height(200.dp()).background(Color::BLUE), |scope| {
-        BoxLayout(Modifier.width(100.dp()).height(100.dp()).align(scope, Alignment::CENTER).background(Color::YELLOW), |_| {});
-        BoxLayout(Modifier.width(50.dp()).height(50.dp()).align(scope, Alignment::CENTER).background(Color::GREEN), |_| {});
+    BoxLayout(Modifier.padding_top(10.dp()).padding_end(10.dp()).on_placed(move |coordinates| {
+        dbg!(coordinates.size());
+    }).width(200.dp()).height(200.dp()).background(Color::BLUE), |scope| {
+        // BoxLayout(Modifier.width(100.dp()).height(100.dp()).align(scope, Alignment::CENTER).background(Color::YELLOW), |_| {});
+        // BoxLayout(Modifier.width(50.dp()).height(50.dp()).align(scope, Alignment::CENTER).background(Color::GREEN), |_| {});
     });
 }
 

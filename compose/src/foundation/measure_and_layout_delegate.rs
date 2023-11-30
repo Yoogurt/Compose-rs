@@ -77,6 +77,7 @@ impl MeasureAndLayoutDelegate {
         let layout_pending = measure_pass_delegate.borrow().layout_pending;
         let is_placed = measure_pass_delegate.borrow().is_placed;
 
+        drop(layout_node_mut);
         if layout_pending && is_placed {
             if std::ptr::eq(layout_node.as_ptr(), self.root.as_ptr()) {
                 measure_pass_delegate.borrow_mut().place_at((0, 0).into(), 0.0)

@@ -73,12 +73,12 @@ pub fn DesktopWindow(option: DesktopWindowOption,
     Composer::apply_changes();
     Composer::apply_deferred_changes();
 
-    let mut compose_view = compose_view_rc.borrow_mut();
-    compose_view.no_insert_set_content(diff);
-
-    drop(compose_view);
-    Composer::apply_changes();
-    Composer::apply_deferred_changes();
+    // let mut compose_view = compose_view_rc.borrow_mut();
+    // compose_view.no_insert_set_content(diff);
+    //
+    // drop(compose_view);
+    // Composer::apply_changes();
+    // Composer::apply_deferred_changes();
 
     Composer::debug_print();
 
@@ -87,6 +87,7 @@ pub fn DesktopWindow(option: DesktopWindowOption,
     while windows.is_open() && !windows.is_key_pressed(Key::Escape, KeyRepeat::No) {
         compose_view.dispatch_measure(window_width, window_height);
         compose_view.dispatch_layout();
+        Composer::apply_measure_or_layout_defer_action();
         compose_view.dispatch_draw(&mut canvas);
         windows.update_with_buffer(buffer.as_slice(), window_width, window_height).unwrap();
         std::thread::sleep(Duration::from_millis(100));

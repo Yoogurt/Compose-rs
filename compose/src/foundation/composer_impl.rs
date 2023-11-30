@@ -89,6 +89,7 @@ pub(crate) struct ComposerImpl {
     node_index_stack: Vec<usize>,
 
     pending: Option<Pending>,
+    defer_action: Vec<Box<dyn FnOnce()>>
 }
 
 impl Debug for ComposerImpl {
@@ -332,6 +333,19 @@ impl ComposerImpl {
         }
     }
 
+    pub(crate) fn record_measure_or_layout_defer_action(&mut self, action: impl FnOnce() + 'static) {
+        self.defer_action.push(Box::new(action))
+    }
+
+    pub(crate) fn apply_measure_or_layout_defer_action(&mut self) {
+        let mut defer_action = vec![];
+        std::mem::swap(&mut defer_action, &mut self.defer_action);
+
+        defer_action.into_iter().for_each(|action| {
+            action();
+        });
+    }
+
     pub(crate) fn start_restart_group(&mut self) {
         self.add_recompose_scope()
     }
@@ -548,6 +562,7 @@ impl ComposerImpl {
             node_index_stack: vec![],
 
             pending: None,
+            defer_action: vec![]
         }
     }
 }

@@ -70,3 +70,4 @@ pub mod desktop;
 pub(crate) mod composition;
 mod application_applier;
 mod updater;
+mod measure_layout_defer_action_manager;

@@ -8,6 +8,7 @@ use auto_delegate::Delegate;
 use compose_foundation_macro::AnyConverter;
 
 use crate::foundation::canvas::Canvas;
+use crate::foundation::composer::Composer;
 use crate::foundation::constraint::Constraints;
 use crate::foundation::geometry::{IntOffset, IntSize};
 use crate::foundation::layout_node::LayoutNode;
@@ -22,6 +23,7 @@ use crate::foundation::node_coordinator::{PerformDrawTrait, PerformMeasureHelper
 use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 use crate::foundation::usage_by_parent::UsageByParent;
+use crate::foundation::utils::option_extension::OptionThen;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::utils::self_reference::SelfReference;
 
@@ -41,7 +43,8 @@ pub(crate) struct InnerNodeCoordinator {
     LookaheadCapablePlaceable,
     TailModifierNodeProvider,
     MeasureResultProvider,
-    ParentDataGenerator
+    ParentDataGenerator,
+    LayoutCoordinates
     )]
     pub(crate) node_coordinator_impl: NodeCoordinatorImpl,
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,
@@ -175,7 +178,13 @@ impl SelfReference for InnerNodeCoordinator {
 impl PlaceablePlaceAt for InnerNodeCoordinator {
     fn place_at(&mut self, position: IntOffset, z_index: f32) {
         self.node_coordinator_impl.place_at(position, z_index);
-        self.on_placed();
+
+        let this = self.get_self();
+        Composer::record_measure_or_layout_defer_action(move || {
+            this.upgrade().then(|this| {
+                this.borrow().on_placed();
+            })
+        });
     }
 }
 

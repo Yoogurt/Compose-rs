@@ -5,6 +5,7 @@ use auto_delegate::delegate;
 
 use crate::foundation::canvas::Canvas;
 use crate::foundation::constraint::Constraints;
+use crate::foundation::layout::layout_coordinates::LayoutCoordinates;
 use crate::foundation::look_ahead_capable_placeable::LookaheadCapablePlaceable;
 use crate::foundation::measure_result::MeasureResultProvider;
 use crate::foundation::modifier::ModifierNode;
@@ -53,6 +54,7 @@ pub trait NodeCoordinator: PerformDrawTrait
 + MeasureResultProvider
 + DrawableNodeCoordinator
 + ParentDataGenerator
++ LayoutCoordinates
 + Measurable {
     fn on_initialize(&self) {}
     fn on_placed(&self) {}

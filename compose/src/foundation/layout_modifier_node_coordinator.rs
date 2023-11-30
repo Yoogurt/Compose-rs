@@ -4,10 +4,12 @@ use std::rc::{Rc, Weak};
 
 use auto_delegate::Delegate;
 use compose_foundation_macro::AnyConverter;
+use crate::foundation::composer::Composer;
 
 use crate::foundation::constraint::Constraints;
 use crate::foundation::delegatable_node::ToDelegatedNode;
 use crate::foundation::geometry::{IntOffset, IntSize};
+use crate::foundation::layout::layout_coordinates::LayoutCoordinates;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::measurable::Measurable;
 use crate::foundation::measure_result::MeasureResultProvider;
@@ -20,6 +22,7 @@ use crate::foundation::placeable::Placeable;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 use crate::foundation::utils::option_extension::OptionThen;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
+use crate::foundation::utils::self_reference::SelfReference;
 
 #[derive(Debug, Delegate, AnyConverter)]
 pub(crate) struct LayoutModifierNodeCoordinator {
@@ -34,9 +37,12 @@ pub(crate) struct LayoutModifierNodeCoordinator {
     IntrinsicMeasurable,
     LookaheadCapablePlaceable,
     MeasureResultProvider,
-    ParentDataGenerator
+    ParentDataGenerator,
+    LayoutCoordinates,
     )]
     pub(crate) node_coordinator_impl: NodeCoordinatorImpl,
+
+    weak_self: Weak<RefCell<Self>>,
 }
 
 impl TailModifierNodeProvider for LayoutModifierNodeCoordinator {
@@ -59,6 +65,12 @@ impl Deref for LayoutModifierNodeCoordinator {
     }
 }
 
+impl SelfReference for LayoutModifierNodeCoordinator {
+    fn get_self(&self) -> Weak<RefCell<Self>> {
+        self.weak_self.clone()
+    }
+}
+
 impl LayoutModifierNodeCoordinator {
     pub(crate) fn new(
         layout_node: &Rc<RefCell<LayoutNode>>,
@@ -69,6 +81,7 @@ impl LayoutModifierNodeCoordinator {
             layout_node: Rc::downgrade(layout_node),
             node_coordinator_impl: NodeCoordinatorImpl::new(),
             layout_modifier_node: measure_node.clone(),
+            weak_self: Weak::new(),
         }.wrap_with_rc_refcell();
 
         {
@@ -76,6 +89,7 @@ impl LayoutModifierNodeCoordinator {
             let node_coordinator_impl = &mut this.node_coordinator_impl;
             node_coordinator_impl.attach(layout_node, node_chain);
             node_coordinator_impl.set_vtable_placeable_place_at(Rc::downgrade(&(result.clone() as Rc<RefCell<dyn PlaceablePlaceAt>>)));
+            this.weak_self = Rc::downgrade(&result);
         }
 
         result
@@ -141,12 +155,30 @@ impl NodeCoordinator for LayoutModifierNodeCoordinator {
     fn as_node_coordinator(&self) -> &dyn NodeCoordinator {
         self
     }
+
+    fn on_placed(&self) {
+        self.node_coordinator_impl.on_placed()
+    }
+
+    fn on_initialize(&self) {
+        self.node_coordinator_impl.on_initialize()
+    }
+
+    fn on_measured(&mut self) {
+        self.node_coordinator_impl.on_measured()
+    }
 }
 
 impl PlaceablePlaceAt for LayoutModifierNodeCoordinator {
     fn place_at(&mut self, position: IntOffset, z_index: f32) {
         self.node_coordinator_impl.place_at(position, z_index);
-        self.on_placed();
+
+        let this = self.get_self();
+        Composer::record_measure_or_layout_defer_action(move || {
+            this.upgrade().then(|this| {
+                this.borrow().on_placed();
+            })
+        });
 
         self.get_measured_result().take().then(|mut measure_result| {
             measure_result.place_children(self)
