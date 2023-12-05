@@ -23,9 +23,15 @@ use skia_safe::{AlphaType, ColorSpace, ColorType, ImageInfo, surfaces,
 };
 
 fn test_widget() {
-    BoxLayout(Modifier.padding_top(10.dp()).padding_end(10.dp()).on_placed(move |coordinates| {
+    BoxLayout(Modifier.width(200.dp()).height(200.dp()).on_placed(move |coordinates| {
         dbg!(coordinates.size());
-    }).width(200.dp()).height(200.dp()).background(Color::BLUE), |scope| {
+        dbg!(coordinates.is_attached());
+        dbg!(coordinates.get_parent_layout_coordinates());
+    }).background(Color::BLUE), |scope| {
+        BoxLayout(Modifier.layout_id("hello world"), |_| {
+
+        })
+
         // BoxLayout(Modifier.width(100.dp()).height(100.dp()).align(scope, Alignment::CENTER).background(Color::YELLOW), |_| {});
         // BoxLayout(Modifier.width(50.dp()).height(50.dp()).align(scope, Alignment::CENTER).background(Color::GREEN), |_| {});
     });

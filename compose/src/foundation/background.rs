@@ -36,7 +36,7 @@ impl BackgroundModifier for Modifier {
 }
 
 #[derive(Debug, ModifierElement, Delegate)]
-#[Impl(DrawModifierNodeConverter)]
+#[Impl(Draw)]
 struct BackgroundNode {
     color: Color,
     alpha: f32,

@@ -12,6 +12,7 @@ use crate::foundation::geometry::{IntOffset, IntSize};
 use crate::foundation::layout::layout_coordinates::LayoutCoordinates;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::measurable::Measurable;
+use crate::foundation::measure_layout_defer_action_manager::MeasureLayoutDeferActionManager;
 use crate::foundation::measure_result::MeasureResultProvider;
 use crate::foundation::modifier::ModifierNode;
 use crate::foundation::node_chain::NodeChain;
@@ -90,6 +91,7 @@ impl LayoutModifierNodeCoordinator {
             node_coordinator_impl.attach(layout_node, node_chain);
             node_coordinator_impl.set_vtable_placeable_place_at(Rc::downgrade(&(result.clone() as Rc<RefCell<dyn PlaceablePlaceAt>>)));
             this.weak_self = Rc::downgrade(&result);
+            this.node_coordinator_impl.tail = measure_node.clone();
         }
 
         result
@@ -174,7 +176,7 @@ impl PlaceablePlaceAt for LayoutModifierNodeCoordinator {
         self.node_coordinator_impl.place_at(position, z_index);
 
         let this = self.get_self();
-        Composer::record_measure_or_layout_defer_action(move || {
+        MeasureLayoutDeferActionManager::record_layout(move || {
             this.upgrade().then(|this| {
                 this.borrow().on_placed();
             })

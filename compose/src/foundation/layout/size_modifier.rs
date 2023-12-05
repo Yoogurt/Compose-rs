@@ -82,7 +82,7 @@ fn size_measure_policy<T>(
 }
 
 #[derive(Debug, Default, Delegate, ModifierElement)]
-#[Impl(LayoutModifierNodeConverter)]
+#[Impl(Layout)]
 struct SizeNode {
     min_width: Dp,
     max_width: Dp,

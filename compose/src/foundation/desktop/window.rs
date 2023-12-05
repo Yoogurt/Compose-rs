@@ -7,6 +7,7 @@ use crate::foundation::bridge::platform_compose_view::MacOSComposeView;
 use crate::foundation::composer::Composer;
 use crate::foundation::drawing::canvas_impl::new_canvas;
 use crate::foundation::geometry::IntSize;
+use crate::foundation::measure_layout_defer_action_manager::MeasureLayoutDeferActionManager;
 
 pub struct DesktopWindowOption {
     on_close_request: Option<Box<dyn Fn()>>,
@@ -85,9 +86,12 @@ pub fn DesktopWindow(option: DesktopWindowOption,
     let mut compose_view = compose_view_rc.borrow_mut();
 
     while windows.is_open() && !windows.is_key_pressed(Key::Escape, KeyRepeat::No) {
-        compose_view.dispatch_measure(window_width, window_height);
-        compose_view.dispatch_layout();
-        Composer::apply_measure_or_layout_defer_action();
+        MeasureLayoutDeferActionManager::with_manager(|defer_measure, defer_layout| {
+            compose_view.dispatch_measure(window_width, window_height);
+            defer_measure();
+            compose_view.dispatch_layout();
+            defer_layout();
+        });
         compose_view.dispatch_draw(&mut canvas);
         windows.update_with_buffer(buffer.as_slice(), window_width, window_height).unwrap();
         std::thread::sleep(Duration::from_millis(100));

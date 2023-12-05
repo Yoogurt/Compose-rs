@@ -1,3 +1,4 @@
+use crate::foundation::layout::layout_id::ParentDataLayoutId;
 use std::any::Any;
 use std::cell::RefCell;
 use std::ops::DerefMut;
@@ -23,7 +24,7 @@ use crate::foundation::placeable::Placeable;
 use crate::foundation::placement_scope::PlacementScope;
 use crate::foundation::ui::align::Alignment;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
-use crate::foundation::utils::option_extension::OptionalInstanceConverter;
+use crate::foundation::utils::option_extension::{OptionalInstanceConverter, OptionThen};
 use crate::impl_node_kind_parent_data;
 use crate::widgets::layout::Layout;
 
@@ -80,7 +81,7 @@ struct BoxChildDataNode {
 }
 
 #[derive(Delegate, Debug, Default, ModifierElement)]
-#[Impl(ParentDataModifierNodeConverter)]
+#[Impl(ParentData)]
 struct BoxChildDataModifierNode {
     box_child_data_node: BoxChildDataNode,
 
@@ -92,7 +93,10 @@ impl_node_kind_parent_data!(BoxChildDataModifierNode);
 
 impl ParentDataModifierNode for BoxChildDataModifierNode {
     fn modify_parent_data(&mut self, _: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {
-        Some(parent_data.cast_or(|| self.box_child_data_node.clone()))
+        let mut parent_data = parent_data.cast_or(|| self.box_child_data_node.clone());
+        parent_data.match_parent_size = self.box_child_data_node.match_parent_size;
+        parent_data.alignment = self.box_child_data_node.alignment;
+        Some(parent_data)
     }
 }
 
@@ -123,8 +127,8 @@ fn place_in_box(placeable: &mut dyn Placeable,
 
 fn remember_box_measure_policy(alignment: Alignment, propagate_min_constraint: bool) -> MultiChildrenMeasurePolicy {
     MultiChildrenMeasurePolicyDelegate(move |measure_scope: &dyn MeasureScope,
-           measurables: &mut [&mut dyn Measurable],
-           constraints: &Constraints| {
+                                             measurables: &mut [&mut dyn Measurable],
+                                             constraints: &Constraints| {
         let children_count = measurables.len();
 
         let content_constraints = if propagate_min_constraint {

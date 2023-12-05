@@ -161,12 +161,4 @@ impl Composer {
     pub fn skip_to_end() {
         Self::static_dispatch_mut(move |composer| composer.skip_to_end())
     }
-
-    pub fn record_measure_or_layout_defer_action(action: impl FnOnce() + 'static) {
-        Self::static_dispatch_mut(move |composer| composer.record_measure_or_layout_defer_action(action))
-    }
-
-    pub fn apply_measure_or_layout_defer_action() {
-        Self::static_dispatch_mut(move |composer| composer.apply_measure_or_layout_defer_action())
-    }
 }

@@ -47,7 +47,7 @@ impl Default for RowColumnParentData {
 }
 
 #[derive(Debug, Delegate, ModifierElement)]
-#[Impl(ParentDataModifierNodeConverter)]
+#[Impl(ParentData)]
 pub(crate) struct HorizontalAlignModifier {
     pub(crate) alignment_horizontal: AlignmentHorizontal,
     #[to(ModifierNode)]
@@ -75,7 +75,7 @@ impl ParentDataModifierNode for HorizontalAlignModifier {
 }
 
 #[derive(Debug, Delegate, ModifierElement)]
-#[Impl(ParentDataModifierNodeConverter)]
+#[Impl(ParentData)]
 pub(crate) struct VerticalAlignModifier {
     pub(crate) alignment_vertical: AlignmentVertical,
     #[to(ModifierNode)]
@@ -103,7 +103,7 @@ impl VerticalAlignModifier {
 }
 
 #[derive(Debug, Delegate, ModifierElement)]
-#[Impl(ParentDataModifierNodeConverter)]
+#[Impl(ParentData)]
 pub(crate) struct LayoutWeightNode {
     pub(crate) weight: f32,
     pub(crate) fill: bool,

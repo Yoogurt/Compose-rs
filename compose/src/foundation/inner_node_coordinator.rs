@@ -15,6 +15,7 @@ use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::layout_node_layout_delegate::LayoutNodeLayoutDelegate;
 use crate::foundation::measurable::{Measurable, MultiChildrenMeasurePolicyDelegate};
 use crate::foundation::measurable::MultiChildrenMeasurePolicy;
+use crate::foundation::measure_layout_defer_action_manager::MeasureLayoutDeferActionManager;
 use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
 use crate::foundation::measure_result::{MeasureResult, MeasureResultProvider};
 use crate::foundation::measure_scope::MeasureScope;
@@ -180,7 +181,7 @@ impl PlaceablePlaceAt for InnerNodeCoordinator {
         self.node_coordinator_impl.place_at(position, z_index);
 
         let this = self.get_self();
-        Composer::record_measure_or_layout_defer_action(move || {
+        MeasureLayoutDeferActionManager::record_layout(move || {
             this.upgrade().then(|this| {
                 this.borrow().on_placed();
             })

@@ -47,7 +47,7 @@ impl Modifier {
 }
 
 #[derive(Delegate, Debug, ModifierElement)]
-#[Impl(LayoutModifierNodeConverter)]
+#[Impl(Layout)]
 struct PaddingElement {
     start: Dp,
     end: Dp,

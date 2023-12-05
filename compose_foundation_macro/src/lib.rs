@@ -113,7 +113,13 @@ pub fn ModifierElement(struct_token_stream: TokenStream) -> TokenStream {
         if let Meta::List(list) = attribute.meta {
             list.tokens.into_iter().for_each(|token| {
                 if let proc_macro2::TokenTree::Ident(ident) = token {
-                    if let Some(do_generate) = mapping.get_mut(ident.to_string().as_str()) {
+                    let mut ident_convert_match_str = ident.to_string();
+
+                    if !ident_convert_match_str.ends_with("ModifierNodeConverter") {
+                        ident_convert_match_str.push_str("ModifierNodeConverter");
+                    }
+
+                    if let Some(do_generate) = mapping.get_mut(ident_convert_match_str.as_str()) {
                         do_generate.3 = true;
                     }
                 }

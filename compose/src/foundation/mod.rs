@@ -1,5 +1,3 @@
-#![feature(type_alias_impl_trait)]
-
 pub mod canvas;
 pub(crate) mod compose_node;
 pub mod composer;

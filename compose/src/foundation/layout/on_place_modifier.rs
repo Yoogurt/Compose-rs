@@ -1,13 +1,13 @@
 use std::cell::RefCell;
 use std::fmt::{Debug, Formatter};
 use std::ops::Deref;
-use crate::impl_node_kind_for_type;
 use auto_delegate::Delegate;
 use compose_foundation_macro::ModifierElement;
 use crate::foundation::modifier::{Modifier, modifier_node_element_creator, modifier_node_element_updater, ModifierNodeImpl, NodeKind};
 use crate::foundation::layout::layout_coordinates::LayoutCoordinates;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
+use crate::impl_node_kind_for_type;
 use crate::impl_node_kind_any;
 use std::rc::Rc;
 use crate::foundation::geometry::IntSize;
@@ -20,7 +20,7 @@ impl Modifier {
 }
 
 #[derive(Delegate, ModifierElement)]
-#[Impl(LayoutAwareModifierNodeConverter)]
+#[Impl(LayoutAware)]
 struct OnPlacedNode {
     callback: Rc<dyn Fn(&dyn LayoutCoordinates)>,
 
@@ -30,8 +30,8 @@ struct OnPlacedNode {
 impl_node_kind_for_type!(OnPlacedNode, NodeKind::LayoutAware);
 
 impl LayoutAwareModifierNode for OnPlacedNode {
-    fn on_placed(&self, coordinate: &dyn LayoutCoordinates) {
-        (self.callback)(coordinate)
+    fn on_placed(&self, coordinates: &dyn LayoutCoordinates) {
+        (self.callback)(coordinates)
     }
 
     fn on_remeasured(&self, size: IntSize) {

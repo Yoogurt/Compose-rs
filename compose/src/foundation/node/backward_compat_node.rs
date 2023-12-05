@@ -16,7 +16,7 @@ use crate::foundation::oop::LayoutModifierNodeConverter;
 use crate::foundation::ui::draw::ContentDrawScope;
 
 #[derive(Debug, Delegate, ModifierElement)]
-#[Impl(LayoutModifierNodeConverter)]
+#[Impl(Layout)]
 pub(crate) struct BackwardsCompatNode {
     element: Rc<RefCell<dyn ModifierElement>>,
 

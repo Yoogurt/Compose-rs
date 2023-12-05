@@ -1,3 +1,5 @@
+#![feature(trait_upcasting)]
+
 use std::any::Any;
 use std::cell::RefCell;
 use std::fmt::Debug;
@@ -190,7 +192,16 @@ impl LayoutCoordinates for NodeCoordinatorImpl {
     }
 
     fn is_attached(&self) -> bool {
-       self.layout_node.upgrade().map(|layout_node| layout_node.borrow().is_attached()).unwrap_or(false)
+        self.layout_node.upgrade().map(|layout_node| layout_node.borrow().is_attached()).unwrap_or(false)
+    }
+
+    fn get_parent_coordinates(&self) -> Option<Rc<RefCell<dyn LayoutCoordinates>>> {
+        self.get_wrapped_by().map(|wrapped_by| wrapped_by as Rc<RefCell<dyn LayoutCoordinates>>)
+    }
+
+    fn get_parent_layout_coordinates(&self) -> Option<Rc<RefCell<dyn LayoutCoordinates>>> {
+        self.layout_node().upgrade().and_then(|layout_node| layout_node.borrow().get_outer_coordinator().borrow().get_wrapped_by())
+            .map(|wrapped_by| wrapped_by as Rc<RefCell<dyn LayoutCoordinates>>)
     }
 }
 
@@ -234,7 +245,7 @@ impl NodeCoordinatorImpl {
 
             measure_result: None,
             perform_draw_vtable: None,
-            leak_object: Default::default()
+            leak_object: Default::default(),
         }
     }
 
@@ -265,9 +276,6 @@ impl NodeCoordinatorImpl {
             self.get_wrapped_by().and_then(|wrapped_by| {
                 let tail = wrapped_by.borrow().get_tail();
                 if include_tail {
-                    dbg!(self);
-                    dbg!("wrapped_by", &wrapped_by);
-                    dbg!("wrapped_by child", tail.borrow().get_child());
                     tail.borrow().get_child()
                 } else {
                     Some(tail)
