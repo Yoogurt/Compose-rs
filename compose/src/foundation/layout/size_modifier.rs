@@ -76,7 +76,7 @@ fn size_measure_policy<T>(
             };
 
             let (measure_result, placeable) = measurable.measure(&target_constraints);
-            measure_scope.layout(IntSize::zero(), move |scope| scope.place_relative(placeable.borrow_mut(), 0, 0))
+            measure_scope.layout(IntSize::zero(), move |scope| scope.place_relative(&placeable, 0, 0))
         },
     )
 }
@@ -194,7 +194,7 @@ impl LayoutModifierNode for SizeNode {
 
         measure_scope.layout(
             measure_result,
-            move |scope| scope.place_relative(placeable.borrow_mut(), 0, 0),
+            move |scope| scope.place_relative(&placeable, 0, 0),
         )
     }
 }

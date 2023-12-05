@@ -45,3 +45,9 @@ impl From<Color> for SkiaColor {
         SkiaColor::from(color.value)
     }
 }
+
+impl From<Color> for skia_safe::Color {
+    fn from(value: Color) -> Self {
+        skia_safe::Color::from(value.value)
+    }
+}

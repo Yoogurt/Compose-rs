@@ -142,7 +142,7 @@ fn remember_box_measure_policy(alignment: Alignment, propagate_min_constraint: b
                 let (measure_result, placeable) = measurables[0].measure(&content_constraints);
                 measure_scope.layout(
                     measure_result,
-                    move |scope: &dyn PlacementScope| scope.place_relative(placeable.borrow_mut(), 0, 0),
+                    move |scope: &dyn PlacementScope| scope.place_relative(&placeable, 0, 0),
                 )
             }
             _ => {

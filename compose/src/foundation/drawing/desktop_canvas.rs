@@ -1,16 +1,22 @@
-use skia_safe::{Color4f, Paint, Rect, Vector};
+use skia_safe::{Color4f, Paint, Point, Rect, scalar, Vector};
+use skia_safe::canvas::SaveLayerRec;
 
-use crate::foundation::canvas::{Canvas, CanvasExtension, CanvasSaveGuard};
+use crate::foundation::canvas::{Canvas, CanvasExtension, CanvasSaveGuard, CanvasSaveLayerGuard};
+use crate::foundation::drawing::scalar::Scalar;
 use crate::foundation::ui::graphics::color;
 use crate::foundation::ui::graphics::color::Color;
 
 pub struct DesktopCanvas<'a> {
+    paint: Paint,
     inner: &'a mut skia_safe::Canvas,
 }
 
 impl<'a> DesktopCanvas<'a> {
     pub fn new(skia_canvas: &'a mut skia_safe::Canvas) -> DesktopCanvas {
-        DesktopCanvas { inner: skia_canvas }
+        DesktopCanvas {
+            paint: Paint::new(Color4f::from(Color::WHITE), None),
+            inner: skia_canvas,
+        }
     }
 }
 
@@ -24,6 +30,16 @@ impl Canvas for DesktopCanvas<'_> {
         self.inner.restore();
     }
 
+    fn save_layer(&mut self) -> CanvasSaveLayerGuard<'_> {
+        let save_layer_rec = SaveLayerRec::default();
+        self.inner.save_layer(&save_layer_rec);
+
+        CanvasSaveLayerGuard {
+            save_layer_rec,
+            canvas: self,
+        }
+    }
+
     fn save_count(&self) -> usize {
         self.inner.save_count()
     }
@@ -32,9 +48,14 @@ impl Canvas for DesktopCanvas<'_> {
         self.inner.translate(Vector::new(x, y));
     }
 
+    fn draw_circle(&mut self, point: Point, scalar: scalar, color: Color) {
+        self.paint.set_color(color);
+        self.inner.draw_circle(point, scalar, &self.paint);
+    }
+
     fn draw_rect(&mut self, color: Color, rect: Rect) {
-        let paint = Paint::new(<color::Color as Into<Color4f>>::into(color), None);
-        self.inner.draw_rect(rect, &paint);
+        self.paint.set_color(color);
+        self.inner.draw_rect(rect, &self.paint);
     }
 }
 

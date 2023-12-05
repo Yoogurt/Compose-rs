@@ -20,7 +20,7 @@ pub(crate) fn root_measure_policy() -> MultiChildrenMeasurePolicy {
                     measure_scope.layout(
                         measure_result,
                         move |place_scope: &dyn PlacementScope| {
-                            place_scope.place_relative(placeable.borrow_mut(), 0, 0);
+                            place_scope.place_relative(&placeable, 0, 0);
                         },
                     )
                 }
@@ -45,7 +45,7 @@ pub(crate) fn root_measure_policy() -> MultiChildrenMeasurePolicy {
                         move |place_scope: &dyn PlacementScope| {
                             placeables
                                 .iter_mut()
-                                .for_each(|placeable| place_scope.place_relative(placeable.borrow_mut(), 0, 0));
+                                .for_each(|placeable| place_scope.place_relative(&placeable, 0, 0));
                         },
                     )
                 }

@@ -1,3 +1,4 @@
+use crate::impl_node_kind_draw;
 use auto_delegate::Delegate;
 use compose_foundation_macro::ModifierElement;
 
@@ -8,6 +9,7 @@ use crate::foundation::modifier::{Modifier, modifier_node_element_creator, modif
 use crate::foundation::modifier_node::DrawModifierNode;
 use crate::foundation::ui::draw::{ContentDrawScope, DrawScope};
 use crate::foundation::ui::graphics::color::Color;
+use crate::impl_node_kind_parent_data;
 
 pub trait BackgroundModifier {
     fn background(self, color: Color) -> Modifier;
@@ -41,19 +43,14 @@ struct BackgroundNode {
     color: Color,
     alpha: f32,
 
-    #[to(ModifierNode, DelegatableNode)]
+    #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
 }
+impl_node_kind_draw!(BackgroundNode);
 
 impl BackgroundNode {
     fn draw_rect(&self, draw_scope: &mut dyn ContentDrawScope) {
         draw_scope.draw_rect(self.color, Offset::zero(), Some(draw_scope.get_size()), 1.0);
-    }
-}
-
-impl NodeKindPatch for BackgroundNode {
-    fn get_node_kind(&self) -> NodeKind {
-        NodeKind::Draw
     }
 }
 
