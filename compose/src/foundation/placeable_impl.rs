@@ -62,9 +62,9 @@ impl PlaceableImpl {
 }
 
 impl PlaceablePlaceAt for PlaceableImpl {
-    fn place_at(&mut self, position: IntOffset, z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
+    fn place_at(&mut self, position: IntOffset, size: IntSize, z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
         if let Some(vtable) = self.place_at_vtable.clone() {
-            vtable.upgrade().unwrap().borrow_mut().place_at(position, z_index, layer_block);
+            vtable.upgrade().unwrap().borrow_mut().place_at(position, size, z_index, layer_block);
             return;
         }
         unimplemented!("place_at to PlaceableImpl should implement by yourself");

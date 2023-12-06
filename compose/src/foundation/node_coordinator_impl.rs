@@ -240,14 +240,14 @@ impl NodeCoordinator for NodeCoordinatorImpl {
 
 impl DrawableNodeCoordinator for NodeCoordinatorImpl {
     fn draw(&self, canvas: &mut dyn Canvas) {
-        // if let Some(layer) = self.layer.as_ref() {
-        //     layer.draw_layer(canvas)
-        // } else {
+        if let Some(layer) = self.layer.as_ref() {
+            layer.draw_layer(canvas)
+        } else {
             let offset = self.get_position().as_f32_offset();
             canvas.translate(offset.x, offset.y);
             self.draw_contrained_draw_modifiers(canvas);
             canvas.translate(-offset.x, -offset.y);
-        // }
+        }
     }
 }
 
@@ -300,9 +300,8 @@ impl NodeCoordinatorImpl {
         }
     }
 
-    fn update_layer_parameters(&mut self) {
+    fn update_layer_parameters(&mut self, size: IntSize) {
         let layer_density = self.layer_density;
-        let size = self.size();
 
         match self.layer.as_mut() {
             Some(layer) => {
@@ -328,7 +327,7 @@ impl NodeCoordinatorImpl {
         }
     }
 
-    fn update_layer_block(&mut self, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>, force_update_parameters: bool) {
+    pub(crate) fn update_layer_block(&mut self, size: IntSize, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>, force_update_parameters: bool) {
         let layout_node = self.layout_node.upgrade().unwrap();
         let layout_node_density = layout_node.borrow().get_density();
         let layout_node_layout_direction = layout_node.borrow().get_layout_direction();
@@ -358,7 +357,7 @@ impl NodeCoordinatorImpl {
                     Some(layer)
                 };
 
-                self.update_layer_parameters();
+                self.update_layer_parameters(size);
             } else if update_parameters {
                 todo!()
             }
@@ -367,8 +366,8 @@ impl NodeCoordinatorImpl {
         }
     }
 
-    fn place_self(&mut self, position: IntOffset, z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
-        self.update_layer_block(layer_block, false);
+    pub(crate) fn place_self(&mut self, position: IntOffset, size: IntSize, z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
+        self.update_layer_block(size, layer_block, false);
 
         if self.get_position() != position {
             self.set_position(position);
@@ -482,7 +481,7 @@ impl NodeCoordinatorImpl {
 }
 
 impl PlaceablePlaceAt for NodeCoordinatorImpl {
-    fn place_at(&mut self, position: IntOffset, z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
-        self.place_self(position, z_index, layer_block)
+    fn place_at(&mut self, position: IntOffset, _size: IntSize, z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
+        todo!()
     }
 }

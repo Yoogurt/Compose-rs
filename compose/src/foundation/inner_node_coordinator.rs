@@ -10,7 +10,8 @@ use compose_foundation_macro::AnyConverter;
 use crate::foundation::canvas::Canvas;
 use crate::foundation::composer::Composer;
 use crate::foundation::constraint::Constraints;
-use crate::foundation::geometry::{IntOffset, IntSize};
+use crate::foundation::geometry::{IntOffset, IntSize, Size};
+use crate::foundation::layout::layout_coordinates::LayoutCoordinates;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::layout_node_layout_delegate::LayoutNodeLayoutDelegate;
 use crate::foundation::measurable::{Measurable, MultiChildrenMeasurePolicyDelegate};
@@ -178,8 +179,8 @@ impl SelfReference for InnerNodeCoordinator {
 }
 
 impl PlaceablePlaceAt for InnerNodeCoordinator {
-    fn place_at(&mut self, position: IntOffset, z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
-        self.node_coordinator_impl.place_at(position, z_index, layer_block);
+    fn place_at(&mut self, position: IntOffset, size: IntSize, z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
+        self.node_coordinator_impl.place_self(position, size, z_index, layer_block);
 
         let this = self.get_self();
         MeasureLayoutDeferActionManager::record_layout(move || {

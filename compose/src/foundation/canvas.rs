@@ -9,6 +9,7 @@ pub trait Canvas {
     fn restore(&mut self);
 
     fn save_layer(&mut self) -> SaveLayerRec;
+    fn save_layer_alpha(&mut self, rect: Option<Rect>, alpha: f32);
 
     fn save_count(&self) -> usize;
 
@@ -28,6 +29,13 @@ pub trait CanvasExtension: Canvas {
 
     fn with_save_layer<R>(&mut self, action: impl FnOnce(&mut Self) -> R) -> R {
         let _ = self.save_layer();
+        let result = action(self);
+        self.restore();
+        result
+    }
+
+    fn with_save_layer_alpha<R>(&mut self, rect: Option<Rect>, alpha: f32, action: impl FnOnce(&mut Self) -> R) -> R {
+        let _ = self.save_layer_alpha(rect, alpha);
         let result = action(self);
         self.restore();
         result

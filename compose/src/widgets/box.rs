@@ -122,7 +122,7 @@ fn place_in_box(placeable: &mut dyn Placeable,
                 box_size: IntSize,
                 alignment: Alignment) {
     let position = alignment.align(placeable.get_size(), box_size, layout_direction);
-    placeable.place_at(position, 0.0, None);
+    placeable.place_at(position, placeable.get_size(), 0.0, None);
 }
 
 fn remember_box_measure_policy(alignment: Alignment, propagate_min_constraint: bool) -> MultiChildrenMeasurePolicy {

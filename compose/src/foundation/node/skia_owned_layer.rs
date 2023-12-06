@@ -14,7 +14,7 @@ impl SkiaOwnedLayer {
     pub(crate) fn new(draw_block: impl Fn(&mut dyn Canvas) + 'static) -> Self {
         SkiaOwnedLayer {
             property: GraphicsLayerScope::new(),
-            draw_block: draw_block.wrap_with_box()
+            draw_block: draw_block.wrap_with_box(),
         }
     }
 }
@@ -29,16 +29,23 @@ impl OwnedLayer for SkiaOwnedLayer {
     }
 
     fn draw_layer(&self, canvas: &mut dyn Canvas) {
-        // canvas.with_save_layer(|canvas| {
-        //     canvas.translate(self.property.get_translation_x(), self.property.get_translation_y());
-            (self.draw_block)(canvas);
-            // canvas.translate(-self.property.get_translation_x(), -self.property.get_translation_y());
-        // });
+        let alpha = self.property.get_alpha();
+        if alpha >= 1.0f32 {
+            canvas.with_save_layer(|canvas| {
+                canvas.translate(self.property.get_translation_x(), self.property.get_translation_y());
+                (self.draw_block)(canvas);
+                canvas.translate(-self.property.get_translation_x(), -self.property.get_translation_y());
+            });
+        } else {
+            canvas.with_save_layer_alpha(alpha, |canvas| {
+                canvas.translate(self.property.get_translation_x(), self.property.get_translation_y());
+                (self.draw_block)(canvas);
+                canvas.translate(-self.property.get_translation_x(), -self.property.get_translation_y());
+            });
+        }
     }
 
-    fn move_to(&mut self, position: Offset<f32>) {
-    }
+    fn move_to(&mut self, position: Offset<f32>) {}
 
-    fn resize(&mut self, size: IntSize) {
-    }
+    fn resize(&mut self, size: IntSize) {}
 }

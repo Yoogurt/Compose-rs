@@ -94,7 +94,7 @@ impl Remeasurable for MeasurePassDelegate {
 }
 
 impl PlaceablePlaceAt for MeasurePassDelegate {
-    fn place_at(&mut self, position: IntOffset, z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
+    fn place_at(&mut self, position: IntOffset, _size: IntSize, z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
         if position != self.last_position {
             self.last_position = position;
         }
@@ -287,7 +287,8 @@ impl MeasurePassDelegate {
             // todo place outer coordinator
 
             let outer_coordinator = self.get_outer_coordinator();
-            outer_coordinator.borrow_mut().place_at(position, z_index, None);
+            let size = outer_coordinator.borrow().get_size();
+            outer_coordinator.borrow_mut().place_at(position, size, z_index, None);
             self.on_node_placed();
         }
         self.set_layout_state(LayoutState::Idle);

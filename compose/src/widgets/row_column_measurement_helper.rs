@@ -335,16 +335,18 @@ impl RowColumnMeasureHelper {
         let main_axis_positions = &measure_result.main_axis_positions;
 
         for i in measure_result.range.clone() {
-            let mut placeable_rc = placeables[i].as_ref().unwrap().borrow_mut();
-            let placeable = placeable_rc.deref_mut();
-            let cross_axis_position = self.get_cross_axis_position(placeable, parent_data[i].as_ref(), measure_result.cross_axis_size, layout_direction, measure_result.before_cross_axis_alignment_line) + cross_axis_offset;
+            let placeable = placeables[i].as_ref().unwrap();
+            let mut placeable_rc = placeable.borrow_mut();
+            let placeable_ref = placeable_rc.deref();
+            let cross_axis_position = self.get_cross_axis_position(placeable_ref, parent_data[i].as_ref(), measure_result.cross_axis_size, layout_direction, measure_result.before_cross_axis_alignment_line) + cross_axis_offset;
 
+            drop(placeable_rc);
             match self.orientation {
                 LayoutOrientation::Horizontal => {
-                    placeable.place_at((main_axis_positions[i - measure_result.range.start()] as i32, cross_axis_position).into(), 0f32, None);
+                    placement_scope.place(placeable, main_axis_positions[i - measure_result.range.start()] as i32, cross_axis_position)
                 }
                 LayoutOrientation::Vertical => {
-                    placeable.place_at((cross_axis_position, main_axis_positions[i - measure_result.range.start()] as i32).into(), 0f32, None);
+                    placement_scope.place(placeable, cross_axis_position, main_axis_positions[i - measure_result.range.start()] as i32)
                 }
             }
         }

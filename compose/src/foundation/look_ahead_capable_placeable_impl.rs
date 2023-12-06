@@ -46,16 +46,15 @@ impl Measured for LookaheadCapablePlaceableImpl {
 
 impl Placeable for LookaheadCapablePlaceableImpl {
     fn get_size(&self) -> IntSize {
-        self.size
+        self.placeable_impl.borrow().get_size()
     }
 
     fn set_measured_size(&mut self, size: IntSize) {
-        self.size = size;
         self.placeable_impl.borrow_mut().set_measured_size(size)
     }
 
     fn get_measured_size(&self) -> IntSize {
-        self.size
+        self.placeable_impl.borrow().get_measured_size()
     }
 
     fn set_measurement_constraint(&mut self, constraint: &Constraints) {
@@ -67,7 +66,7 @@ impl Placeable for LookaheadCapablePlaceableImpl {
 }
 
 impl PlaceablePlaceAt for LookaheadCapablePlaceableImpl {
-    fn place_at(&mut self, _position: IntOffset, _z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
+    fn place_at(&mut self, _position: IntOffset, _size: IntSize, _z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
         unimplemented!("unimplemented place_at for LookaheadCapablePlaceableImpl")
     }
 }

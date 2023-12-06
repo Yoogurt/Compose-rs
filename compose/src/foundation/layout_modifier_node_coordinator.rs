@@ -174,8 +174,8 @@ impl NodeCoordinator for LayoutModifierNodeCoordinator {
 }
 
 impl PlaceablePlaceAt for LayoutModifierNodeCoordinator {
-    fn place_at(&mut self, position: IntOffset, z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
-        self.node_coordinator_impl.place_at(position, z_index, layer_block);
+    fn place_at(&mut self, position: IntOffset, size: IntSize, z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
+        self.node_coordinator_impl.place_self(position, size, z_index, layer_block);
 
         let this = self.get_self();
         MeasureLayoutDeferActionManager::record_layout(move || {

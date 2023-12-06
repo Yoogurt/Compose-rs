@@ -35,6 +35,10 @@ impl Canvas for DesktopCanvas<'_> {
         return save_layer_rec;
     }
 
+    fn save_layer_alpha(&mut self, rect: Option<Rect>, alpha: f32) {
+        self.inner.save_layer_alpha_f( rect, alpha);
+    }
+
     fn save_count(&self) -> usize {
         self.inner.save_count()
     }

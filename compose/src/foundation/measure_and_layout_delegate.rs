@@ -1,4 +1,5 @@
 use std::{cell::RefCell, rc::Rc};
+use crate::foundation::geometry::IntSize;
 
 use crate::foundation::measurable::MultiChildrenMeasurePolicy;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
@@ -80,7 +81,8 @@ impl MeasureAndLayoutDelegate {
         drop(layout_node_mut);
         if layout_pending && is_placed {
             if std::ptr::eq(layout_node.as_ptr(), self.root.as_ptr()) {
-                measure_pass_delegate.borrow_mut().place_at((0, 0).into(), 0.0, None);
+                let mut measure_pass_delegate = measure_pass_delegate.borrow_mut();
+                measure_pass_delegate.place_at((0, 0).into(), IntSize::default(), 0.0, None);
             } else {}
         }
     }
