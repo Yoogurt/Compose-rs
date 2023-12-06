@@ -6,6 +6,7 @@ use std::sync::atomic::AtomicU32;
 use crate::foundation::compose_node_lifecycle_callback::ComposeNodeLifecycleCallback;
 
 use crate::foundation::geometry::Density;
+use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::layout_node_container::LayoutNodeContainer;
 use crate::foundation::layout_node_draw_delegate::LayoutNodeDrawDelegate;
 use crate::foundation::layout_node_layout_delegate::LayoutNodeLayoutDelegate;
@@ -35,6 +36,7 @@ pub(crate) struct LayoutNode {
     pub(crate) layout_node_draw_delegate: Rc<RefCell<LayoutNodeDrawDelegate>>,
     pub(crate) usage_by_parent: UsageByParent,
     pub(crate) layout_state: Rc<RefCell<LayoutState>>,
+    pub(crate) layout_direction: LayoutDirection,
 
     pub(crate) owner: Option<Weak<RefCell<dyn Owner>>>,
     pub(crate) identify: u32,
@@ -58,6 +60,7 @@ impl LayoutNode {
             layout_node_draw_delegate: LayoutNodeDrawDelegate::new(),
             usage_by_parent: UsageByParent::NotUsed,
             layout_state: LayoutState::Idle.wrap_with_rc_refcell(),
+            layout_direction: LayoutDirection::default(),
 
             owner: None,
             weak_self: Weak::default(),
@@ -116,6 +119,18 @@ impl LayoutNode {
         self.layout_node_layout_delegate.borrow().update_parent_data_with_parent(parent);
     }
 
+    pub fn is_placed(&self) -> bool {
+        self.get_measure_pass_delegate().borrow().is_placed
+    }
+
+    pub fn get_layout_direction(&self) -> LayoutDirection {
+        self.layout_direction
+    }
+
+    pub fn set_layout_direction(&mut self, layout_direction: LayoutDirection) {
+        self.layout_direction = layout_direction;
+    }
+
     pub fn detach(&mut self) {
         let owner = self.owner.take();
         match owner {
@@ -128,6 +143,10 @@ impl LayoutNode {
                 });
             }
         }
+    }
+
+    pub(crate) fn require_owner(&self) -> Rc<RefCell<dyn Owner>> {
+        self.owner.as_ref().unwrap().upgrade().unwrap()
     }
 
     pub(crate) fn is_attached(&self) -> bool {

@@ -77,4 +77,9 @@ impl Size<f32> {
     pub fn center(&self) -> Offset<f32> {
         Offset::new(self.width / 2f32, self.height / 2f32)
     }
+
+    pub const UNSPECIFIC: Size<f32> = Size {
+        width: f32::NAN,
+        height: f32::NAN,
+    };
 }

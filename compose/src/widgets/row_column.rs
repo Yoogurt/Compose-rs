@@ -7,14 +7,13 @@ use crate::foundation::geometry::{Density, Dp};
 use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::measurable::{Measurable, MultiChildrenMeasurePolicy};
 use crate::foundation::measure_scope::{empty_place_action, MeasureScope, MeasureScopeLayoutAction};
-use crate::foundation::modifier::{Modifier, modifier_node_element_creator, modifier_node_element_updater, ModifierNode};
-use crate::foundation::modifier::Modifier::ModifierNodeElement;
+use crate::foundation::modifier::{Modifier, ModifierNodeElement, ModifierNode};
 use crate::foundation::placeable::Placeable;
 use crate::foundation::placement_scope::PlacementScope;
 use crate::foundation::ui::size_mode::SizeMode;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
 use crate::widgets::cross_axis_alignment::CrossAxisAlignment;
-use crate::widgets::row_column_measurement_helper::{LayoutOrientation, LayoutWeightNode, RowColumnMeasureHelper, RowColumnParentDataTrait};
+use crate::widgets::row_column_measurement_helper::{LayoutOrientation, LayoutWeightModifier, RowColumnMeasureHelper, RowColumnParentDataTrait};
 
 impl Modifier {
     pub fn weight<T>(self, scope: &T, weight: f32) -> Self where T: ?Sized + RowColumnWeightScope {
@@ -27,16 +26,19 @@ impl Modifier {
 }
 
 fn row_column_modifier_element(weight: f32, fill: bool) -> Modifier {
-    ModifierNodeElement {
-        create: modifier_node_element_creator(move || {
-            let mut result = LayoutWeightNode::new();
+    ModifierNodeElement(
+        move || {
+            let mut result = LayoutWeightModifier::new();
             result.weight = weight;
             result.fill = fill;
 
             result
-        }),
-        update: modifier_node_element_updater(move |_: &mut LayoutWeightNode| {}),
-    }
+        },
+        move |modifier: &mut LayoutWeightModifier| {
+            modifier.weight = weight;
+            modifier.fill = fill;
+        },
+    )
 }
 
 pub trait RowColumnWeightScope {

@@ -3,7 +3,7 @@ use compose_macro::Composable;
 use crate as compose;
 use crate::foundation::geometry::Density;
 use crate::foundation::layout_direction::LayoutDirection;
-use crate::foundation::modifier::{Modifier, modifier_node_element_creator, modifier_node_element_updater};
+use crate::foundation::modifier::{Modifier, ModifierNodeElement};
 use crate::foundation::ui::align::{Alignment, AlignmentVertical};
 use crate::foundation::ui::arrangement::ArrangementHorizontal;
 use crate::foundation::ui::size_mode::SizeMode;
@@ -28,14 +28,11 @@ struct RowScopeImpl;
 const INSTANCE: &dyn RowScope = &RowScopeImpl {};
 
 fn vertical_align_modifier(alignment_vertical: AlignmentVertical) -> Modifier {
-    Modifier::ModifierNodeElement {
-        create: modifier_node_element_creator(move || {
-            VerticalAlignModifier::new(alignment_vertical)
-        }),
-        update: modifier_node_element_updater(move |vertical_align_modifier: &mut VerticalAlignModifier| {
-            vertical_align_modifier.alignment_vertical = alignment_vertical;
-        }),
-    }
+    ModifierNodeElement(move || {
+        VerticalAlignModifier::new(alignment_vertical)
+    }, move |vertical_align_modifier: &mut VerticalAlignModifier| {
+        vertical_align_modifier.alignment_vertical = alignment_vertical;
+    })
 }
 
 impl RowColumnWeightScope for RowScopeImpl {}

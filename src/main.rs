@@ -25,7 +25,10 @@ use skia_safe::{AlphaType, ColorSpace, ColorType, ImageInfo, surfaces,
 };
 
 fn test_widget() {
-    BoxLayout(Modifier.layout(|scope, measurable, constraints| {
+    BoxLayout(Modifier.graphics_layer(|scope| {
+        scope.set_translation_x(100.0);
+        scope.set_translation_y(50.0);
+    }).layout(|scope, measurable, constraints| {
         let (size, placeable) = measurable.measure(constraints);
 
         scope.layout(size, move |scope| {

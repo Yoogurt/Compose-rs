@@ -104,16 +104,16 @@ impl VerticalAlignModifier {
 
 #[derive(Debug, Delegate, ModifierElement)]
 #[Impl(ParentData)]
-pub(crate) struct LayoutWeightNode {
+pub(crate) struct LayoutWeightModifier {
     pub(crate) weight: f32,
     pub(crate) fill: bool,
 
     #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
 }
-impl_node_kind_parent_data!(LayoutWeightNode);
+impl_node_kind_parent_data!(LayoutWeightModifier);
 
-impl ParentDataModifierNode for LayoutWeightNode {
+impl ParentDataModifierNode for LayoutWeightModifier {
     fn modify_parent_data(&mut self, _: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {
         let mut parent_data = parent_data.cast_or(|| {
             RowColumnParentData::default()
@@ -125,7 +125,7 @@ impl ParentDataModifierNode for LayoutWeightNode {
     }
 }
 
-impl LayoutWeightNode {
+impl LayoutWeightModifier {
     pub fn new() -> Self {
         Self {
             weight: 0f32,
@@ -341,10 +341,10 @@ impl RowColumnMeasureHelper {
 
             match self.orientation {
                 LayoutOrientation::Horizontal => {
-                    placeable.place_at((main_axis_positions[i - measure_result.range.start()] as i32, cross_axis_position).into(), 0f32);
+                    placeable.place_at((main_axis_positions[i - measure_result.range.start()] as i32, cross_axis_position).into(), 0f32, None);
                 }
                 LayoutOrientation::Vertical => {
-                    placeable.place_at((cross_axis_position, main_axis_positions[i - measure_result.range.start()] as i32).into(), 0f32);
+                    placeable.place_at((cross_axis_position, main_axis_positions[i - measure_result.range.start()] as i32).into(), 0f32, None);
                 }
             }
         }

@@ -21,6 +21,7 @@ use crate::foundation::node_coordinator::PerformMeasureHelper;
 use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
 use crate::foundation::placeable::Placeable;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
+use crate::foundation::ui::graphics::graphics_layer_modifier::GraphicsLayerScope;
 use crate::foundation::utils::option_extension::OptionThen;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::utils::self_reference::SelfReference;
@@ -90,6 +91,7 @@ impl LayoutModifierNodeCoordinator {
             let node_coordinator_impl = &mut this.node_coordinator_impl;
             node_coordinator_impl.attach(layout_node, node_chain);
             node_coordinator_impl.set_vtable_placeable_place_at(Rc::downgrade(&(result.clone() as Rc<RefCell<dyn PlaceablePlaceAt>>)));
+            node_coordinator_impl.set_vtable(Rc::downgrade(&(result.clone() as Rc<RefCell<dyn NodeCoordinator>>)));
             this.weak_self = Rc::downgrade(&result);
             this.node_coordinator_impl.tail = measure_node.clone();
         }
@@ -154,8 +156,8 @@ impl Measurable for LayoutModifierNodeCoordinator {
 impl PerformDrawTrait for LayoutModifierNodeCoordinator {}
 
 impl NodeCoordinator for LayoutModifierNodeCoordinator {
-    fn as_node_coordinator(&self) -> &dyn NodeCoordinator {
-        self
+    fn node_coordinator_ref(&self) -> &NodeCoordinatorImpl {
+        &self.node_coordinator_impl
     }
 
     fn on_placed(&self) {
@@ -172,8 +174,8 @@ impl NodeCoordinator for LayoutModifierNodeCoordinator {
 }
 
 impl PlaceablePlaceAt for LayoutModifierNodeCoordinator {
-    fn place_at(&mut self, position: IntOffset, z_index: f32) {
-        self.node_coordinator_impl.place_at(position, z_index);
+    fn place_at(&mut self, position: IntOffset, z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
+        self.node_coordinator_impl.place_at(position, z_index, layer_block);
 
         let this = self.get_self();
         MeasureLayoutDeferActionManager::record_layout(move || {

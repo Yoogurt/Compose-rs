@@ -17,7 +17,7 @@ use crate::foundation::geometry::{Density, IntSize};
 use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::measurable::{MultiChildrenMeasurePolicy, MultiChildrenMeasurePolicyDelegate};
 use crate::foundation::measure_scope::{empty_place_action, MeasureScopeLayoutAction};
-use crate::foundation::modifier::{modifier_node_element_creator, modifier_node_element_updater, ModifierNode, ModifierNodeImpl, NodeKind, NodeKindPatch};
+use crate::foundation::modifier::{ModifierNodeElement, ModifierNode, ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::modifier_node::ParentDataModifierNode;
 use crate::foundation::parent_data::ExtractParentData;
 use crate::foundation::placeable::Placeable;
@@ -101,20 +101,20 @@ impl ParentDataModifierNode for BoxChildDataModifierNode {
 }
 
 fn box_child_data(alignment: Alignment, match_parent_size: bool) -> Modifier {
-    Modifier::ModifierNodeElement {
-        create: modifier_node_element_creator(move || {
+    ModifierNodeElement(
+        move || {
             let mut box_child_data_node = BoxChildDataModifierNode::default();
 
             box_child_data_node.box_child_data_node.alignment = alignment;
             box_child_data_node.box_child_data_node.match_parent_size = match_parent_size;
 
             box_child_data_node
-        }),
-        update: modifier_node_element_updater(move |box_child_data_node: &mut BoxChildDataModifierNode| {
+        },
+        move |box_child_data_node: &mut BoxChildDataModifierNode| {
             box_child_data_node.box_child_data_node.alignment = alignment;
             box_child_data_node.box_child_data_node.match_parent_size = match_parent_size;
-        }),
-    }
+        },
+    )
 }
 
 fn place_in_box(placeable: &mut dyn Placeable,
@@ -122,7 +122,7 @@ fn place_in_box(placeable: &mut dyn Placeable,
                 box_size: IntSize,
                 alignment: Alignment) {
     let position = alignment.align(placeable.get_size(), box_size, layout_direction);
-    placeable.place_at(position, 0.0);
+    placeable.place_at(position, 0.0, None);
 }
 
 fn remember_box_measure_policy(alignment: Alignment, propagate_min_constraint: bool) -> MultiChildrenMeasurePolicy {

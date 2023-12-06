@@ -5,11 +5,10 @@ use compose_foundation_macro::ModifierElement;
 use crate::foundation::constraint::Constraints;
 use crate::foundation::measurable::{Measurable, SingleChildMeasurePolicy, SingleChildMeasurePolicyDelegate};
 use crate::foundation::measure_scope::MeasureScope;
-use crate::foundation::modifier::{Modifier, modifier_node_element_creator, modifier_node_element_updater, ModifierNodeImpl};
-use crate::foundation::modifier::Modifier::ModifierNodeElement;
+use crate::foundation::modifier::{Modifier, ModifierNodeElement, ModifierNodeImpl};
 use crate::foundation::modifier::NodeKind::Layout;
 use crate::foundation::modifier_node::LayoutModifierNode;
-use crate::impl_node_kind_layout_node;
+use crate::impl_node_kind_layout;
 
 impl Modifier {
     pub fn layout(self, measure: impl FnMut(&mut dyn MeasureScope, &mut dyn Measurable, &Constraints) -> MeasureResult + 'static) -> Modifier {
@@ -25,7 +24,7 @@ struct LayoutElement {
     #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
 }
-impl_node_kind_layout_node!(LayoutElement);
+impl_node_kind_layout!(LayoutElement);
 
 impl Debug for LayoutElement {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -42,15 +41,15 @@ impl LayoutModifierNode for LayoutElement {
 fn layout_element(measure: SingleChildMeasurePolicy) -> Modifier {
     let measure_for_update = measure.clone();
 
-    ModifierNodeElement {
-        create: modifier_node_element_creator(move || {
+    ModifierNodeElement(
+        move || {
             LayoutElement {
                 measure: measure.clone(),
                 node_impl: Default::default(),
             }
-        }),
-        update: modifier_node_element_updater(move |node: &mut LayoutElement| {
+        },
+        move |node: &mut LayoutElement| {
             node.measure = measure_for_update.clone();
-        }),
-    }
+        },
+    )
 }

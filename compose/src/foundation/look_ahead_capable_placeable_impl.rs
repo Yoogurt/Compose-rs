@@ -11,14 +11,16 @@ use crate::foundation::measured::Measured;
 use crate::foundation::placeable::Placeable;
 use crate::foundation::placeable_impl::PlaceableImpl;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
+use crate::foundation::ui::graphics::graphics_layer_modifier::GraphicsLayerScope;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
 #[derive(Debug, Delegate)]
-pub(crate) struct LookaheadCapablePlaceableImpl {
+pub struct LookaheadCapablePlaceableImpl {
     pub(crate) placeable_impl: Rc<RefCell<PlaceableImpl>>,
     #[to(MeasureScope)]
     measure_scope_impl: MeasureScopeImpl,
     position: IntOffset,
+    size: IntSize
 }
 
 impl Default for LookaheadCapablePlaceableImpl {
@@ -26,7 +28,8 @@ impl Default for LookaheadCapablePlaceableImpl {
         Self {
             placeable_impl: PlaceableImpl::new("LookaheadCapablePlaceableImpl").wrap_with_rc_refcell(),
             measure_scope_impl: MeasureScopeImpl::default(),
-            position: Default::default()
+            position: Default::default(),
+            size: Default::default()
         }
     }
 }
@@ -43,15 +46,16 @@ impl Measured for LookaheadCapablePlaceableImpl {
 
 impl Placeable for LookaheadCapablePlaceableImpl {
     fn get_size(&self) -> IntSize {
-        self.placeable_impl.borrow().get_size()
+        self.size
     }
 
     fn set_measured_size(&mut self, size: IntSize) {
+        self.size = size;
         self.placeable_impl.borrow_mut().set_measured_size(size)
     }
 
     fn get_measured_size(&self) -> IntSize {
-        self.placeable_impl.borrow().get_measured_size()
+        self.size
     }
 
     fn set_measurement_constraint(&mut self, constraint: &Constraints) {
@@ -63,7 +67,7 @@ impl Placeable for LookaheadCapablePlaceableImpl {
 }
 
 impl PlaceablePlaceAt for LookaheadCapablePlaceableImpl {
-    fn place_at(&mut self, _position: IntOffset, _z_index: f32) {
+    fn place_at(&mut self, _position: IntOffset, _z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
         unimplemented!("unimplemented place_at for LookaheadCapablePlaceableImpl")
     }
 }

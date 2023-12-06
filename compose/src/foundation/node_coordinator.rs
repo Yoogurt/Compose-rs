@@ -9,6 +9,7 @@ use crate::foundation::layout::layout_coordinates::LayoutCoordinates;
 use crate::foundation::look_ahead_capable_placeable::LookaheadCapablePlaceable;
 use crate::foundation::measure_result::MeasureResultProvider;
 use crate::foundation::modifier::ModifierNode;
+use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
 use crate::foundation::oop::AnyConverter;
 use crate::foundation::parent_data::ParentDataGenerator;
 
@@ -59,7 +60,7 @@ pub trait NodeCoordinator: PerformDrawTrait
     fn on_initialize(&self) {}
     fn on_placed(&self) {}
     fn on_measured(&mut self) {}
-    fn as_node_coordinator(&self) -> &dyn NodeCoordinator;
+    fn node_coordinator_ref(&self) -> &NodeCoordinatorImpl;
 }
 
 pub(crate) trait PerformMeasureHelper {

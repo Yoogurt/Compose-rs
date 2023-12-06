@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::rc::Weak;
+use std::rc::{Rc, Weak};
 
 use auto_delegate::Delegate;
 
@@ -8,6 +8,7 @@ use crate::foundation::geometry::{CoerceIn, IntOffset, IntSize};
 use crate::foundation::measured::MeasuredImpl;
 use crate::foundation::placeable::Placeable;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
+use crate::foundation::ui::graphics::graphics_layer_modifier::GraphicsLayerScope;
 
 #[derive(Debug, Delegate)]
 pub(crate) struct PlaceableImpl {
@@ -61,9 +62,9 @@ impl PlaceableImpl {
 }
 
 impl PlaceablePlaceAt for PlaceableImpl {
-    fn place_at(&mut self, position: IntOffset, z_index: f32) {
+    fn place_at(&mut self, position: IntOffset, z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
         if let Some(vtable) = self.place_at_vtable.clone() {
-            vtable.upgrade().unwrap().borrow_mut().place_at(position, z_index);
+            vtable.upgrade().unwrap().borrow_mut().place_at(position, z_index, layer_block);
             return;
         }
         unimplemented!("place_at to PlaceableImpl should implement by yourself");

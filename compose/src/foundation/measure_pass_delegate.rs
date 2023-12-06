@@ -20,6 +20,7 @@ use crate::foundation::placeable::Placeable;
 use crate::foundation::placeable_impl::PlaceableImpl;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 use crate::foundation::remeasurable::{Remeasurable, StatefulRemeasurable};
+use crate::foundation::ui::graphics::graphics_layer_modifier::GraphicsLayerScope;
 use crate::foundation::usage_by_parent::UsageByParent;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::utils::self_reference::SelfReference;
@@ -93,7 +94,7 @@ impl Remeasurable for MeasurePassDelegate {
 }
 
 impl PlaceablePlaceAt for MeasurePassDelegate {
-    fn place_at(&mut self, position: IntOffset, z_index: f32) {
+    fn place_at(&mut self, position: IntOffset, z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
         if position != self.last_position {
             self.last_position = position;
         }
@@ -286,7 +287,7 @@ impl MeasurePassDelegate {
             // todo place outer coordinator
 
             let outer_coordinator = self.get_outer_coordinator();
-            outer_coordinator.borrow_mut().place_at(position, z_index);
+            outer_coordinator.borrow_mut().place_at(position, z_index, None);
             self.on_node_placed();
         }
         self.set_layout_state(LayoutState::Idle);

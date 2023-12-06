@@ -2,7 +2,7 @@
 
 use std::any::Any;
 use std::cell::RefCell;
-use std::fmt::Debug;
+use std::fmt::{Debug, Formatter};
 use std::ops::{Deref, DerefMut};
 use std::rc::{Rc, Weak};
 
@@ -11,22 +11,24 @@ use compose_foundation_macro::{AnyConverter, Leak};
 
 use crate::foundation::canvas::Canvas;
 use crate::foundation::composer::Composer;
-use crate::foundation::geometry::{IntOffset, IntSize};
+use crate::foundation::geometry::{Density, IntOffset, IntSize};
 use crate::foundation::intrinsic_measurable::IntrinsicMeasurable;
 use crate::foundation::layout::layout_coordinates::LayoutCoordinates;
+use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::look_ahead_capable_placeable::LookaheadCapablePlaceable;
 use crate::foundation::look_ahead_capable_placeable_impl::LookaheadCapablePlaceableImpl;
 use crate::foundation::measure_result::{MeasureResult, MeasureResultProvider};
 use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::memory::leak_token::LeakToken;
 use crate::foundation::modifier::{ModifierNode, ModifierNodeExtension, NodeKind};
-use crate::foundation::node::LayoutNodeDrawScope;
+use crate::foundation::node::{LayoutNodeDrawScope, OwnedLayer, SkiaOwnedLayer};
 use crate::foundation::node_chain::{NodeChain, TailModifierNode};
 use crate::foundation::node_coordinator::{DrawableNodeCoordinator, NodeCoordinatorTrait, PerformDrawTrait};
 use crate::foundation::node_coordinator::TailModifierNodeProvider;
 use crate::foundation::parent_data::ParentDataGenerator;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 use crate::foundation::ui::draw::{CanvasDrawScope, DrawContext};
+use crate::foundation::ui::graphics::graphics_layer_modifier::GraphicsLayerScope;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::utils::weak_upgrade::WeakUpdater;
@@ -38,8 +40,8 @@ use super::node_coordinator::NodeCoordinator;
 use super::placeable::Placeable;
 
 #[Leak]
-#[derive(Debug, Delegate, AnyConverter)]
-pub(crate) struct NodeCoordinatorImpl {
+#[derive(Delegate, AnyConverter)]
+pub struct NodeCoordinatorImpl {
     #[to(Placeable, Measured, MeasureScope, LookaheadCapablePlaceable)]
     pub(crate) look_ahead_capable_placeable_impl: LookaheadCapablePlaceableImpl,
     pub(crate) wrapped: Option<Rc<RefCell<dyn NodeCoordinator>>>,
@@ -53,7 +55,26 @@ pub(crate) struct NodeCoordinatorImpl {
 
     pub(crate) measure_result: Option<MeasureResult>,
 
-    perform_draw_vtable: Option<Weak<RefCell<dyn PerformDrawTrait>>>,
+    is_clipping: bool,
+
+    layer: Option<Box<dyn OwnedLayer>>,
+    layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>,
+    layer_density: Density,
+    layer_layout_direction: LayoutDirection,
+
+    graphics_layer_scope: GraphicsLayerScope,
+
+    vtable: Option<Weak<RefCell<dyn NodeCoordinator>>>,
+}
+
+impl Debug for NodeCoordinatorImpl {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("NodeCoordinatorImpl").field("wrapped", &self.wrapped)
+            .field("wrapped_by", &self.wrapped_by)
+            .field("tail", &self.tail)
+            .field("measure_result", &self.measure_result)
+            .finish()
+    }
 }
 
 impl ParentDataGenerator for NodeCoordinatorImpl {
@@ -145,7 +166,7 @@ impl NodeCoordinatorTrait for NodeCoordinatorImpl {
 
 impl PerformDrawTrait for NodeCoordinatorImpl {
     fn perform_draw(&self, canvas: &mut dyn Canvas) {
-        match self.perform_draw_vtable.as_ref() {
+        match self.vtable.as_ref() {
             Some(perform_draw_trait) => {
                 if let Some(vtable) = perform_draw_trait.upgrade() {
                     vtable.borrow().perform_draw(canvas);
@@ -206,8 +227,8 @@ impl LayoutCoordinates for NodeCoordinatorImpl {
 }
 
 impl NodeCoordinator for NodeCoordinatorImpl {
-    fn as_node_coordinator(&self) -> &dyn NodeCoordinator {
-        self
+    fn node_coordinator_ref(&self) -> &NodeCoordinatorImpl {
+        &self
     }
 
     fn on_placed(&self) {
@@ -219,10 +240,14 @@ impl NodeCoordinator for NodeCoordinatorImpl {
 
 impl DrawableNodeCoordinator for NodeCoordinatorImpl {
     fn draw(&self, canvas: &mut dyn Canvas) {
-        let offset = self.get_position().as_f32_offset();
-        canvas.translate(offset.x, offset.y);
-        self.draw_contrained_draw_modifiers(canvas);
-        canvas.translate(-offset.x, -offset.y);
+        // if let Some(layer) = self.layer.as_ref() {
+        //     layer.draw_layer(canvas)
+        // } else {
+            let offset = self.get_position().as_f32_offset();
+            canvas.translate(offset.x, offset.y);
+            self.draw_contrained_draw_modifiers(canvas);
+            canvas.translate(-offset.x, -offset.y);
+        // }
     }
 }
 
@@ -243,14 +268,21 @@ impl NodeCoordinatorImpl {
             z_index: 0.0,
             tail: TailModifierNode::default().wrap_with_rc_refcell(),
 
+            graphics_layer_scope: GraphicsLayerScope::new(),
             measure_result: None,
-            perform_draw_vtable: None,
+            vtable: None,
             leak_object: Default::default(),
+
+            is_clipping: false,
+            layer_block: None,
+            layer_density: Density::default(),
+            layer_layout_direction: LayoutDirection::default(),
+            layer: None,
         }
     }
 
-    pub fn set_vtable_perform_draw_trait(&mut self, perform_draw_vtable: Weak<RefCell<dyn PerformDrawTrait>>) {
-        self.perform_draw_vtable = Some(perform_draw_vtable);
+    pub fn set_vtable(&mut self, vtable: Weak<RefCell<dyn NodeCoordinator>>) {
+        self.vtable = Some(vtable);
     }
 
     pub fn set_vtable_placeable_place_at(&mut self, place_at_vtable: Weak<RefCell<dyn PlaceablePlaceAt>>) {
@@ -259,7 +291,85 @@ impl NodeCoordinatorImpl {
 
     pub(crate) fn on_layout_modifier_node_changed(&self) {}
 
-    fn place_self(&mut self, position: IntOffset, z_index: f32) {
+    fn compare_layer_block(left: Option<&Rc<dyn Fn(&mut GraphicsLayerScope)>>, right: Option<&Rc<dyn Fn(&mut GraphicsLayerScope)>>) -> bool {
+        match (left, right) {
+            (Some(left), Some(right)) => {
+                Rc::as_ptr(left) == Rc::as_ptr(right)
+            }
+            _ => { false }
+        }
+    }
+
+    fn update_layer_parameters(&mut self) {
+        let layer_density = self.layer_density;
+        let size = self.size();
+
+        match self.layer.as_mut() {
+            Some(layer) => {
+                let layer_block = self.layer_block.clone().unwrap();
+
+                let graphics_layer_scope = &mut self.graphics_layer_scope;
+
+                graphics_layer_scope.reset();
+                graphics_layer_scope.set_density(layer_density);
+                graphics_layer_scope.set_size(size.as_f32_size());
+
+                layer_block(graphics_layer_scope);
+
+                layer.update_layer_property(
+                    graphics_layer_scope
+                )
+            }
+            None => {
+                if self.layer_block.is_some() {
+                    panic!("self.layer_block should be None")
+                }
+            }
+        }
+    }
+
+    fn update_layer_block(&mut self, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>, force_update_parameters: bool) {
+        let layout_node = self.layout_node.upgrade().unwrap();
+        let layout_node_density = layout_node.borrow().get_density();
+        let layout_node_layout_direction = layout_node.borrow().get_layout_direction();
+
+        let update_parameters = force_update_parameters
+            || Self::compare_layer_block(self.layer_block.as_ref(), layer_block.as_ref())
+            || (self.layer_density != layout_node_density)
+            || (self.layer_layout_direction != layout_node_layout_direction);
+
+        self.layer_block = layer_block.clone();
+        self.layer_density = layout_node_density;
+        self.layer_layout_direction = layout_node_layout_direction;
+
+        if self.is_attached() && layer_block.is_some() {
+            if self.layer.is_none() {
+                let vtable = self.vtable.clone();
+
+                self.layer = {
+                    let layer: Box<dyn OwnedLayer> = Box::new(SkiaOwnedLayer::new(move |canvas| {
+                        let layout_node = layout_node.borrow();
+                        if layout_node.is_placed() {
+                            let vtable = vtable.as_ref().and_then(|vtable| vtable.upgrade()).unwrap();
+                            vtable.borrow().node_coordinator_ref().draw_contrained_draw_modifiers(canvas);
+                        }
+                    }));
+
+                    Some(layer)
+                };
+
+                self.update_layer_parameters();
+            } else if update_parameters {
+                todo!()
+            }
+        } else {
+            self.layer = None;
+        }
+    }
+
+    fn place_self(&mut self, position: IntOffset, z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
+        self.update_layer_block(layer_block, false);
+
         if self.get_position() != position {
             self.set_position(position);
         }
@@ -372,7 +482,7 @@ impl NodeCoordinatorImpl {
 }
 
 impl PlaceablePlaceAt for NodeCoordinatorImpl {
-    fn place_at(&mut self, position: IntOffset, z_index: f32) {
-        self.place_self(position, z_index)
+    fn place_at(&mut self, position: IntOffset, z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
+        self.place_self(position, z_index, layer_block)
     }
 }

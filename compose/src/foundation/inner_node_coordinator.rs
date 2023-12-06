@@ -23,6 +23,7 @@ use crate::foundation::node_chain::NodeChain;
 use crate::foundation::node_coordinator::{PerformDrawTrait, PerformMeasureHelper};
 use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
+use crate::foundation::ui::graphics::graphics_layer_modifier::GraphicsLayerScope;
 use crate::foundation::usage_by_parent::UsageByParent;
 use crate::foundation::utils::option_extension::OptionThen;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
@@ -91,7 +92,7 @@ impl InnerNodeCoordinator {
             let mut result_mut = result.borrow_mut();
             result_mut.weak_this = Rc::downgrade(&result);
 
-            result_mut.node_coordinator_impl.set_vtable_perform_draw_trait(Rc::downgrade(&(result.clone() as Rc<RefCell<dyn PerformDrawTrait>>)));
+            result_mut.node_coordinator_impl.set_vtable(Rc::downgrade(&(result.clone() as Rc<RefCell<dyn NodeCoordinator>>)));
         }
         result
     }
@@ -177,8 +178,8 @@ impl SelfReference for InnerNodeCoordinator {
 }
 
 impl PlaceablePlaceAt for InnerNodeCoordinator {
-    fn place_at(&mut self, position: IntOffset, z_index: f32) {
-        self.node_coordinator_impl.place_at(position, z_index);
+    fn place_at(&mut self, position: IntOffset, z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
+        self.node_coordinator_impl.place_at(position, z_index, layer_block);
 
         let this = self.get_self();
         MeasureLayoutDeferActionManager::record_layout(move || {

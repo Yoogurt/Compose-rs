@@ -1,8 +1,8 @@
 use auto_delegate::Delegate;
 use compose_foundation_macro::ModifierElement;
 use crate::foundation::geometry::{Dp, IntoDp};
-use crate::foundation::modifier::{Modifier, modifier_node_element_creator, modifier_node_element_updater, ModifierNodeImpl};
-use crate::impl_node_kind_layout_node;
+use crate::foundation::modifier::{Modifier, ModifierNodeElement, ModifierNodeImpl};
+use crate::impl_node_kind_layout;
 use crate::foundation::constraint::Constraints;
 use crate::foundation::geometry::usize_extension::MayBeOverflowAdd;
 use crate::foundation::measurable::Measurable;
@@ -57,7 +57,7 @@ struct PaddingElement {
     #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
 }
-impl_node_kind_layout_node!(PaddingElement);
+impl_node_kind_layout!(PaddingElement);
 
 impl LayoutModifierNode for PaddingElement {
     fn measure(&self, measure_scope: &mut dyn MeasureScope, measurable: &mut dyn Measurable, constraint: &Constraints) -> MeasureResult {
@@ -89,21 +89,21 @@ fn padding_element(start: Dp,
                    top: Dp,
                    bottom: Dp,
                    rtl_aware: bool) -> Modifier {
-    Modifier::ModifierNodeElement {
-        create: modifier_node_element_creator(move || PaddingElement {
+    ModifierNodeElement (
+        move || PaddingElement {
             start,
             end,
             top,
             bottom,
             rtl_aware,
             node_impl: Default::default(),
-        }),
-        update: modifier_node_element_updater(move |padding_element: &mut PaddingElement| {
+        },
+        move |padding_element: &mut PaddingElement| {
             padding_element.start = start;
             padding_element.end = end;
             padding_element.top = top;
             padding_element.bottom = bottom;
             padding_element.rtl_aware = rtl_aware;
-        }),
-    }
+        }
+    )
 }

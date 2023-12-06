@@ -6,6 +6,7 @@ use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::placeable::Placeable;
 use crate::foundation::placement_scope::PlacementScope;
+use crate::foundation::ui::graphics::graphics_layer_modifier::GraphicsLayerScope;
 
 pub(crate) struct PlacementScopeImpl<'a> {
     pub(crate) size: IntSize,
@@ -34,7 +35,7 @@ impl PlacementScope for PlacementScopeImpl<'_> {
     }
 
     fn place_with_z(&self, mut placeable: &Rc<RefCell<dyn Placeable>>, x: i32, y: i32, z_index: f32) {
-        placeable.borrow_mut().place_at((x, y).into(), z_index)
+        placeable.borrow_mut().place_at((x, y).into(), z_index, None)
     }
 
     fn place_relative(&self, placeable: &Rc<RefCell<dyn Placeable>>, x: i32, y: i32) {
@@ -45,7 +46,7 @@ impl PlacementScope for PlacementScopeImpl<'_> {
         let mut placeable = placeable.borrow_mut();
         // mirror
         if self.parent_layout_direction() == LayoutDirection::Ltr || self.parent_width() == 0 {
-            placeable.place_at((x, y).into(), z_index)
+            placeable.place_at((x, y).into(), z_index, None)
         } else {
             let x = self.parent_width() as i32 - placeable.get_size().width as i32 - x;
 
@@ -56,8 +57,13 @@ impl PlacementScope for PlacementScopeImpl<'_> {
                 )
                     .into(),
                 z_index,
+                None
             )
         }
+    }
+
+    fn place_with_layer(&self, placeable: &Rc<RefCell<dyn Placeable>>, x: i32, y: i32, z_index: f32, layer_block: Rc<dyn Fn(&mut GraphicsLayerScope) + 'static>) {
+        placeable.borrow_mut().place_at((x, y).into(), z_index, Some(layer_block))
     }
 }
 

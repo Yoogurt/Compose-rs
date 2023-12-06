@@ -1,7 +1,7 @@
 use skia_safe::{Color4f, Paint, Point, Rect, scalar, Vector};
 use skia_safe::canvas::SaveLayerRec;
 
-use crate::foundation::canvas::{Canvas, CanvasExtension, CanvasSaveGuard, CanvasSaveLayerGuard};
+use crate::foundation::canvas::{Canvas, CanvasExtension};
 use crate::foundation::drawing::scalar::Scalar;
 use crate::foundation::ui::graphics::color;
 use crate::foundation::ui::graphics::color::Color;
@@ -21,23 +21,18 @@ impl<'a> DesktopCanvas<'a> {
 }
 
 impl Canvas for DesktopCanvas<'_> {
-    fn save(&mut self) -> CanvasSaveGuard<'_> {
+    fn save(&mut self) {
         self.inner.save();
-        CanvasSaveGuard { canvas: self }
     }
 
     fn restore(&mut self) {
         self.inner.restore();
     }
 
-    fn save_layer(&mut self) -> CanvasSaveLayerGuard<'_> {
+    fn save_layer(&mut self) -> SaveLayerRec {
         let save_layer_rec = SaveLayerRec::default();
         self.inner.save_layer(&save_layer_rec);
-
-        CanvasSaveLayerGuard {
-            save_layer_rec,
-            canvas: self,
-        }
+        return save_layer_rec;
     }
 
     fn save_count(&self) -> usize {
@@ -59,4 +54,4 @@ impl Canvas for DesktopCanvas<'_> {
     }
 }
 
-impl CanvasExtension for DesktopCanvas<'_> {}
+impl<T> CanvasExtension for T where T: ?Sized + Canvas {}

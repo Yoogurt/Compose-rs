@@ -1,6 +1,6 @@
 use skia_safe::{Point, Rect};
 
-use crate::foundation::canvas::Canvas;
+use crate::foundation::canvas::{Canvas, CanvasExtension};
 use crate::foundation::geometry::Offset;
 use crate::foundation::geometry::Size;
 use crate::foundation::layout_direction::LayoutDirection;
@@ -32,10 +32,6 @@ impl<'a> DrawScope<'a> for CanvasDrawScope<'a> {
         };
 
         let canvas = self.draw_context.get_canvas();
-
-        let layer = canvas.save_layer();
-        canvas.draw_circle(Point::new(200.0,200.0), 100.0, Color::GREEN);
-        drop(layer);
         canvas.draw_rect(color, Rect::new(top_left.x, top_left.y, size.width, size.height));
     }
 }

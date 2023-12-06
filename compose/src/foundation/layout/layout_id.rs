@@ -9,8 +9,7 @@ use compose_foundation_macro::ModifierElement;
 use crate::foundation::delegatable_node::{DelegatableKind, DelegatableNode};
 use crate::foundation::geometry::Density;
 use crate::foundation::measurable::Measurable;
-use crate::foundation::modifier::{Modifier, modifier_node_element_creator, modifier_node_element_updater};
-use crate::foundation::modifier::Modifier::ModifierNodeElement;
+use crate::foundation::modifier::{Modifier, ModifierNodeElement};
 use crate::foundation::oop::AnyConverter;
 use crate::foundation::parent_data::ExtractParentData;
 use crate::foundation::utils::option_extension::OptionalInstanceConverter;
@@ -60,16 +59,15 @@ impl ParentDataModifierNode for LayoutIdModifier {
 
 fn layout_id_element(layout_id: Rc<dyn Any>) -> Modifier {
     let layout_id_for_update = layout_id.clone();
-    ModifierNodeElement {
-        create: modifier_node_element_creator(move || {
+    ModifierNodeElement(
+        move || {
             LayoutIdModifier {
                 layout_id: layout_id.clone(),
                 node_impl: Default::default(),
             }
-        }),
-
-        update: modifier_node_element_updater(move |layout_id: &mut LayoutIdModifier| {
+        },
+        move |layout_id: &mut LayoutIdModifier| {
             layout_id.layout_id = layout_id_for_update.clone();
-        }),
-    }
+        },
+    )
 }
