@@ -1,14 +1,19 @@
+use minifb::MouseButton;
+use std::cell::RefCell;
+use crate::foundation::geometry::Density;
 use crate::foundation::canvas::Canvas;
 use std::time::Duration;
 use crate as compose;
 use minifb::{Key, KeyRepeat, Scale, ScaleMode, Window, WindowOptions};
 use skia_safe::{AlphaType, ColorSpace, ColorType, ImageInfo, surfaces,
 };
+use std::rc::Rc;
 use crate::foundation::bridge::platform_compose_view::MacOSComposeView;
 use crate::foundation::composer::Composer;
 use crate::foundation::drawing::canvas_impl::new_canvas;
 use crate::foundation::geometry::IntSize;
 use crate::foundation::measure_layout_defer_action_manager::MeasureLayoutDeferActionManager;
+use crate::foundation::ui::compose_scene::ComposeScene;
 use crate::foundation::ui::graphics::color::Color;
 
 pub struct DesktopWindowOption {
@@ -63,8 +68,7 @@ pub fn DesktopWindow(option: DesktopWindowOption,
             window_width * BYTE_PER_PIXEL,
             None,
         )
-    }
-        .unwrap();
+    }.unwrap();
 
     let mut canvas = new_canvas(surface.canvas());
     let mut compose_view_rc = MacOSComposeView::new();
@@ -87,16 +91,28 @@ pub fn DesktopWindow(option: DesktopWindowOption,
 
     let mut compose_view = compose_view_rc.borrow_mut();
 
+    let runtime = tokio::runtime::Builder::new_current_thread().build().unwrap();
+    let mut redraw_need = Rc::new(RefCell::new(true));
+    let redraw_capture = redraw_need.clone();
+    let compose_scene = ComposeScene::new(runtime, Density::default(), Box::new(move || {
+        redraw_capture.replace(true);
+    }));
     while windows.is_open() && !windows.is_key_pressed(Key::Escape, KeyRepeat::No) {
+
+
         MeasureLayoutDeferActionManager::with_manager(|defer_measure, defer_layout| {
             compose_view.dispatch_measure(window_width, window_height);
             defer_measure();
             compose_view.dispatch_layout();
             defer_layout();
         });
-        canvas.clear(Color::WHITE);
-        compose_view.dispatch_draw(&mut canvas);
+
+        if redraw_need.replace(false) {
+            canvas.clear(Color::WHITE);
+            compose_view.dispatch_draw(&mut canvas);
+        }
+
         windows.update_with_buffer(buffer.as_slice(), window_width, window_height).unwrap();
-        std::thread::sleep(Duration::from_millis(100));
+        std::thread::sleep(Duration::from_millis(33));
     }
 }
