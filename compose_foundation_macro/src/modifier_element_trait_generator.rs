@@ -25,6 +25,29 @@ pub(crate) fn generate_any_converter(struct_ident: &Ident) -> TokenStream {
     }).into()
 }
 
+pub(crate) fn generate_delegate_type(struct_ident: &Ident) -> TokenStream {
+    (quote! {
+            impl crate::foundation::delegatable_node::DelegatableNode for #struct_ident {
+                fn get_node(&self) -> crate::foundation::delegatable_node::DelegatableKind {
+                    crate::foundation::delegatable_node::DelegatableKind::This
+                }
+            }
+    }).into()
+}
+
+pub(crate) fn generate_node_patch(struct_ident: &Ident,
+                                  node_patch: Ident) -> TokenStream {
+    dbg!(format!("node_path_impl {:?} is impl for {}", node_patch, struct_ident.to_string()).as_str());
+
+    (quote! {
+            impl crate::foundation::modifier::NodeKindPatch for #struct_ident {
+                fn get_node_kind(&self) -> crate::foundation::modifier::NodeKind {
+                    crate::foundation::modifier::NodeKind::#node_patch
+                }
+            }
+    }).into()
+}
+
 pub(crate) fn generate_converter(struct_ident: &Ident,
                                  converter_ident: Ident,
                                  as_ref: Ident,
@@ -47,7 +70,7 @@ pub(crate) fn generate_converter(struct_ident: &Ident,
                 fn #as_mut(&mut self) -> Option<&mut dyn crate::foundation::modifier_node::#ret_ident> {
                     Some(self)
                 }
-        }
+            }
     }).into()
     }
 }

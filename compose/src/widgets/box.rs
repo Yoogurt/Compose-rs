@@ -25,7 +25,6 @@ use crate::foundation::placement_scope::PlacementScope;
 use crate::foundation::ui::align::Alignment;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
 use crate::foundation::utils::option_extension::{OptionalInstanceConverter, OptionThen};
-use crate::impl_node_kind_parent_data;
 use crate::widgets::layout::Layout;
 
 trait BoxMeasurableTrait {
@@ -88,8 +87,6 @@ struct BoxChildDataModifierNode {
     #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
 }
-
-impl_node_kind_parent_data!(BoxChildDataModifierNode);
 
 impl ParentDataModifierNode for BoxChildDataModifierNode {
     fn modify_parent_data(&mut self, _: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {

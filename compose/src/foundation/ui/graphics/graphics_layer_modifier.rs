@@ -11,7 +11,6 @@ use crate::foundation::measurable::Measurable;
 use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::measure_scope::{MeasureScope, MeasureScopeLayoutAction};
 use crate::foundation::modifier_node::LayoutModifierNode;
-use crate::impl_node_kind_layout;
 
 #[derive(Debug, Clone)]
 pub struct GraphicsLayerScope {
@@ -126,7 +125,6 @@ struct BlockGraphicsLayerModifier {
     #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
 }
-impl_node_kind_layout!(BlockGraphicsLayerModifier);
 
 impl Debug for BlockGraphicsLayerModifier {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

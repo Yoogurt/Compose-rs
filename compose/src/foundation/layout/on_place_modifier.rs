@@ -8,8 +8,6 @@ use crate::foundation::modifier::{Modifier, ModifierNodeImpl, NodeKind};
 use crate::foundation::layout::layout_coordinates::LayoutCoordinates;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
-use crate::impl_node_kind_for_type;
-use crate::impl_node_kind_any;
 use std::rc::Rc;
 use crate::foundation::geometry::IntSize;
 use crate::foundation::modifier_node::LayoutAwareModifierNode;
@@ -28,7 +26,6 @@ struct OnPlacedNode {
     #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
 }
-impl_node_kind_for_type!(OnPlacedNode, NodeKind::LayoutAware);
 
 impl LayoutAwareModifierNode for OnPlacedNode {
     fn on_placed(&self, coordinates: &dyn LayoutCoordinates) {

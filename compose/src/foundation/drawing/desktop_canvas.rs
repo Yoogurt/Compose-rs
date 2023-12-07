@@ -47,6 +47,10 @@ impl Canvas for DesktopCanvas<'_> {
         self.inner.translate(Vector::new(x, y));
     }
 
+    fn scale(&mut self, x: f32, y: f32) {
+        self.inner.scale((x, y));
+    }
+
     fn draw_circle(&mut self, point: Point, scalar: scalar, color: Color) {
         self.paint.set_color(color);
         self.inner.draw_circle(point, scalar, &self.paint);
@@ -55,6 +59,10 @@ impl Canvas for DesktopCanvas<'_> {
     fn draw_rect(&mut self, color: Color, rect: Rect) {
         self.paint.set_color(color);
         self.inner.draw_rect(rect, &self.paint);
+    }
+
+    fn clear(&mut self, color: Color) {
+        self.inner.clear(color);
     }
 }
 

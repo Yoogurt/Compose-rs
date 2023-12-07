@@ -6,6 +6,7 @@ use std::rc::Weak;
 use auto_delegate::Delegate;
 use compose_foundation_macro::ModifierElement;
 
+use crate::impl_node_kind_any;
 use crate::foundation::layout_modifier_node_coordinator::LayoutModifierNodeCoordinator;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::layout_node_container::LayoutNodeContainer;
@@ -17,7 +18,6 @@ use crate::foundation::node::BackwardsCompatNode;
 use crate::foundation::node_coordinator::TailModifierNodeProvider;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::utils::self_reference::SelfReference;
-use crate::impl_node_kind_any;
 
 use super::{
     inner_node_coordinator::InnerNodeCoordinator, measure_result::MeasureResult,
@@ -27,7 +27,7 @@ use super::modifier::Modifier;
 
 #[derive(Debug, Delegate, Default, ModifierElement)]
 pub(crate) struct TailModifierNode {
-    #[to(ModifierNode, DelegatableNode)]
+    #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
 }
 
@@ -53,7 +53,7 @@ impl_node_kind_any!(TailModifierNode);
 
 #[derive(Debug, Default, Delegate, ModifierElement)]
 struct SentineHeadNode {
-    #[to(ModifierNode, DelegatableNode)]
+    #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
 }
 impl_node_kind_any!(SentineHeadNode);

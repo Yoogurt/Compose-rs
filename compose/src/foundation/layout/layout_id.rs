@@ -1,5 +1,4 @@
 use crate::foundation::modifier_node::ParentDataModifierNode;
-use crate::impl_node_kind_parent_data;
 use crate::foundation::modifier::ModifierNodeImpl;
 use auto_delegate::Delegate;
 use std::any::Any;
@@ -43,7 +42,6 @@ struct LayoutIdModifier {
     #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
 }
-impl_node_kind_parent_data!(LayoutIdModifier);
 
 impl ParentDataModifierNode for LayoutIdModifier {
     fn modify_parent_data(&mut self, density: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {

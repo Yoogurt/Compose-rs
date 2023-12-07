@@ -8,7 +8,6 @@ use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::modifier::{Modifier, ModifierNodeElement, ModifierNodeImpl};
 use crate::foundation::modifier::NodeKind::Layout;
 use crate::foundation::modifier_node::LayoutModifierNode;
-use crate::impl_node_kind_layout;
 
 impl Modifier {
     pub fn layout(self, measure: impl FnMut(&mut dyn MeasureScope, &mut dyn Measurable, &Constraints) -> MeasureResult + 'static) -> Modifier {
@@ -24,7 +23,6 @@ struct LayoutElement {
     #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
 }
-impl_node_kind_layout!(LayoutElement);
 
 impl Debug for LayoutElement {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

@@ -62,74 +62,6 @@ macro_rules! impl_node_kind_any {
     };
 }
 
-#[macro_export]
-macro_rules! impl_node_kind_for_type {
-    ($tt:tt, $expr:expr) => {
-         impl crate::foundation::modifier::NodeKindPatch for $tt {
-            fn get_node_kind(&self) -> crate::foundation::modifier::NodeKind {
-                $expr
-            }
-        }
-
-        impl crate::foundation::delegatable_node::DelegatableNode for $tt {
-            fn get_node(&self) -> crate::foundation::delegatable_node::DelegatableKind {
-                crate::foundation::delegatable_node::DelegatableKind::This
-            }
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! impl_node_kind_parent_data {
-    ($tt:tt) => {
-        impl crate::foundation::modifier::NodeKindPatch for $tt {
-            fn get_node_kind(&self) -> crate::foundation::modifier::NodeKind {
-                crate::foundation::modifier::NodeKind::ParentData
-            }
-        }
-
-        impl crate::foundation::delegatable_node::DelegatableNode for $tt {
-            fn get_node(&self) -> crate::foundation::delegatable_node::DelegatableKind {
-                crate::foundation::delegatable_node::DelegatableKind::This
-            }
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! impl_node_kind_draw {
-    ($tt:tt) => {
-        impl crate::foundation::modifier::NodeKindPatch for $tt {
-            fn get_node_kind(&self) -> crate::foundation::modifier::NodeKind {
-                crate::foundation::modifier::NodeKind::Draw
-            }
-        }
-
-        impl crate::foundation::delegatable_node::DelegatableNode for $tt {
-            fn get_node(&self) -> crate::foundation::delegatable_node::DelegatableKind {
-                crate::foundation::delegatable_node::DelegatableKind::This
-            }
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! impl_node_kind_layout {
-    ($tt:tt) => {
-        impl crate::foundation::modifier::NodeKindPatch for $tt {
-            fn get_node_kind(&self) -> crate::foundation::modifier::NodeKind {
-                crate::foundation::modifier::NodeKind::Layout
-            }
-        }
-
-        impl crate::foundation::delegatable_node::DelegatableNode for $tt {
-            fn get_node(&self) -> crate::foundation::delegatable_node::DelegatableKind {
-                crate::foundation::delegatable_node::DelegatableKind::This
-            }
-        }
-    };
-}
-
 pub trait NodeKindPatch {
     fn get_node_kind(&self) -> NodeKind;
 }
@@ -176,12 +108,6 @@ pub(crate) struct ModifierNodeImpl {
 impl NodeKindPatch for ModifierNodeImpl {
     fn get_node_kind(&self) -> NodeKind {
         todo!("implement get node kind by yourself")
-    }
-}
-
-impl DelegatableNode for ModifierNodeImpl {
-    fn get_node(&self) -> DelegatableKind {
-        DelegatableKind::This
     }
 }
 

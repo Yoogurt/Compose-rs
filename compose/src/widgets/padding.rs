@@ -2,7 +2,6 @@ use auto_delegate::Delegate;
 use compose_foundation_macro::ModifierElement;
 use crate::foundation::geometry::{Dp, IntoDp};
 use crate::foundation::modifier::{Modifier, ModifierNodeElement, ModifierNodeImpl};
-use crate::impl_node_kind_layout;
 use crate::foundation::constraint::Constraints;
 use crate::foundation::geometry::usize_extension::MayBeOverflowAdd;
 use crate::foundation::measurable::Measurable;
@@ -57,7 +56,6 @@ struct PaddingElement {
     #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
 }
-impl_node_kind_layout!(PaddingElement);
 
 impl LayoutModifierNode for PaddingElement {
     fn measure(&self, measure_scope: &mut dyn MeasureScope, measurable: &mut dyn Measurable, constraint: &Constraints) -> MeasureResult {

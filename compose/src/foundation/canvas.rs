@@ -14,9 +14,12 @@ pub trait Canvas {
     fn save_count(&self) -> usize;
 
     fn translate(&mut self, x: f32, y: f32);
+    fn scale(&mut self, x: f32, y: f32);
 
     fn draw_circle(&mut self, point: Point, scalar: scalar, color: Color);
     fn draw_rect(&mut self, color: Color, rect: Rect);
+
+    fn clear(&mut self, color: Color);
 }
 
 pub trait CanvasExtension: Canvas {

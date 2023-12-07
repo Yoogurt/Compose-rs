@@ -1,3 +1,4 @@
+use skia_safe::Rect;
 use crate::foundation::canvas::CanvasExtension;
 use crate::foundation::geometry::{IntSize, Offset};
 use crate::foundation::node::OwnedLayer;
@@ -17,6 +18,12 @@ impl SkiaOwnedLayer {
             draw_block: draw_block.wrap_with_box(),
         }
     }
+
+    fn apply_canvas_property(&self, canvas: &mut dyn Canvas) {
+        canvas.translate(self.property.get_translation_x(), self.property.get_translation_y());
+        canvas.scale(self.property.get_scale_x(), self.property.get_scale_y());
+        (self.draw_block)(canvas);
+    }
 }
 
 impl OwnedLayer for SkiaOwnedLayer {
@@ -32,15 +39,11 @@ impl OwnedLayer for SkiaOwnedLayer {
         let alpha = self.property.get_alpha();
         if alpha >= 1.0f32 {
             canvas.with_save_layer(|canvas| {
-                canvas.translate(self.property.get_translation_x(), self.property.get_translation_y());
-                (self.draw_block)(canvas);
-                canvas.translate(-self.property.get_translation_x(), -self.property.get_translation_y());
+                self.apply_canvas_property(canvas);
             });
         } else {
-            canvas.with_save_layer_alpha(alpha, |canvas| {
-                canvas.translate(self.property.get_translation_x(), self.property.get_translation_y());
-                (self.draw_block)(canvas);
-                canvas.translate(-self.property.get_translation_x(), -self.property.get_translation_y());
+            canvas.with_save_layer_alpha(None, alpha, |canvas| {
+                self.apply_canvas_property(canvas);
             });
         }
     }

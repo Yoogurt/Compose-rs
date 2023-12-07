@@ -1,3 +1,4 @@
+use crate::foundation::canvas::Canvas;
 use std::time::Duration;
 use crate as compose;
 use minifb::{Key, KeyRepeat, Scale, ScaleMode, Window, WindowOptions};
@@ -8,6 +9,7 @@ use crate::foundation::composer::Composer;
 use crate::foundation::drawing::canvas_impl::new_canvas;
 use crate::foundation::geometry::IntSize;
 use crate::foundation::measure_layout_defer_action_manager::MeasureLayoutDeferActionManager;
+use crate::foundation::ui::graphics::color::Color;
 
 pub struct DesktopWindowOption {
     on_close_request: Option<Box<dyn Fn()>>,
@@ -92,6 +94,7 @@ pub fn DesktopWindow(option: DesktopWindowOption,
             compose_view.dispatch_layout();
             defer_layout();
         });
+        canvas.clear(Color::WHITE);
         compose_view.dispatch_draw(&mut canvas);
         windows.update_with_buffer(buffer.as_slice(), window_width, window_height).unwrap();
         std::thread::sleep(Duration::from_millis(100));

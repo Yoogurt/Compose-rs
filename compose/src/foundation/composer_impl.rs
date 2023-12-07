@@ -184,6 +184,9 @@ impl ComposerImpl {
     }
 
     fn exit_group(&mut self, is_node: bool) {
+        if is_node {
+            self.node_index = self.node_index_stack.pop().unwrap();
+        }
         self.read_writer.exit_group();
     }
 
@@ -205,7 +208,11 @@ impl ComposerImpl {
         self.validate_node_expected();
 
         {
-            let insert_index = *self.node_index_stack.last().unwrap();
+            let insert_index_mut = self.node_index_stack.last_mut().unwrap();
+            let insert_index = *insert_index_mut;
+            *insert_index_mut += 1;
+
+            drop(insert_index_mut);
             let slot = self.read_writer.parent();
             let slot_bottom_up = slot.clone();
             self.record_fix_up(move |applier, _| {
@@ -402,8 +409,8 @@ impl ComposerImpl {
     }
 
     fn enter_group(&mut self, is_node: bool) {
-        self.node_index_stack.push(self.node_index);
         if is_node {
+            self.node_index_stack.push(self.node_index);
             self.node_index = 0;
         }
 

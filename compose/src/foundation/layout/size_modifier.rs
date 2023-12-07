@@ -12,7 +12,6 @@ use crate::foundation::measure_result::MeasureResult;
 use crate::foundation::measure_scope::{MeasureScope, MeasureScopeLayoutAction};
 use crate::foundation::modifier::{Modifier, ModifierNode, ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::modifier_node::LayoutModifierNode;
-use crate::impl_node_kind_layout;
 
 pub trait SizeModifier {
     fn width(self, width: Dp) -> Modifier;
@@ -199,7 +198,6 @@ impl LayoutModifierNode for SizeNode {
         )
     }
 }
-impl_node_kind_layout!(SizeNode);
 
 impl PartialEq for SizeNode {
     fn eq(&self, other: &Self) -> bool {

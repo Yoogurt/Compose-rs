@@ -23,7 +23,6 @@ use crate::foundation::ui::align::{AlignmentHorizontal, AlignmentVertical};
 use crate::foundation::ui::size_mode::SizeMode;
 use crate::foundation::utils::option_extension::OptionalInstanceConverter;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
-use crate::impl_node_kind_parent_data;
 use crate::widgets::cross_axis_alignment::CrossAxisAlignment;
 use crate::widgets::orientation_independent_constrains::OrientationIndependentConstrains;
 
@@ -62,7 +61,6 @@ impl HorizontalAlignModifier {
         }
     }
 }
-impl_node_kind_parent_data!(HorizontalAlignModifier);
 
 impl ParentDataModifierNode for HorizontalAlignModifier {
     fn modify_parent_data(&mut self, _: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {
@@ -81,7 +79,6 @@ pub(crate) struct VerticalAlignModifier {
     #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
 }
-impl_node_kind_parent_data!(VerticalAlignModifier);
 
 impl ParentDataModifierNode for VerticalAlignModifier {
     fn modify_parent_data(&mut self, _: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {
@@ -111,7 +108,6 @@ pub(crate) struct LayoutWeightModifier {
     #[to(ModifierNode)]
     node_impl: ModifierNodeImpl,
 }
-impl_node_kind_parent_data!(LayoutWeightModifier);
 
 impl ParentDataModifierNode for LayoutWeightModifier {
     fn modify_parent_data(&mut self, _: Density, parent_data: Option<Box<dyn Any>>) -> Option<Box<dyn Any>> {
@@ -336,6 +332,7 @@ impl RowColumnMeasureHelper {
 
         for i in measure_result.range.clone() {
             let placeable = placeables[i].as_ref().unwrap();
+
             let mut placeable_rc = placeable.borrow_mut();
             let placeable_ref = placeable_rc.deref();
             let cross_axis_position = self.get_cross_axis_position(placeable_ref, parent_data[i].as_ref(), measure_result.cross_axis_size, layout_direction, measure_result.before_cross_axis_alignment_line) + cross_axis_offset;

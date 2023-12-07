@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
-
+use std::fmt::Debug;
 use crate::foundation::geometry::IntSize;
 use crate::foundation::intrinsic_measurable::IntrinsicMeasurable;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
@@ -10,7 +10,7 @@ use super::{
     placeable::Placeable,
 };
 
-pub trait Measurable: IntrinsicMeasurable {
+pub trait Measurable: IntrinsicMeasurable + Debug {
     fn measure(&mut self, constraint: &Constraints) -> (IntSize, Rc<RefCell<dyn Placeable>>);
 
     fn as_placeable(&mut self) -> Rc<RefCell<dyn Placeable>>;

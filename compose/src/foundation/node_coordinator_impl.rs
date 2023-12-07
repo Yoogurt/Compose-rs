@@ -346,9 +346,13 @@ impl NodeCoordinatorImpl {
                 let vtable = self.vtable.clone();
 
                 self.layer = {
+                    let layout_node = self.layout_node.clone();
+
                     let layer: Box<dyn OwnedLayer> = Box::new(SkiaOwnedLayer::new(move |canvas| {
-                        let layout_node = layout_node.borrow();
-                        if layout_node.is_placed() {
+                        let Some(layout_node) = layout_node.upgrade() else {
+                            return;
+                        };
+                        if layout_node.borrow().is_placed() {
                             let vtable = vtable.as_ref().and_then(|vtable| vtable.upgrade()).unwrap();
                             vtable.borrow().node_coordinator_ref().draw_contrained_draw_modifiers(canvas);
                         }
