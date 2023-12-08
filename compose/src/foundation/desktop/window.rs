@@ -1,6 +1,7 @@
-use minifb::MouseButton;
+use minifb::{MouseButton, MouseMode};
 use std::cell::RefCell;
-use crate::foundation::geometry::Density;
+use std::fmt::Display;
+use crate::foundation::geometry::{Density, IntRect};
 use crate::foundation::canvas::Canvas;
 use std::time::Duration;
 use crate as compose;
@@ -8,13 +9,14 @@ use minifb::{Key, KeyRepeat, Scale, ScaleMode, Window, WindowOptions};
 use skia_safe::{AlphaType, ColorSpace, ColorType, ImageInfo, surfaces,
 };
 use std::rc::Rc;
-use crate::foundation::bridge::platform_compose_view::MacOSComposeView;
+use crate::foundation::bridge::skia_base_owner::SkiaBaseOwner;
 use crate::foundation::composer::Composer;
 use crate::foundation::drawing::canvas_impl::new_canvas;
 use crate::foundation::geometry::IntSize;
 use crate::foundation::measure_layout_defer_action_manager::MeasureLayoutDeferActionManager;
 use crate::foundation::ui::compose_scene::ComposeScene;
 use crate::foundation::ui::graphics::color::Color;
+use crate::foundation::utils::result_extension::ResultExtension;
 
 pub struct DesktopWindowOption {
     on_close_request: Option<Box<dyn Fn()>>,
@@ -71,7 +73,15 @@ pub fn DesktopWindow(option: DesktopWindowOption,
     }.unwrap();
 
     let mut canvas = new_canvas(surface.canvas());
-    let mut compose_view_rc = MacOSComposeView::new();
+    let mut compose_view_rc = SkiaBaseOwner::new(IntRect::ZERO);
+    let runtime = tokio::runtime::Builder::new_current_thread().build().unwrap();
+    let mut redraw_need = Rc::new(RefCell::new(true));
+    let redraw_capture = redraw_need.clone();
+    let mut compose_scene = ComposeScene::new(runtime, Density::default(), Box::new(move || {
+        redraw_capture.replace(true);
+    }));
+    compose_scene.attach(compose_view_rc.clone());
+
     let mut compose_view = compose_view_rc.borrow_mut();
 
     compose_view.set_content(content);
@@ -89,30 +99,41 @@ pub fn DesktopWindow(option: DesktopWindowOption,
 
     Composer::debug_print();
 
-    let mut compose_view = compose_view_rc.borrow_mut();
-
-    let runtime = tokio::runtime::Builder::new_current_thread().build().unwrap();
-    let mut redraw_need = Rc::new(RefCell::new(true));
-    let redraw_capture = redraw_need.clone();
-    let compose_scene = ComposeScene::new(runtime, Density::default(), Box::new(move || {
-        redraw_capture.replace(true);
-    }));
     while windows.is_open() && !windows.is_key_pressed(Key::Escape, KeyRepeat::No) {
+        {
+            let mut compose_view = compose_view_rc.borrow_mut();
+            let (width, height) = windows.get_size();
+            compose_view.update_bound(IntRect::new(0, 0, width as i32, height as i32));
 
+            MeasureLayoutDeferActionManager::with_manager(|defer_measure, defer_layout| {
+                compose_view.dispatch_measure(width, height);
+                defer_measure();
+                compose_view.dispatch_layout();
+                defer_layout();
+            });
 
-        MeasureLayoutDeferActionManager::with_manager(|defer_measure, defer_layout| {
-            compose_view.dispatch_measure(window_width, window_height);
-            defer_measure();
-            compose_view.dispatch_layout();
-            defer_layout();
-        });
-
-        if redraw_need.replace(false) {
-            canvas.clear(Color::WHITE);
-            compose_view.dispatch_draw(&mut canvas);
+            if redraw_need.replace(false) {
+                canvas.clear(Color::WHITE);
+                compose_view.dispatch_draw(&mut canvas);
+            }
         }
 
         windows.update_with_buffer(buffer.as_slice(), window_width, window_height).unwrap();
-        std::thread::sleep(Duration::from_millis(33));
+        process_mouse_event(&mut compose_scene, &windows);
+        std::thread::sleep(Duration::from_millis(66));
     }
+
+    compose_scene.detach(compose_view_rc.clone());
+}
+
+fn process_mouse_event(compose_scene: &mut ComposeScene, windows: &Window) {
+    let Some(mouse_position) = windows.get_mouse_pos(MouseMode::Pass) else {
+        return;
+    };
+    let left_mouse_button_pressed = windows.get_mouse_down(MouseButton::Left);
+    let right_mouse_button_pressed = windows.get_mouse_down(MouseButton::Right);
+
+    let event_time = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis();
+    // dbg!(mouse_position);
+    compose_scene.on_mouse_event(mouse_position.0, mouse_position.1, event_time, left_mouse_button_pressed, right_mouse_button_pressed)
 }

@@ -1,3 +1,4 @@
+use crate::foundation::ui::input::pointer_event_type::PointerInputEvent;
 use std::cell::RefCell;
 use std::rc::{Rc, Weak};
 
@@ -5,30 +6,32 @@ use crate::foundation::bridge::root_measure_policy::root_measure_policy;
 use crate::foundation::canvas::Canvas;
 use crate::foundation::composer::Composer;
 use crate::foundation::constraint::Constraints;
-use crate::foundation::geometry::Density;
+use crate::foundation::geometry::{Density, IntOffset, IntRect};
 use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::measure_and_layout_delegate::MeasureAndLayoutDelegate;
-use crate::foundation::node::Owner;
+use crate::foundation::node::{GesstureOwner, Owner};
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 
-pub struct MacOSComposeView {
+pub struct SkiaBaseOwner {
+    bound: IntRect,
     root: Rc<RefCell<LayoutNode>>,
     measure_and_layout_delegate: MeasureAndLayoutDelegate,
 }
 
-impl Drop for MacOSComposeView {
+impl Drop for SkiaBaseOwner {
     fn drop(&mut self) {
         Composer::detach_root_layout_node();
         self.detach()
     }
 }
 
-impl MacOSComposeView {
-    pub fn new() -> Rc<RefCell<MacOSComposeView>> {
+impl SkiaBaseOwner {
+    pub fn new(bound: IntRect) -> Rc<RefCell<SkiaBaseOwner>> {
         let measure_and_layout_delegate = MeasureAndLayoutDelegate::new();
 
-        let mut result = MacOSComposeView {
+        let mut result = SkiaBaseOwner {
+            bound,
             root: measure_and_layout_delegate.root.clone(),
             measure_and_layout_delegate,
         };
@@ -45,6 +48,15 @@ impl MacOSComposeView {
 
         Self::init(&result);
         result
+    }
+
+    pub fn update_bound(&mut self, bound: IntRect) {
+        // dbg!(&bound);
+        self.bound = bound;
+    }
+
+    pub fn is_in_bound(&self, point: IntOffset) -> bool {
+        self.bound.contains(point)
     }
 
     fn init(this: &Rc<RefCell<Self>>) {
@@ -83,7 +95,7 @@ impl MacOSComposeView {
     }
 }
 
-impl Owner for MacOSComposeView {
+impl Owner for SkiaBaseOwner {
     fn get_root(&self) -> Rc<RefCell<LayoutNode>> {
         self.root.clone()
     }
@@ -103,4 +115,9 @@ impl Owner for MacOSComposeView {
     fn on_attach(&self, layout_node: &LayoutNode) {}
 
     fn on_detach(&self, layout_node: &LayoutNode) {}
+}
+
+impl GesstureOwner for SkiaBaseOwner {
+    fn process_pointer_input(&mut self, event: PointerInputEvent) {
+    }
 }

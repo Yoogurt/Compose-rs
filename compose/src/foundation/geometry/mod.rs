@@ -11,6 +11,5 @@ include!("density.rs");
 pub mod density_impl;
 pub mod dp_impl;
 pub mod offset_impl;
-pub mod rect_impl;
 pub mod size_impl;
 pub(crate) mod usize_extension;

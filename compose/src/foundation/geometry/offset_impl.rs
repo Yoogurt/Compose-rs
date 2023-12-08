@@ -110,6 +110,10 @@ impl Offset<f32> {
     pub fn is_finite(&self) -> bool {
         self.x.is_finite() && self.y.is_finite()
     }
+
+    pub fn as_int_offset(&self) -> IntOffset {
+        Offset::new(self.x as i32, self.y as i32)
+    }
 }
 
 impl<T> Default for Offset<T>
