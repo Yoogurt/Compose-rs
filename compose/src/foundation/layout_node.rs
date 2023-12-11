@@ -5,7 +5,7 @@ use std::rc::{Rc, Weak};
 use std::sync::atomic::AtomicU32;
 use crate::foundation::compose_node_lifecycle_callback::ComposeNodeLifecycleCallback;
 
-use crate::foundation::geometry::Density;
+use crate::foundation::geometry::{Density, Offset};
 use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::layout_node_container::LayoutNodeContainer;
 use crate::foundation::layout_node_draw_delegate::LayoutNodeDrawDelegate;
@@ -13,6 +13,7 @@ use crate::foundation::layout_node_layout_delegate::LayoutNodeLayoutDelegate;
 use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
 use crate::foundation::node::Owner;
 use crate::foundation::node_coordinator::NodeCoordinator;
+use crate::foundation::ui::hit_test_result::HitTestResult;
 use crate::foundation::usage_by_parent::UsageByParent;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::utils::self_reference::SelfReference;
@@ -310,6 +311,10 @@ impl LayoutNode {
             }
             _ => {}
         }
+    }
+
+    pub(crate) fn hit_test(&self, pointer_position: Offset<f32>, hit_test_result: &mut HitTestResult, is_touch_event: bool, is_in_layer: bool) {
+
     }
 }
 

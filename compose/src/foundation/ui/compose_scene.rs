@@ -7,7 +7,7 @@ use std::cell::RefCell;
 use crate::foundation::bridge::skia_base_owner::SkiaBaseOwner;
 use crate::foundation::node::GesstureOwner;
 use crate::foundation::ui::input::pointer_button::{PointerButton, PointerButtons};
-use crate::foundation::ui::input::pointer_event::{PointerEventType, PointerType};
+use crate::foundation::ui::input::pointer_event::{PointerEventType, PointerId, PointerType};
 use crate::foundation::ui::input::pointer_event_type::PointerInputEvent;
 use std::rc::Rc;
 use crate::foundation::utils::option_extension::OptionThen;
@@ -51,7 +51,7 @@ impl DefaultPointerStateTracker {
 
 #[derive(Clone, PartialEq, Debug)]
 struct Pointer {
-    id: u64,
+    id: PointerId,
     position: Offset<f32>,
     pressed: bool,
     pointer_type: PointerType,
@@ -61,7 +61,7 @@ struct Pointer {
 impl Default for Pointer {
     fn default() -> Self {
         Self {
-            id: 0,
+            id: PointerId::new(0),
             position: Offset::zero(),
             pressed: false,
             pointer_type: PointerType::Mouse,
@@ -182,7 +182,7 @@ impl ComposeScene {
         let actual_buttons = buttons.clone().unwrap_or(self.default_pointer_state_tracker.buttons);
 
         let pointers = vec![Pointer {
-            id: 0,
+            id: PointerId::new(0),
             position,
             pressed: actual_buttons.are_any_pressed(),
             pointer_type,
@@ -202,6 +202,7 @@ impl ComposeScene {
                     down: pointer.pressed,
                     pointer_type: pointer.pointer_type,
                     pressure: pointer.pressure,
+                    histroical: vec![],
                     scroll_delta,
                 }
             }).collect(),
@@ -215,14 +216,14 @@ impl ComposeScene {
 
     fn process_press(&mut self, event: PointerInputEvent) {
         if let Some(gesture_owner) = self.gesture_owner.as_ref() {
-            gesture_owner.borrow_mut().process_pointer_input(event);
+            gesture_owner.borrow_mut().process_pointer_input(event, true);
             return;
         }
 
         let position = event.pointers.first().unwrap().position.as_int_offset();
         self.owners.iter().rev().any(|owner| {
             if owner.borrow().is_in_bound(position) {
-                owner.borrow_mut().process_pointer_input(event.clone());
+                owner.borrow_mut().process_pointer_input(event.clone(), true);
                 self.gesture_owner = Some(owner.clone());
                 return true;
             }
@@ -253,13 +254,13 @@ impl ComposeScene {
         self.last_hover_owner.as_ref().then(|last_hover_owner| {
             let mut event = event.clone();
             event.event_type = PointerEventType::Exit;
-            last_hover_owner.borrow_mut().process_pointer_input(event);
+            last_hover_owner.borrow_mut().process_pointer_input(event, true);
         });
 
         owner.as_ref().then(|owner| {
             let mut event = event.clone();
             event.event_type = PointerEventType::Enter;
-            owner.borrow_mut().process_pointer_input(event);
+            owner.borrow_mut().process_pointer_input(event, true);
         });
 
         self.last_hover_owner = owner;
@@ -279,7 +280,7 @@ impl ComposeScene {
             return;
         }
 
-        owner.then(|owner| owner.borrow_mut().process_pointer_input(event));
+        owner.then(|owner| { owner.borrow_mut().process_pointer_input(event, true); });
     }
 
     fn process_pointer_event(&mut self, event: PointerInputEvent) {

@@ -13,9 +13,9 @@ pub struct MeasureAndLayoutDelegate {
 }
 
 impl MeasureAndLayoutDelegate {
-    pub(crate) fn new() -> Self {
+    pub(crate) fn new(root: Rc<RefCell<LayoutNode>>) -> Self {
         MeasureAndLayoutDelegate {
-            root: LayoutNode::new(),
+            root,
             root_constraint: Constraints::unbounded(),
             during_measure_layout: false,
         }

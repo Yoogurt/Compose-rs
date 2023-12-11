@@ -1,22 +1,38 @@
 use crate::foundation::ui::input::pointer_event_type::PointerInputEvent;
 use std::cell::RefCell;
+use std::ops::Deref;
 use std::rc::{Rc, Weak};
 
 use crate::foundation::bridge::root_measure_policy::root_measure_policy;
 use crate::foundation::canvas::Canvas;
 use crate::foundation::composer::Composer;
 use crate::foundation::constraint::Constraints;
-use crate::foundation::geometry::{Density, IntOffset, IntRect};
+use crate::foundation::geometry::{Density, IntOffset, IntRect, Offset};
 use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::measure_and_layout_delegate::MeasureAndLayoutDelegate;
 use crate::foundation::node::{GesstureOwner, Owner};
+use crate::foundation::ui::input::pointer_input_event_processor::{PointerInputEventProcessor, PositionCalculator};
+use crate::foundation::ui::input::process_result::ProcessResult;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
+
+struct SkiaBaseOwnerPositionCalculator;
+impl PositionCalculator for SkiaBaseOwnerPositionCalculator {
+    fn screen_to_local(&self, position_on_screen: Offset<f32>) -> Offset<f32> {
+        position_on_screen
+    }
+
+    fn local_to_screen(&self, position_on_local: Offset<f32>) -> Offset<f32> {
+        position_on_local
+    }
+}
 
 pub struct SkiaBaseOwner {
     bound: IntRect,
     root: Rc<RefCell<LayoutNode>>,
     measure_and_layout_delegate: MeasureAndLayoutDelegate,
+    pointer_input_event_processor: PointerInputEventProcessor,
+    position_calculator: Rc<dyn PositionCalculator>,
 }
 
 impl Drop for SkiaBaseOwner {
@@ -28,19 +44,23 @@ impl Drop for SkiaBaseOwner {
 
 impl SkiaBaseOwner {
     pub fn new(bound: IntRect) -> Rc<RefCell<SkiaBaseOwner>> {
-        let measure_and_layout_delegate = MeasureAndLayoutDelegate::new();
+        let root = LayoutNode::new();
+
+        let measure_and_layout_delegate = MeasureAndLayoutDelegate::new(root.clone());
 
         let mut result = SkiaBaseOwner {
             bound,
-            root: measure_and_layout_delegate.root.clone(),
+            root: root.clone(),
             measure_and_layout_delegate,
+            pointer_input_event_processor: PointerInputEventProcessor::new(root.clone()),
+            position_calculator: Rc::new(SkiaBaseOwnerPositionCalculator),
         };
 
         result
             .measure_and_layout_delegate
             .update_root_measure_policy(root_measure_policy());
 
-        if !Composer::attach_root_layout_node(result.measure_and_layout_delegate.root.clone()) {
+        if !Composer::attach_root_layout_node(root.clone()) {
             panic!("unable to create multiple compose view in single thread");
         }
 
@@ -51,7 +71,6 @@ impl SkiaBaseOwner {
     }
 
     pub fn update_bound(&mut self, bound: IntRect) {
-        // dbg!(&bound);
         self.bound = bound;
     }
 
@@ -118,6 +137,8 @@ impl Owner for SkiaBaseOwner {
 }
 
 impl GesstureOwner for SkiaBaseOwner {
-    fn process_pointer_input(&mut self, event: PointerInputEvent) {
+    fn process_pointer_input(&mut self, event: PointerInputEvent, is_in_bounds: bool) -> ProcessResult {
+        let event_pointer_in_bounds = event.pointers.iter().all(|it| self.bound.contains(it.position.as_int_offset()));
+        self.pointer_input_event_processor.process(event, self.position_calculator.clone().deref(), is_in_bounds && event_pointer_in_bounds)
     }
 }
