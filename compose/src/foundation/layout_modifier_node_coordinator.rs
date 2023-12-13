@@ -8,20 +8,22 @@ use crate::foundation::composer::Composer;
 
 use crate::foundation::constraint::Constraints;
 use crate::foundation::delegatable_node::ToDelegatedNode;
-use crate::foundation::geometry::{IntOffset, IntSize};
+use crate::foundation::geometry::{IntOffset, IntSize, Offset};
 use crate::foundation::layout::layout_coordinates::LayoutCoordinates;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::measurable::Measurable;
 use crate::foundation::measure_layout_defer_action_manager::MeasureLayoutDeferActionManager;
 use crate::foundation::measure_result::MeasureResultProvider;
 use crate::foundation::modifier::ModifierNode;
+use crate::foundation::node::OwnedLayer;
 use crate::foundation::node_chain::NodeChain;
-use crate::foundation::node_coordinator::{NodeCoordinator, NodeCoordinatorTrait, PerformDrawTrait, TailModifierNodeProvider};
+use crate::foundation::node_coordinator::{AsNodeCoodinator, HitTestSource, NodeCoordinator, NodeCoordinatorTrait, PerformDrawTrait, TailModifierNodeProvider};
 use crate::foundation::node_coordinator::PerformMeasureHelper;
 use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
 use crate::foundation::placeable::Placeable;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 use crate::foundation::ui::graphics::graphics_layer_modifier::GraphicsLayerScope;
+use crate::foundation::ui::hit_test_result::HitTestResult;
 use crate::foundation::utils::option_extension::OptionThen;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::utils::self_reference::SelfReference;
@@ -155,11 +157,13 @@ impl Measurable for LayoutModifierNodeCoordinator {
 
 impl PerformDrawTrait for LayoutModifierNodeCoordinator {}
 
-impl NodeCoordinator for LayoutModifierNodeCoordinator {
+impl AsNodeCoodinator for LayoutModifierNodeCoordinator {
     fn node_coordinator_ref(&self) -> &NodeCoordinatorImpl {
         &self.node_coordinator_impl
     }
+}
 
+impl NodeCoordinator for LayoutModifierNodeCoordinator {
     fn on_placed(&self) {
         self.node_coordinator_impl.on_placed()
     }
@@ -170,6 +174,14 @@ impl NodeCoordinator for LayoutModifierNodeCoordinator {
 
     fn on_measured(&mut self) {
         self.node_coordinator_impl.on_measured()
+    }
+
+    fn get_layer(&self) -> Option<&Box<dyn OwnedLayer>> {
+        self.node_coordinator_impl.get_layer()
+    }
+
+    fn hit_test(&self, hit_test_source: &dyn HitTestSource, pointer_position: Offset<f32>, hit_test_result: &mut HitTestResult, is_touch_event: bool, is_in_layer: bool) {
+        self.node_coordinator_impl.hit_test(hit_test_source, pointer_position, hit_test_result, is_touch_event, is_in_layer)
     }
 }
 

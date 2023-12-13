@@ -1,13 +1,8 @@
 #![allow(warnings)]
-
-use std::cell::RefCell;
+#![feature(async_closure)]
 use std::default::{Default as STDefault};
 use std::hash::Hash;
-use std::rc::Rc;
-use std::thread::scope;
-use compose::foundation::background;
 
-use compose::foundation::background::BackgroundModifier;
 use compose::foundation::composer::{Composer, ScopeUpdateScopeHelper};
 use compose::foundation::desktop::window::{DesktopWindow, DesktopWindowOption};
 use compose::foundation::geometry::IntoDp;
@@ -20,7 +15,11 @@ use compose::widgets::column::{Column, ColumnParams};
 use compose::widgets::r#box::BoxLayout;
 
 fn test_widget() {
-    Column(Modifier.fill_max_size(None).background(Color::BLUE).graphics_layer(|scope| {
+    Column(Modifier.pointer_input(|scope| {
+        scope.await_pointer_event_scope(async {
+
+        })
+    }).fill_max_size(None).background(Color::BLUE).graphics_layer(|scope| {
         scope.set_scale_x(1.5);
         scope.set_scale_y(0.3);
         scope.set_alpha(0.5);

@@ -47,7 +47,8 @@ pub(crate) struct InnerNodeCoordinator {
     TailModifierNodeProvider,
     MeasureResultProvider,
     ParentDataGenerator,
-    LayoutCoordinates
+    LayoutCoordinates,
+    AsNodeCoodinator
     )]
     pub(crate) node_coordinator_impl: NodeCoordinatorImpl,
     pub(crate) layout_node: Weak<RefCell<LayoutNode>>,

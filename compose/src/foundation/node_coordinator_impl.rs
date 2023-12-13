@@ -11,7 +11,7 @@ use compose_foundation_macro::{AnyConverter, Leak};
 
 use crate::foundation::canvas::Canvas;
 use crate::foundation::composer::Composer;
-use crate::foundation::geometry::{Density, IntOffset, IntSize};
+use crate::foundation::geometry::{Density, IntOffset, IntSize, Offset};
 use crate::foundation::intrinsic_measurable::IntrinsicMeasurable;
 use crate::foundation::layout::layout_coordinates::LayoutCoordinates;
 use crate::foundation::layout_direction::LayoutDirection;
@@ -19,16 +19,18 @@ use crate::foundation::look_ahead_capable_placeable::LookaheadCapablePlaceable;
 use crate::foundation::look_ahead_capable_placeable_impl::LookaheadCapablePlaceableImpl;
 use crate::foundation::measure_result::{MeasureResult, MeasureResultProvider};
 use crate::foundation::measure_scope::MeasureScope;
+use crate::foundation::measured::Measured;
 use crate::foundation::memory::leak_token::LeakToken;
 use crate::foundation::modifier::{ModifierNode, ModifierNodeExtension, NodeKind};
 use crate::foundation::node::{LayoutNodeDrawScope, OwnedLayer, SkiaOwnedLayer};
 use crate::foundation::node_chain::{NodeChain, TailModifierNode};
-use crate::foundation::node_coordinator::{DrawableNodeCoordinator, NodeCoordinatorTrait, PerformDrawTrait};
+use crate::foundation::node_coordinator::{AsNodeCoodinator, DrawableNodeCoordinator, HitTestSource, NodeCoordinatorTrait, PerformDrawTrait};
 use crate::foundation::node_coordinator::TailModifierNodeProvider;
 use crate::foundation::parent_data::ParentDataGenerator;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 use crate::foundation::ui::draw::{CanvasDrawScope, DrawContext};
 use crate::foundation::ui::graphics::graphics_layer_modifier::GraphicsLayerScope;
+use crate::foundation::ui::hit_test_result::HitTestResult;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::utils::weak_upgrade::WeakUpdater;
@@ -115,6 +117,8 @@ impl Measurable for NodeCoordinatorImpl {
 }
 
 impl NodeCoordinatorImpl {
+    pub(crate) const PointerInputSource: PointerInputSource = PointerInputSource;
+
     pub(crate) fn attach(&mut self, layout_node: &Rc<RefCell<LayoutNode>>, node_chain: &Rc<RefCell<NodeChain>>) {
         self.layout_node = Rc::downgrade(layout_node);
         self.node_chain = Rc::downgrade(node_chain);
@@ -122,6 +126,46 @@ impl NodeCoordinatorImpl {
 
     pub(crate) fn layout_node(&self) -> Weak<RefCell<LayoutNode>> {
         self.layout_node.clone()
+    }
+
+    pub(crate) fn within_layer_bounds(&self, position: Offset<f32>) -> bool {
+        if !position.is_finite() {
+            return false;
+        }
+
+        let layer = self.layer.as_ref();
+        self.is_clipping || layer.map(|layer| layer.is_in_layer(position)).unwrap_or(true)
+    }
+
+    fn hit_test_child(&self,
+                                 hit_test_source: &dyn HitTestSource,
+                                 pointer_position: Offset<f32>,
+                                 hit_test_result: &mut HitTestResult,
+                                 is_touch_event: bool,
+                                 is_in_layer: bool) {
+        if let Some(wrapped) = self.get_wrapped() {
+            let wrapped = wrapped.borrow();
+            let position_in_wrapped = wrapped.from_parent_position(pointer_position);
+            wrapped.hit_test(hit_test_source, pointer_position, hit_test_result, is_touch_event, is_in_layer);
+        }
+    }
+
+    fn is_pointer_in_bounds(&self, pointer_position: Offset<f32>) -> bool {
+        let x = pointer_position.x;
+        let y = pointer_position.y;
+
+        x >= 0f32 && y >= 0f32 && x < self.get_measured_width() as f32 && y < self.get_measured_height() as f32
+    }
+
+    fn hit(&self, this: Option<Rc<RefCell<dyn ModifierNode>>>, hit_test_source: &dyn HitTestSource, pointer_position: Offset<f32>, hit_test_result: &mut HitTestResult, is_touch_event: bool, is_in_layer: bool) {
+        match this {
+            None => {
+                self.hit_test_child(hit_test_source, pointer_position, hit_test_result, is_touch_event, is_in_layer)
+            }
+            Some(this) => {
+                todo!()
+            }
+        }
     }
 }
 
@@ -226,15 +270,36 @@ impl LayoutCoordinates for NodeCoordinatorImpl {
     }
 }
 
-impl NodeCoordinator for NodeCoordinatorImpl {
+impl AsNodeCoodinator for NodeCoordinatorImpl {
     fn node_coordinator_ref(&self) -> &NodeCoordinatorImpl {
         &self
     }
+}
 
+impl NodeCoordinator for NodeCoordinatorImpl {
     fn on_placed(&self) {
         self.visit_nodes(NodeKind::LayoutAware, |modifier_node| {
             modifier_node.borrow().as_layout_aware_modifier_node().unwrap().on_placed(self);
         });
+    }
+
+    fn get_layer(&self) -> Option<&Box<dyn OwnedLayer>> {
+        self.layer.as_ref()
+    }
+
+    fn hit_test(&self,
+                hit_test_source: &dyn HitTestSource,
+                pointer_position: Offset<f32>,
+                hit_test_result: &mut HitTestResult,
+                is_touch_event: bool,
+                is_in_layer: bool) {
+        let head = self.head(hit_test_source.entity_type());
+
+        if !self.within_layer_bounds(pointer_position) {} else if head.is_none() {
+            self.hit_test_child(hit_test_source, pointer_position, hit_test_result, is_touch_event, is_in_layer);
+        } else if self.is_pointer_in_bounds(pointer_position) {
+            self.hit(head, hit_test_source, pointer_position, hit_test_result, is_touch_event, is_in_layer);
+        }
     }
 }
 
@@ -281,11 +346,11 @@ impl NodeCoordinatorImpl {
         }
     }
 
-    pub fn set_vtable(&mut self, vtable: Weak<RefCell<dyn NodeCoordinator>>) {
+    pub(crate) fn set_vtable(&mut self, vtable: Weak<RefCell<dyn NodeCoordinator>>) {
         self.vtable = Some(vtable);
     }
 
-    pub fn set_vtable_placeable_place_at(&mut self, place_at_vtable: Weak<RefCell<dyn PlaceablePlaceAt>>) {
+    pub(crate) fn set_vtable_placeable_place_at(&mut self, place_at_vtable: Weak<RefCell<dyn PlaceablePlaceAt>>) {
         self.look_ahead_capable_placeable_impl.placeable_impl.borrow_mut().set_vtable(place_at_vtable);
     }
 
@@ -486,6 +551,26 @@ impl NodeCoordinatorImpl {
 
 impl PlaceablePlaceAt for NodeCoordinatorImpl {
     fn place_at(&mut self, position: IntOffset, _size: IntSize, z_index: f32, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>) {
+        todo!()
+    }
+}
+
+pub(crate) struct PointerInputSource;
+
+impl HitTestSource for PointerInputSource {
+    fn entity_type(&self) -> NodeKind {
+        NodeKind::PointerInput
+    }
+
+    fn intercept_out_of_bounds_child_events(&self, node: Rc<RefCell<dyn ModifierNode>>) -> bool {
+        todo!()
+    }
+
+    fn should_hit_Test_children(&self, parnet_layout_node: Rc<RefCell<LayoutNode>>) -> bool {
+        todo!()
+    }
+
+    fn child_hit_test(&self, layout_node: Rc<RefCell<LayoutNode>>, pointer_position: Offset<f32>, hit_test_result: &mut HitTestResult, is_touch_event: bool, is_in_layer: bool) {
         todo!()
     }
 }

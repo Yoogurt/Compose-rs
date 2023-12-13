@@ -11,7 +11,7 @@ use crate::foundation::layout_modifier_node_coordinator::LayoutModifierNodeCoord
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::layout_node_container::LayoutNodeContainer;
 use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
-use crate::foundation::modifier::{ModifierElement, ModifierNode};
+use crate::foundation::modifier::{ModifierElement, ModifierInternal, ModifierNode};
 use crate::foundation::modifier::{ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::modifier_node::LayoutModifierNode;
 use crate::foundation::node::BackwardsCompatNode;
@@ -147,11 +147,11 @@ impl NodeChain {
         element: &mut Modifier,
         parent: Rc<RefCell<dyn ModifierNode>>,
     ) -> Rc<RefCell<dyn ModifierNode>> {
-        let node = match element {
-            Modifier::ModifierNodeElement { create, update } => create(),
-            Modifier::ModifierElement(element) => {
-                BackwardsCompatNode::new(element.clone()).wrap_with_rc_refcell()
-            }
+        let node = match &element.inner {
+            ModifierInternal::ModifierNodeElement { create, update } => create(),
+            // ModifierInternal::ModifierElement(element) => {
+            //     BackwardsCompatNode::new(element.clone()).wrap_with_rc_refcell()
+            // }
             _ => {
                 todo!()
             }

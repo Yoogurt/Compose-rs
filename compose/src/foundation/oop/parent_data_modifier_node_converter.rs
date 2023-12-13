@@ -1,6 +1,6 @@
 use crate::foundation::modifier_node::ParentDataModifierNode;
 
-pub trait ParentDataModifierNodeConverter {
+pub(crate) trait ParentDataModifierNodeConverter {
     fn as_parent_data_modifier_node(&self) -> Option<&dyn ParentDataModifierNode> {
         None
     }

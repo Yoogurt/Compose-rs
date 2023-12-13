@@ -5,10 +5,10 @@ use crate::foundation::ui::input::pointer_event::{PointerId, PointerInputChange}
 use crate::foundation::ui::input::pointer_event_type::PointerInputEvent;
 
 pub(crate) struct InternalPointerEvent {
-    pointer_event_type: PointerEventType,
-    changes: HashMap<PointerId, PointerInputChange>,
-    buttons: PointerButtons,
-    button: Option<PointerButton>
+    pub(crate) pointer_event_type: PointerEventType,
+    pub(crate) changes: HashMap<PointerId, PointerInputChange>,
+    pub(crate) buttons: PointerButtons,
+    pub(crate) button: Option<PointerButton>
 }
 
 impl InternalPointerEvent {

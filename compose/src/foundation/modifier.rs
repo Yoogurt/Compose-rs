@@ -17,7 +17,9 @@ use crate::foundation::utils::box_wrapper::WrapWithBox;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::utils::weak_upgrade::WeakUpdater;
 
-pub const Modifier: Modifier = Modifier::Unit;
+pub const Modifier: Modifier = Modifier {
+    inner: ModifierInternal::Unit
+};
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum NodeKind {
@@ -26,6 +28,7 @@ pub enum NodeKind {
     ParentData = 1 << 2,
     Draw = 1 << 3,
     LayoutAware = 1 << 4,
+    PointerInput = 1 << 5,
 }
 
 impl NodeKind {
@@ -72,13 +75,13 @@ pub trait NodeKindParentData: NodeKindPatch {
     }
 }
 
-pub trait ModifierElement: AnyConverter + LayoutModifierNodeConverter + DrawModifierNodeConverter + ParentDataModifierNodeConverter + LayoutAwareModifierNodeConverter + NodeKindPatch + Debug {
+pub(crate) trait ModifierElement: AnyConverter + LayoutModifierNodeConverter + DrawModifierNodeConverter + ParentDataModifierNodeConverter + LayoutAwareModifierNodeConverter + NodeKindPatch + Debug {
     fn as_modifier_element(&self) -> &dyn ModifierElement;
     fn as_modifier_element_mut(&mut self) -> &mut dyn ModifierElement;
 }
 
 #[delegate]
-pub trait ModifierNode: ModifierElement + DelegatableNode {
+pub(crate) trait ModifierNode: ModifierElement + DelegatableNode {
     fn set_parent(&mut self, parent: Option<Weak<RefCell<dyn ModifierNode>>>);
 
     fn get_parent(&self) -> Option<Rc<RefCell<dyn ModifierNode>>>;
@@ -145,28 +148,47 @@ impl ModifierNode for ModifierNodeImpl {
     }
 }
 
+#[derive(Default, Debug)]
+pub struct Modifier {
+    pub(crate) inner: ModifierInternal,
+}
+
+impl From<ModifierInternal> for Modifier {
+    fn from(value: ModifierInternal) -> Self {
+        Modifier {
+            inner: value
+        }
+    }
+}
+
+impl From<Modifier> for ModifierInternal {
+    fn from(value: Modifier) -> Self {
+        value.inner
+    }
+}
+
 #[derive(Default, Clone)]
-pub enum Modifier {
+pub(crate) enum ModifierInternal {
     #[default]
     Unit,
     ModifierNodeElement {
         create: Rc<dyn Fn() -> Rc<RefCell<dyn ModifierNode>>>,
         update: Rc<dyn Fn(RefMut<dyn ModifierNode>)>,
     },
-    ModifierElement(
-        Rc<RefCell<dyn ModifierElement>>
-    ),
+    ComposedModifier {
+        factory: Rc<dyn Fn(Modifier) -> Modifier>,
+    },
     Combined {
-        left: Box<Modifier>,
-        right: Box<Modifier>,
+        left: Box<ModifierInternal>,
+        right: Box<ModifierInternal>,
     },
 }
 
 pub(crate) fn ModifierNodeElement<T>(create: impl Fn() -> T + 'static, update: impl Fn(&mut T) + 'static) -> Modifier where T: Sized + ModifierNode {
-    Modifier::ModifierNodeElement {
+    ModifierInternal::ModifierNodeElement {
         create: modifier_node_element_creator(create),
         update: modifier_node_element_updater(update),
-    }
+    }.into()
 }
 
 #[inline]
@@ -187,52 +209,102 @@ fn modifier_node_element_updater<T>(updater: impl Fn(&mut T) + 'static) -> Rc<dy
     })
 }
 
-impl Modifier {
-    pub fn then(self, modifier: Modifier) -> Modifier {
-        if let Modifier::Unit = self {
-            return modifier;
-        }
-
-        if let Modifier::Unit = modifier {
-            return self;
-        }
-
-        Modifier::Combined {
-            left: Box::new(self),
-            right: Box::new(modifier),
-        }
-    }
-
-    pub fn fold_in<R>(&self, initial: R, mut operation: impl FnMut(R, &Modifier) -> R) -> R {
+impl ModifierInternal {
+    fn fold_in<R>(self, initial: R, operation: &impl Fn(R, ModifierInternal) -> R) -> R {
         match self {
-            Modifier::Combined { left, right } => {
-                right.fold_in(left.fold_in(initial, &mut operation), operation)
+            ModifierInternal::Combined { left, right } => {
+                right.fold_in(left.fold_in(initial, operation), operation)
             }
             _ => operation(initial, self),
         }
     }
 
-    pub fn fold_out<R>(&self, initial: R, operation: &mut dyn FnMut(&Modifier, R) -> R) -> R {
+    fn fold_out<R>(self, initial: R, operation: &impl Fn(ModifierInternal, R) -> R) -> R {
         match self {
-            Modifier::Combined { left, right } => {
+            ModifierInternal::Combined { left, right } => {
                 left.fold_out(right.fold_out(initial, operation), operation)
             }
             _ => operation(self, initial),
         }
     }
 
-    pub fn any(&self, mut predicate: impl FnMut(&Modifier) -> bool) -> bool {
+    fn any(&self, mut predicate: &impl Fn(&ModifierInternal) -> bool) -> bool {
         match self {
-            Modifier::Combined { left, right } => left.any(&mut predicate) || right.any(predicate),
+            ModifierInternal::Combined { left, right } => left.any(predicate) || right.any(predicate),
             _ => predicate(self),
         }
     }
 
-    pub fn all(&self, mut predicate: impl FnMut(&Modifier) -> bool) -> bool {
+    fn all(&self, mut predicate: &impl Fn(&ModifierInternal) -> bool) -> bool {
         match self {
-            Modifier::Combined { left, right } => left.all(&mut predicate) && right.all(predicate),
+            ModifierInternal::Combined { left, right } => left.all(predicate) && right.all(predicate),
             _ => predicate(self),
         }
+    }
+}
+
+impl Modifier {
+    fn all(&self, mut predicate: impl Fn(&ModifierInternal) -> bool) -> bool {
+        self.inner.all(&predicate)
+    }
+
+    fn fold_in<R>(self, initial: R, operation: impl Fn(R, ModifierInternal) -> R) -> R {
+        self.inner.fold_in(initial, &operation)
+    }
+
+    fn fold_out<R>(self, initial: R, operation: &impl Fn(ModifierInternal, R) -> R) -> R {
+        self.inner.fold_out(initial, operation)
+    }
+
+    fn any(&self, mut predicate: impl Fn(&ModifierInternal) -> bool) -> bool {
+        self.inner.any(&predicate)
+    }
+
+    pub fn then(mut self, modifier: Modifier) -> Modifier {
+        if let ModifierInternal::Unit = self.inner {
+            return modifier;
+        }
+
+        if let ModifierInternal::Unit = modifier.inner {
+            return self;
+        }
+
+        self.inner = ModifierInternal::Combined {
+            left: Box::new(self.inner),
+            right: Box::new(modifier.inner),
+        };
+
+        self
+    }
+
+    pub fn composed(self, factory: impl Fn(Modifier) -> Modifier + 'static) -> Modifier {
+        self.then(Modifier {
+            inner: ModifierInternal::ComposedModifier {
+                factory: Rc::new(factory),
+            }
+        })
+    }
+
+    pub fn materialize(self) -> Modifier {
+        if self.all(|modifier| match modifier {
+            ModifierInternal::ComposedModifier { .. } => { false }
+            _ => { true }
+        }) {
+            return self;
+        }
+
+        self.fold_in(Modifier, |mut result, modifier| {
+            match modifier {
+                ModifierInternal::ComposedModifier { factory } => {
+                    result = factory(result);
+                }
+                _ => {
+                    result = result.then(modifier.clone().into());
+                }
+            }
+
+            result
+        })
     }
 
     pub(crate) fn flatten(self) -> Vec<Modifier> {
@@ -240,10 +312,10 @@ impl Modifier {
         let mut stack: Vec<Modifier> = vec![self];
 
         while let Some(next) = stack.pop() {
-            match next {
-                Modifier::Combined { left, right } => {
-                    stack.push(*right);
-                    stack.push(*left);
+            match next.inner {
+                ModifierInternal::Combined { left, right } => {
+                    stack.push((*right).into());
+                    stack.push((*left).into());
                 }
 
                 _ => {
@@ -258,8 +330,8 @@ impl Modifier {
 
 impl Modifier {
     const fn is_element(&self) -> bool {
-        match self {
-            Modifier::ModifierNodeElement { .. } => true,
+        match self.inner {
+            ModifierInternal::ModifierNodeElement { .. } => true,
             _ => false,
         }
     }
@@ -272,22 +344,19 @@ impl Add for Modifier {
     }
 }
 
-impl Debug for Modifier {
+impl Debug for ModifierInternal {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Modifier::Unit => f.write_str("<modifier:unit>"),
-            Modifier::Combined { left, right } => {
+            ModifierInternal::Unit => f.write_str("<modifier:unit>"),
+            ModifierInternal::Combined { left, right } => {
                 f.write_str("<modifier:combined>")?;
                 left.fmt(f)?;
                 right.fmt(f)
             }
-            Modifier::ModifierNodeElement { create, update } => {
+            ModifierInternal::ModifierNodeElement { create, update } => {
                 f.write_str("<modifier:node_element[")?;
                 f.write_str(&format!("create:{:p}", create.deref()))?;
                 f.write_str(&format!(",update:{:p}]>", update.deref()))
-            }
-            Modifier::ModifierElement(element) => {
-                element.fmt(f)
             }
             _ => f.write_str("<unknown modifier>"),
         }

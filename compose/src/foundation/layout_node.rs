@@ -13,6 +13,7 @@ use crate::foundation::layout_node_layout_delegate::LayoutNodeLayoutDelegate;
 use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
 use crate::foundation::node::Owner;
 use crate::foundation::node_coordinator::NodeCoordinator;
+use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
 use crate::foundation::ui::hit_test_result::HitTestResult;
 use crate::foundation::usage_by_parent::UsageByParent;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
@@ -314,7 +315,10 @@ impl LayoutNode {
     }
 
     pub(crate) fn hit_test(&self, pointer_position: Offset<f32>, hit_test_result: &mut HitTestResult, is_touch_event: bool, is_in_layer: bool) {
-
+        let _outer_coordinator = self.get_outer_coordinator();
+        let outer_coordinator = _outer_coordinator.borrow();
+        let position_in_wrapped = outer_coordinator.from_parent_position(pointer_position);
+        outer_coordinator.hit_test(&NodeCoordinatorImpl::PointerInputSource, position_in_wrapped, hit_test_result, is_touch_event, is_in_layer);
     }
 }
 

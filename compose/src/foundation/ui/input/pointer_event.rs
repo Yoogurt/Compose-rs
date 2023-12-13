@@ -1,4 +1,7 @@
+use crate::foundation::composer_impl::Change;
 use crate::foundation::geometry::Offset;
+use crate::foundation::ui::input::internal_pointer_event::InternalPointerEvent;
+use crate::foundation::ui::input::pointer_button::{PointerButton, PointerButtons};
 
 #[derive(Clone, PartialEq, Debug, Copy)]
 pub(crate) enum PointerEventType {
@@ -39,6 +42,7 @@ pub(crate) struct HistoricalChange {
     position: Offset<f32>,
 }
 
+#[derive(Clone)]
 pub(crate) struct ConsumedData {
     position_change: bool,
     down_change: bool,
@@ -53,6 +57,7 @@ impl ConsumedData {
     }
 }
 
+#[derive(Clone)]
 pub(crate) struct PointerInputChange {
     pub(crate) id: PointerId,
     pub(crate) uptime: u128,
@@ -112,5 +117,61 @@ impl PointerInputChange {
 
     pub(crate) fn changed_to_down_ignore_consumed(&self) -> bool {
         !self.previous_pressed && self.pressed
+    }
+
+    pub(crate) fn changed_to_up_ignore_consumed(&self) -> bool {
+        self.previous_pressed && !self.pressed
+    }
+}
+
+#[derive(Clone)]
+pub(crate) struct PointerEvent {
+    changes: Vec<PointerInputChange>,
+    buttons: PointerButtons,
+    pointer_event_type: PointerEventType,
+    button: Option<PointerButton>,
+}
+
+fn calculate_pointer_event_type(changes: &Vec<PointerInputChange>) -> PointerEventType {
+    if changes.is_empty() {
+        return PointerEventType::Unknown;
+    }
+
+    changes.iter().find_map(|change| {
+        if change.changed_to_up_ignore_consumed() {
+            return Some(PointerEventType::Release)
+        }
+
+        if change.changed_to_down_ignore_consumed() {
+            return Some(PointerEventType::Press)
+        }
+
+        None
+    }).unwrap_or(PointerEventType::Move)
+}
+
+impl PointerEvent {
+    fn _new(changes: Vec<PointerInputChange>,
+            buttons: PointerButtons,
+            pointer_event_type: PointerEventType,
+            button: Option<PointerButton>) -> Self {
+        Self {
+            changes,
+            buttons,
+            pointer_event_type,
+            button,
+        }
+    }
+
+    pub(crate) fn new(changes: Vec<PointerInputChange>, internal_pointer_event: InternalPointerEvent) -> Self {
+        Self::_new(changes,
+                   internal_pointer_event.buttons,
+                   internal_pointer_event.pointer_event_type,
+                   internal_pointer_event.button)
+    }
+
+    pub(crate) fn new_default(changes: Vec<PointerInputChange>) -> Self {
+        let pointer_event_type = calculate_pointer_event_type(&changes);
+        Self::_new(changes, PointerButtons::default(), pointer_event_type, None)
     }
 }

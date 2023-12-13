@@ -116,9 +116,34 @@ pub fn ModifierElement(struct_token_stream: TokenStream) -> TokenStream {
             ret_ident: "LayoutModifierNode",
             node_patch: "Layout",
         },
-        ModifierElementAttribute { converter_name: "DrawModifierNodeConverter", as_ref: "as_draw_modifier_node", as_mut: "as_draw_modifier_node_mut", ret_ident: "DrawModifierNode", node_patch: "Draw" },
-        ModifierElementAttribute { converter_name: "ParentDataModifierNodeConverter", as_ref: "as_parent_data_modifier_node", as_mut: "as_parent_data_modifier_node_mut", ret_ident: "ParentDataModifierNode", node_patch: "ParentData" },
-        ModifierElementAttribute { converter_name: "LayoutAwareModifierNodeConverter", as_ref: "as_layout_aware_modifier_node", as_mut: "as_layout_aware_modifier_node_mut", ret_ident: "LayoutAwareModifierNode", node_patch: "LayoutAware" },
+        ModifierElementAttribute {
+            converter_name: "DrawModifierNodeConverter",
+            as_ref: "as_draw_modifier_node",
+            as_mut: "as_draw_modifier_node_mut",
+            ret_ident: "DrawModifierNode",
+            node_patch: "Draw",
+        },
+        ModifierElementAttribute {
+            converter_name: "ParentDataModifierNodeConverter",
+            as_ref: "as_parent_data_modifier_node",
+            as_mut: "as_parent_data_modifier_node_mut",
+            ret_ident: "ParentDataModifierNode",
+            node_patch: "ParentData",
+        },
+        ModifierElementAttribute {
+            converter_name: "LayoutAwareModifierNodeConverter",
+            as_ref: "as_layout_aware_modifier_node",
+            as_mut: "as_layout_aware_modifier_node_mut",
+            ret_ident: "LayoutAwareModifierNode",
+            node_patch: "LayoutAware",
+        },
+        ModifierElementAttribute {
+            converter_name: "PointerInputModifierNodeConverter",
+            as_ref: "as_pointer_input_modifier_node",
+            as_mut: "as_pointer_input_modifier_node_mut",
+            ret_ident: "PointerInputModifierNode",
+            node_patch: "PointerInput",
+        },
     ];
 
     let mut mapping = converter.into_iter().map(|value| (value.converter_name, (value, false))).collect::<HashMap<&str, (ModifierElementAttribute, bool)>>();

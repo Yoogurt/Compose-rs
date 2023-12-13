@@ -21,6 +21,7 @@ pub struct GraphicsLayerScope {
     scale_y: f32,
     translation_x: f32,
     translation_y: f32,
+    clip: bool,
 }
 
 impl Deref for GraphicsLayerScope {
@@ -41,6 +42,7 @@ impl GraphicsLayerScope {
             scale_y: 1.0,
             translation_x: 0.0,
             translation_y: 0.0,
+            clip: false,
         }
     }
 
@@ -109,6 +111,13 @@ impl GraphicsLayerScope {
         self.density
     }
 
+    pub fn set_clip(&mut self) {
+        self.clip = true;
+    }
+
+    pub fn get_clip(&self) -> bool {
+        self.clip
+    }
 }
 
 impl Modifier {

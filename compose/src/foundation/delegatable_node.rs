@@ -8,13 +8,13 @@ use auto_delegate::delegate;
 use crate::foundation::modifier::ModifierNode;
 use crate::foundation::oop::AnyConverter;
 
-pub enum DelegatableKind {
+pub(crate) enum DelegatableKind {
     This,
     Other(Weak<RefCell<dyn ModifierNode>>),
 }
 
 #[delegate]
-pub trait DelegatableNode: AnyConverter + Debug {
+pub(crate) trait DelegatableNode: AnyConverter + Debug {
     fn get_node(&self) -> DelegatableKind;
 }
 

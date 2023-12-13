@@ -1,6 +1,6 @@
 use crate::foundation::modifier_node::DrawModifierNode;
 
-pub trait DrawModifierNodeConverter {
+pub(crate) trait DrawModifierNodeConverter {
     fn as_draw_modifier_node(&self) -> Option<&dyn DrawModifierNode> {
         None
     }

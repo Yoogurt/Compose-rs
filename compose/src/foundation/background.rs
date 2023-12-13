@@ -10,10 +10,6 @@ use crate::foundation::modifier_node::DrawModifierNode;
 use crate::foundation::ui::draw::{ContentDrawScope, DrawScope};
 use crate::foundation::ui::graphics::color::Color;
 
-pub trait BackgroundModifier {
-    fn background(self, color: Color) -> Modifier;
-}
-
 fn background_element(color: Color) -> Modifier {
     ModifierNodeElement(
         move || {
@@ -30,8 +26,8 @@ fn background_element(color: Color) -> Modifier {
     )
 }
 
-impl BackgroundModifier for Modifier {
-    fn background(self, color: Color) -> Modifier {
+impl Modifier {
+    pub fn background(self, color: Color) -> Modifier {
         self.then(background_element(color))
     }
 }

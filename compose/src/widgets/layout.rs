@@ -12,12 +12,14 @@ pub fn Layout(
     measure_policy: MultiChildrenMeasurePolicy,
     content: impl FnMut(),
 ) {
+    let materialzed = modifier.materialize();
+
     ComposeNode(
         move |updater| {
             updater.set(measure_policy, |node, measure_policy| {
                 node.set_measure_policy(measure_policy);
             });
-            updater.set(modifier, |node, modifier| {
+            updater.set(materialzed, |node, modifier| {
                 node.set_modifier(modifier);
             })
         },

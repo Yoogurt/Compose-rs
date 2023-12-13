@@ -1,6 +1,8 @@
 use std::ops::{Add, Div, Mul, Neg, Rem, Sub};
 
 use lazy_static::lazy_static;
+use log::LevelFilter::Off;
+use skia_safe::Point;
 
 use super::{IntOffset, Offset};
 
@@ -111,8 +113,21 @@ impl Offset<f32> {
         self.x.is_finite() && self.y.is_finite()
     }
 
+    #[inline]
     pub fn as_int_offset(&self) -> IntOffset {
         Offset::new(self.x as i32, self.y as i32)
+    }
+}
+
+impl From<Offset<f32>> for skia_safe::Point {
+    fn from(value: Offset<f32>) -> Self {
+        skia_safe::Point::new(value.x, value.y)
+    }
+}
+
+impl From<skia_safe::Point> for Offset<f32> {
+    fn from(value: Point) -> Self {
+        Offset::new(value.x, value.y)
     }
 }
 
@@ -135,7 +150,20 @@ impl<T> PartialEq for Offset<T>
 }
 
 impl IntOffset {
+    #[inline]
     pub fn as_f32_offset(&self) -> Offset<f32> {
         Offset::new(self.x as f32, self.y as f32)
+    }
+}
+
+impl From<Offset<f32>> for IntOffset {
+    fn from(value: Offset<f32>) -> Self {
+        value.as_int_offset()
+    }
+}
+
+impl From<IntOffset> for Offset<f32> {
+    fn from(value: IntOffset) -> Self {
+        value.as_f32_offset()
     }
 }
