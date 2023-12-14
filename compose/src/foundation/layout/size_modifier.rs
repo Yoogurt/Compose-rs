@@ -229,6 +229,7 @@ fn size_element<T>(
         T: Into<Dp> + Copy + 'static,
 {
     ModifierNodeElement(
+        "SizeElement",
         move || {
             SizeNode {
                 min_width: min_width_raw.into(),

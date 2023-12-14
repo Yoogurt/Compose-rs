@@ -88,6 +88,7 @@ fn padding_element(start: Dp,
                    bottom: Dp,
                    rtl_aware: bool) -> Modifier {
     ModifierNodeElement (
+        "PaddingElement",
         move || PaddingElement {
             start,
             end,

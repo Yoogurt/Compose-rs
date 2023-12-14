@@ -58,6 +58,7 @@ impl ParentDataModifierNode for LayoutIdModifier {
 fn layout_id_element(layout_id: Rc<dyn Any>) -> Modifier {
     let layout_id_for_update = layout_id.clone();
     ModifierNodeElement(
+        "LayoutIdElement",
         move || {
             LayoutIdModifier {
                 layout_id: layout_id.clone(),

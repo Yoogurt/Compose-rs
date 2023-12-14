@@ -148,9 +148,15 @@ impl ModifierNode for ModifierNodeImpl {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default)]
 pub struct Modifier {
     pub(crate) inner: ModifierInternal,
+}
+
+impl Debug for Modifier {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        self.inner.fmt(f)
+    }
 }
 
 impl From<ModifierInternal> for Modifier {
@@ -172,6 +178,7 @@ pub(crate) enum ModifierInternal {
     #[default]
     Unit,
     ModifierNodeElement {
+        name: &'static str,
         create: Rc<dyn Fn() -> Rc<RefCell<dyn ModifierNode>>>,
         update: Rc<dyn Fn(RefMut<dyn ModifierNode>)>,
     },
@@ -184,8 +191,9 @@ pub(crate) enum ModifierInternal {
     },
 }
 
-pub(crate) fn ModifierNodeElement<T>(create: impl Fn() -> T + 'static, update: impl Fn(&mut T) + 'static) -> Modifier where T: Sized + ModifierNode {
+pub(crate) fn ModifierNodeElement<T>(name: &'static str, create: impl Fn() -> T + 'static, update: impl Fn(&mut T) + 'static) -> Modifier where T: Sized + ModifierNode {
     ModifierInternal::ModifierNodeElement {
+        name,
         create: modifier_node_element_creator(create),
         update: modifier_node_element_updater(update),
     }.into()
@@ -353,8 +361,8 @@ impl Debug for ModifierInternal {
                 left.fmt(f)?;
                 right.fmt(f)
             }
-            ModifierInternal::ModifierNodeElement { create, update } => {
-                f.write_str("<modifier:node_element[")?;
+            ModifierInternal::ModifierNodeElement { name, create, update } => {
+                f.write_str(&format!("<modifier:{}[", name))?;
                 f.write_str(&format!("create:{:p}", create.deref()))?;
                 f.write_str(&format!(",update:{:p}]>", update.deref()))
             }

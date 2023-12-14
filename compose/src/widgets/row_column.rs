@@ -27,6 +27,7 @@ impl Modifier {
 
 fn row_column_modifier_element(weight: f32, fill: bool) -> Modifier {
     ModifierNodeElement(
+        "LayoutWeightElement",
         move || {
             let mut result = LayoutWeightModifier::new();
             result.weight = weight;

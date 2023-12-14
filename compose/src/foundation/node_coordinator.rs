@@ -56,6 +56,11 @@ pub trait AsNodeCoodinator {
 }
 
 #[delegate]
+pub trait HitTestTrait {
+    fn hit_test(&self, hit_test_source: &dyn HitTestSource, pointer_position: Offset<f32>, hit_test_result: &mut HitTestResult, is_touch_event: bool, is_in_layer:bool);
+}
+
+#[delegate]
 pub(crate) trait NodeCoordinator: PerformDrawTrait
 + NodeCoordinatorTrait
 + LookaheadCapablePlaceable
@@ -68,6 +73,7 @@ pub(crate) trait NodeCoordinator: PerformDrawTrait
 + ParentDataGenerator
 + LayoutCoordinates
 + AsNodeCoodinator
++ HitTestTrait
 + Measurable {
     fn on_initialize(&self) {}
     fn on_placed(&self) {}
@@ -82,8 +88,6 @@ pub(crate) trait NodeCoordinator: PerformDrawTrait
             layer.map_offset(relative_to_position, false)
         })
     }
-
-    fn hit_test(&self, hit_test_source: &dyn HitTestSource, pointer_position: Offset<f32>, hit_test_result: &mut HitTestResult, is_touch_event: bool, is_in_layer:bool);
 }
 
 pub(crate) trait PerformMeasureHelper {

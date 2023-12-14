@@ -10,7 +10,7 @@ use compose_foundation_macro::AnyConverter;
 use crate::foundation::canvas::Canvas;
 use crate::foundation::composer::Composer;
 use crate::foundation::constraint::Constraints;
-use crate::foundation::geometry::{IntOffset, IntSize, Size};
+use crate::foundation::geometry::{IntOffset, IntSize, Offset, Size};
 use crate::foundation::layout::layout_coordinates::LayoutCoordinates;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::layout_node_layout_delegate::LayoutNodeLayoutDelegate;
@@ -21,10 +21,11 @@ use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
 use crate::foundation::measure_result::{MeasureResult, MeasureResultProvider};
 use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::node_chain::NodeChain;
-use crate::foundation::node_coordinator::{PerformDrawTrait, PerformMeasureHelper, TailModifierNodeProvider};
+use crate::foundation::node_coordinator::{HitTestSource, HitTestTrait, PerformDrawTrait, PerformMeasureHelper, TailModifierNodeProvider};
 use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 use crate::foundation::ui::graphics::graphics_layer_modifier::GraphicsLayerScope;
+use crate::foundation::ui::hit_test_result::HitTestResult;
 use crate::foundation::usage_by_parent::UsageByParent;
 use crate::foundation::utils::option_extension::OptionThen;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
@@ -95,8 +96,6 @@ impl InnerNodeCoordinator {
             result_mut.weak_this = Rc::downgrade(&result);
 
             result_mut.node_coordinator_impl.set_vtable(Rc::downgrade(&(result.clone() as Rc<RefCell<dyn NodeCoordinator>>)));
-
-            result_mut.get_tail()
         }
         result
     }
@@ -117,6 +116,12 @@ impl InnerNodeCoordinator {
 
     pub(crate) fn on_measured(&self) {
         println!("child {:p} measured {:?}\n", self, self.get_measured_size());
+    }
+}
+
+impl HitTestTrait for InnerNodeCoordinator {
+    fn hit_test(&self, hit_test_source: &dyn HitTestSource, pointer_position: Offset<f32>, hit_test_result: &mut HitTestResult, is_touch_event: bool, is_in_layer: bool) {
+        todo!()
     }
 }
 

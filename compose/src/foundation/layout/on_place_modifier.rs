@@ -55,6 +55,7 @@ impl OnPlacedNode {
 fn on_placed_element(on_place: Rc<dyn Fn(&dyn LayoutCoordinates)>) -> Modifier {
     let on_place_for_update = on_place.clone();
     ModifierNodeElement(
+        "OnPlacedElement",
         move || {
             OnPlacedNode::new(on_place.clone())
         },

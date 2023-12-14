@@ -24,7 +24,7 @@ use crate::foundation::memory::leak_token::LeakToken;
 use crate::foundation::modifier::{ModifierNode, ModifierNodeExtension, NodeKind};
 use crate::foundation::node::{LayoutNodeDrawScope, OwnedLayer, SkiaOwnedLayer};
 use crate::foundation::node_chain::{NodeChain, TailModifierNode};
-use crate::foundation::node_coordinator::{AsNodeCoodinator, DrawableNodeCoordinator, HitTestSource, NodeCoordinatorTrait, PerformDrawTrait};
+use crate::foundation::node_coordinator::{AsNodeCoodinator, DrawableNodeCoordinator, HitTestSource, HitTestTrait, NodeCoordinatorTrait, PerformDrawTrait};
 use crate::foundation::node_coordinator::TailModifierNodeProvider;
 use crate::foundation::parent_data::ParentDataGenerator;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
@@ -286,7 +286,9 @@ impl NodeCoordinator for NodeCoordinatorImpl {
     fn get_layer(&self) -> Option<&Box<dyn OwnedLayer>> {
         self.layer.as_ref()
     }
+}
 
+impl HitTestTrait for NodeCoordinatorImpl {
     fn hit_test(&self,
                 hit_test_source: &dyn HitTestSource,
                 pointer_position: Offset<f32>,

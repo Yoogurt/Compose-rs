@@ -40,6 +40,7 @@ fn layout_element(measure: SingleChildMeasurePolicy) -> Modifier {
     let measure_for_update = measure.clone();
 
     ModifierNodeElement(
+        "LayoutElement",
         move || {
             LayoutElement {
                 measure: measure.clone(),

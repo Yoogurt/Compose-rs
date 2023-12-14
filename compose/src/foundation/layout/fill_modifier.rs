@@ -33,6 +33,7 @@ enum Direction {
 
 fn fill_element(direction: Direction, fraction: f32) -> Modifier {
     ModifierNodeElement(
+        "FillElement",
         move || {
             FillModifierNode {
                 direction,

@@ -34,12 +34,14 @@ impl Modifier {
 fn suspend_pointer_input_element(block: Rc<dyn Fn(PointerInputScope) + 'static>) -> Modifier {
     let block_for_update = block.clone();
 
-    ModifierNodeElement(move || SuspendPointerInputElement {
-        pointer_input_handler: block.clone(),
-        node_impl: Default::default(),
-    }, move |modifier| {
-        modifier.pointer_input_handler = block_for_update.clone();
-    })
+    ModifierNodeElement(
+        "SuspendPointerInputElement",
+        move || SuspendPointerInputElement {
+            pointer_input_handler: block.clone(),
+            node_impl: Default::default(),
+        }, move |modifier| {
+            modifier.pointer_input_handler = block_for_update.clone();
+        })
 }
 
 #[derive(Delegate, ModifierElement)]

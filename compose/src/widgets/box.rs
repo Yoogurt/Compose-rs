@@ -99,6 +99,7 @@ impl ParentDataModifierNode for BoxChildDataModifierNode {
 
 fn box_child_data(alignment: Alignment, match_parent_size: bool) -> Modifier {
     ModifierNodeElement(
+        "BoxChildDataElement",
         move || {
             let mut box_child_data_node = BoxChildDataModifierNode::default();
 

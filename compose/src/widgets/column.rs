@@ -29,6 +29,7 @@ struct ColumnScopeImpl {}
 
 fn horizontal_align_modifier(alignment_horizontal: AlignmentHorizontal) -> Modifier {
     ModifierNodeElement(
+        "HorizontalAlignElement",
         move || {
             HorizontalAlignModifier::new(alignment_horizontal)
         },

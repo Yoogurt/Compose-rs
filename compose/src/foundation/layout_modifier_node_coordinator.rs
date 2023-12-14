@@ -17,7 +17,7 @@ use crate::foundation::measure_result::MeasureResultProvider;
 use crate::foundation::modifier::ModifierNode;
 use crate::foundation::node::OwnedLayer;
 use crate::foundation::node_chain::NodeChain;
-use crate::foundation::node_coordinator::{AsNodeCoodinator, HitTestSource, NodeCoordinator, NodeCoordinatorTrait, PerformDrawTrait, TailModifierNodeProvider};
+use crate::foundation::node_coordinator::{AsNodeCoodinator, HitTestSource, HitTestTrait, NodeCoordinator, NodeCoordinatorTrait, PerformDrawTrait, TailModifierNodeProvider};
 use crate::foundation::node_coordinator::PerformMeasureHelper;
 use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
 use crate::foundation::placeable::Placeable;
@@ -179,7 +179,9 @@ impl NodeCoordinator for LayoutModifierNodeCoordinator {
     fn get_layer(&self) -> Option<&Box<dyn OwnedLayer>> {
         self.node_coordinator_impl.get_layer()
     }
+}
 
+impl HitTestTrait for LayoutModifierNodeCoordinator {
     fn hit_test(&self, hit_test_source: &dyn HitTestSource, pointer_position: Offset<f32>, hit_test_result: &mut HitTestResult, is_touch_event: bool, is_in_layer: bool) {
         self.node_coordinator_impl.hit_test(hit_test_source, pointer_position, hit_test_result, is_touch_event, is_in_layer)
     }

@@ -28,11 +28,13 @@ struct RowScopeImpl;
 const INSTANCE: &dyn RowScope = &RowScopeImpl {};
 
 fn vertical_align_modifier(alignment_vertical: AlignmentVertical) -> Modifier {
-    ModifierNodeElement(move || {
-        VerticalAlignModifier::new(alignment_vertical)
-    }, move |vertical_align_modifier: &mut VerticalAlignModifier| {
-        vertical_align_modifier.alignment_vertical = alignment_vertical;
-    })
+    ModifierNodeElement(
+        "VerticalAlignElement",
+        move || {
+            VerticalAlignModifier::new(alignment_vertical)
+        }, move |vertical_align_modifier: &mut VerticalAlignModifier| {
+            vertical_align_modifier.alignment_vertical = alignment_vertical;
+        })
 }
 
 impl RowColumnWeightScope for RowScopeImpl {}

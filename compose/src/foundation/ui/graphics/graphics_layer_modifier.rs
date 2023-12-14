@@ -154,6 +154,7 @@ impl LayoutModifierNode for BlockGraphicsLayerModifier {
 fn block_graphics_layer_element(block: Rc<dyn Fn(&mut GraphicsLayerScope)>) -> Modifier {
     let block_for_update = block.clone();
     ModifierNodeElement(
+        "BlockGraphicsLayerElement",
         move || BlockGraphicsLayerModifier { block: block.clone(), node_impl: Default::default() },
         move |modifier: &mut BlockGraphicsLayerModifier| {
             modifier.block = block_for_update.clone();

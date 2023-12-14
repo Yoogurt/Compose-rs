@@ -148,10 +148,7 @@ impl NodeChain {
         parent: Rc<RefCell<dyn ModifierNode>>,
     ) -> Rc<RefCell<dyn ModifierNode>> {
         let node = match &element.inner {
-            ModifierInternal::ModifierNodeElement { create, update } => create(),
-            // ModifierInternal::ModifierElement(element) => {
-            //     BackwardsCompatNode::new(element.clone()).wrap_with_rc_refcell()
-            // }
+            ModifierInternal::ModifierNodeElement { name, create, update } => create(),
             _ => {
                 todo!()
             }
@@ -280,6 +277,7 @@ impl NodeChain {
     pub(crate) fn update_from(&mut self, mut modifier: Modifier) {
         // perform expensive reinit for modifier
         // todo structure update modifier
+
         let mut coordinator_sync_needed = false;
         let padded_head = self.pad_chain();
 

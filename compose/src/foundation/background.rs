@@ -12,6 +12,7 @@ use crate::foundation::ui::graphics::color::Color;
 
 fn background_element(color: Color) -> Modifier {
     ModifierNodeElement(
+        "Background",
         move || {
             BackgroundNode {
                 color,
