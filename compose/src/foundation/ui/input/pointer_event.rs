@@ -4,7 +4,7 @@ use crate::foundation::ui::input::internal_pointer_event::InternalPointerEvent;
 use crate::foundation::ui::input::pointer_button::{PointerButton, PointerButtons};
 
 #[derive(Clone, PartialEq, Debug, Copy)]
-pub(crate) enum PointerEventType {
+pub enum PointerEventType {
     Unknown = 0,
     Press = 1,
     Release = 2,
@@ -21,6 +21,13 @@ pub(crate) enum PointerType {
     Mouse = 2,
     Stylus = 3,
     Eraser = 4,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum PointerEventPass {
+    Initial,
+    Main,
+    Final,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug, Copy, Hash)]
@@ -42,7 +49,7 @@ pub(crate) struct HistoricalChange {
     position: Offset<f32>,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub(crate) struct ConsumedData {
     position_change: bool,
     down_change: bool,
@@ -57,7 +64,7 @@ impl ConsumedData {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub(crate) struct PointerInputChange {
     pub(crate) id: PointerId,
     pub(crate) uptime: u128,
@@ -124,8 +131,8 @@ impl PointerInputChange {
     }
 }
 
-#[derive(Clone)]
-pub(crate) struct PointerEvent {
+#[derive(Debug, Clone)]
+pub struct PointerEvent {
     changes: Vec<PointerInputChange>,
     buttons: PointerButtons,
     pointer_event_type: PointerEventType,
@@ -139,11 +146,11 @@ fn calculate_pointer_event_type(changes: &Vec<PointerInputChange>) -> PointerEve
 
     changes.iter().find_map(|change| {
         if change.changed_to_up_ignore_consumed() {
-            return Some(PointerEventType::Release)
+            return Some(PointerEventType::Release);
         }
 
         if change.changed_to_down_ignore_consumed() {
-            return Some(PointerEventType::Press)
+            return Some(PointerEventType::Press);
         }
 
         None

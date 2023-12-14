@@ -318,6 +318,7 @@ impl LayoutNode {
         let _outer_coordinator = self.get_outer_coordinator();
         let outer_coordinator = _outer_coordinator.borrow();
         let position_in_wrapped = outer_coordinator.from_parent_position(pointer_position);
+        dbg!(&outer_coordinator);
         outer_coordinator.hit_test(&NodeCoordinatorImpl::PointerInputSource, position_in_wrapped, hit_test_result, is_touch_event, is_in_layer);
     }
 }

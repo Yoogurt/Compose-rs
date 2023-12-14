@@ -55,8 +55,6 @@ pub(crate) fn row_column_measure_policy(
     cross_axis_alignment: CrossAxisAlignment,
 ) -> MultiChildrenMeasurePolicy {
     MultiChildrenMeasurePolicyDelegate(move |measure_scope, measurables, constraints| {
-        dbg!(&measurables);
-
         if measurables.is_empty() {
             return measure_scope.layout_without_place(constraints.min_dimension());
         }

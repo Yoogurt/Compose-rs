@@ -21,7 +21,7 @@ use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
 use crate::foundation::measure_result::{MeasureResult, MeasureResultProvider};
 use crate::foundation::measure_scope::MeasureScope;
 use crate::foundation::node_chain::NodeChain;
-use crate::foundation::node_coordinator::{PerformDrawTrait, PerformMeasureHelper};
+use crate::foundation::node_coordinator::{PerformDrawTrait, PerformMeasureHelper, TailModifierNodeProvider};
 use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
 use crate::foundation::placeable_place_at::PlaceablePlaceAt;
 use crate::foundation::ui::graphics::graphics_layer_modifier::GraphicsLayerScope;
@@ -95,6 +95,8 @@ impl InnerNodeCoordinator {
             result_mut.weak_this = Rc::downgrade(&result);
 
             result_mut.node_coordinator_impl.set_vtable(Rc::downgrade(&(result.clone() as Rc<RefCell<dyn NodeCoordinator>>)));
+
+            result_mut.get_tail()
         }
         result
     }

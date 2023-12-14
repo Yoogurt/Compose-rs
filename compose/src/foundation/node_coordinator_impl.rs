@@ -519,7 +519,6 @@ impl NodeCoordinatorImpl {
     }
 
     fn draw_contrained_draw_modifiers(&self, canvas: &mut dyn Canvas) {
-        // dbg!(self);
         let head = self.head(NodeKind::Draw);
 
         match head {

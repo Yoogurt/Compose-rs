@@ -1,5 +1,5 @@
-pub(crate) mod pointer_event_type;
-pub(crate) mod pointer_event;
+pub mod pointer_event_type;
+pub mod pointer_event;
 pub(crate) mod internal_pointer_input;
 pub(crate) mod pointer_button;
 pub(crate) mod process_result;
