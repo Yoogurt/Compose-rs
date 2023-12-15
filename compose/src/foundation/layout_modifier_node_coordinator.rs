@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::ops::{Deref, DerefMut};
 use std::rc::{Rc, Weak};
+use std::result;
 
 use auto_delegate::Delegate;
 use compose_foundation_macro::AnyConverter;
@@ -86,16 +87,18 @@ impl LayoutModifierNodeCoordinator {
             node_coordinator_impl: NodeCoordinatorImpl::new(),
             layout_modifier_node: measure_node.clone(),
             weak_self: Weak::new(),
-        }.wrap_with_rc_refcell();
+        };
 
+        let result = result.wrap_with_rc_refcell();
         {
             let mut this = result.borrow_mut();
             let node_coordinator_impl = &mut this.node_coordinator_impl;
             node_coordinator_impl.attach(layout_node, node_chain);
             node_coordinator_impl.set_vtable_placeable_place_at(Rc::downgrade(&(result.clone() as Rc<RefCell<dyn PlaceablePlaceAt>>)));
-            node_coordinator_impl.set_vtable(Rc::downgrade(&(result.clone() as Rc<RefCell<dyn NodeCoordinator>>)));
+            node_coordinator_impl.set_vtable(result.as_ptr());
             this.weak_self = Rc::downgrade(&result);
             this.node_coordinator_impl.tail = measure_node.clone();
+
         }
 
         result
@@ -184,6 +187,18 @@ impl NodeCoordinator for LayoutModifierNodeCoordinator {
 impl HitTestTrait for LayoutModifierNodeCoordinator {
     fn hit_test(&self, hit_test_source: &dyn HitTestSource, pointer_position: Offset<f32>, hit_test_result: &mut HitTestResult, is_touch_event: bool, is_in_layer: bool) {
         self.node_coordinator_impl.hit_test(hit_test_source, pointer_position, hit_test_result, is_touch_event, is_in_layer)
+    }
+
+    fn hit_test_child(&self, hit_test_source: &dyn HitTestSource, pointer_position: Offset<f32>, hit_test_result: &mut HitTestResult, is_touch_event: bool, is_in_layer: bool) {
+        if let Some(wrapped) = self.get_wrapped() {
+            let wrapped = wrapped.borrow();
+            let position_in_wrapped = wrapped.from_parent_position(pointer_position);
+            wrapped.hit_test(hit_test_source, pointer_position, hit_test_result, is_touch_event, is_in_layer);
+        }
+    }
+
+    fn should_share_pointer_input_with_siblings(&self) -> bool {
+        self.node_coordinator_impl.should_share_pointer_input_with_siblings()
     }
 }
 

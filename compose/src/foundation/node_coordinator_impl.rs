@@ -8,7 +8,7 @@ use std::rc::{Rc, Weak};
 
 use auto_delegate::Delegate;
 use compose_foundation_macro::{AnyConverter, Leak};
-
+use crate::foundation::geometry::Size;
 use crate::foundation::canvas::Canvas;
 use crate::foundation::composer::Composer;
 use crate::foundation::geometry::{Density, IntOffset, IntSize, Offset};
@@ -32,6 +32,7 @@ use crate::foundation::ui::draw::{CanvasDrawScope, DrawContext};
 use crate::foundation::ui::graphics::graphics_layer_modifier::GraphicsLayerScope;
 use crate::foundation::ui::hit_test_result::HitTestResult;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
+use crate::foundation::utils::option_extension::OptionThen;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::utils::weak_upgrade::WeakUpdater;
 
@@ -66,7 +67,7 @@ pub struct NodeCoordinatorImpl {
 
     graphics_layer_scope: GraphicsLayerScope,
 
-    vtable: Option<Weak<RefCell<dyn NodeCoordinator>>>,
+    vtable_raw: Option<*mut dyn NodeCoordinator>,
 }
 
 impl Debug for NodeCoordinatorImpl {
@@ -137,19 +138,6 @@ impl NodeCoordinatorImpl {
         self.is_clipping || layer.map(|layer| layer.is_in_layer(position)).unwrap_or(true)
     }
 
-    fn hit_test_child(&self,
-                                 hit_test_source: &dyn HitTestSource,
-                                 pointer_position: Offset<f32>,
-                                 hit_test_result: &mut HitTestResult,
-                                 is_touch_event: bool,
-                                 is_in_layer: bool) {
-        if let Some(wrapped) = self.get_wrapped() {
-            let wrapped = wrapped.borrow();
-            let position_in_wrapped = wrapped.from_parent_position(pointer_position);
-            wrapped.hit_test(hit_test_source, pointer_position, hit_test_result, is_touch_event, is_in_layer);
-        }
-    }
-
     fn is_pointer_in_bounds(&self, pointer_position: Offset<f32>) -> bool {
         let x = pointer_position.x;
         let y = pointer_position.y;
@@ -210,15 +198,17 @@ impl NodeCoordinatorTrait for NodeCoordinatorImpl {
 
 impl PerformDrawTrait for NodeCoordinatorImpl {
     fn perform_draw(&self, canvas: &mut dyn Canvas) {
-        match self.vtable.as_ref() {
-            Some(perform_draw_trait) => {
-                if let Some(vtable) = perform_draw_trait.upgrade() {
-                    vtable.borrow().perform_draw(canvas);
+        unsafe {
+            match self.vtable_raw.map(|vtable| vtable.as_ref()) {
+                Some(perform_draw_trait) => {
+                    if let Some(vtable) = perform_draw_trait {
+                        vtable.perform_draw(canvas);
+                    }
                 }
-            }
-            None => {
-                if let Some(wrapped) = self.get_wrapped().as_ref() {
-                    wrapped.borrow().draw(canvas);
+                None => {
+                    if let Some(wrapped) = self.get_wrapped().as_ref() {
+                        wrapped.borrow().draw(canvas);
+                    }
                 }
             }
         }
@@ -298,10 +288,22 @@ impl HitTestTrait for NodeCoordinatorImpl {
         let head = self.head(hit_test_source.entity_type());
 
         if !self.within_layer_bounds(pointer_position) {} else if head.is_none() {
-            self.hit_test_child(hit_test_source, pointer_position, hit_test_result, is_touch_event, is_in_layer);
+            self.vtable_raw.as_ref().then(|vtable| unsafe {
+                vtable.as_ref().unwrap().hit_test_child(hit_test_source, pointer_position, hit_test_result, is_touch_event, is_in_layer)
+            });
         } else if self.is_pointer_in_bounds(pointer_position) {
             self.hit(head, hit_test_source, pointer_position, hit_test_result, is_touch_event, is_in_layer);
         }
+    }
+
+    fn should_share_pointer_input_with_siblings(&self) -> bool {
+        self.head_node(NodeKind::PointerInput).map_or(false, |start| {
+            false
+        })
+    }
+
+    fn hit_test_child(&self, hit_test_source: &dyn HitTestSource, pointer_position: Offset<f32>, hit_test_result: &mut HitTestResult, is_touch_event: bool, is_in_layer: bool) {
+        todo!()
     }
 }
 
@@ -337,7 +339,6 @@ impl NodeCoordinatorImpl {
 
             graphics_layer_scope: GraphicsLayerScope::new(),
             measure_result: None,
-            vtable: None,
             leak_object: Default::default(),
 
             is_clipping: false,
@@ -345,11 +346,13 @@ impl NodeCoordinatorImpl {
             layer_density: Density::default(),
             layer_layout_direction: LayoutDirection::default(),
             layer: None,
+
+            vtable_raw: None,
         }
     }
 
-    pub(crate) fn set_vtable(&mut self, vtable: Weak<RefCell<dyn NodeCoordinator>>) {
-        self.vtable = Some(vtable);
+    pub(crate) fn set_vtable(&mut self, vtable: *const dyn NodeCoordinator) {
+        self.vtable_raw = Some(vtable as *const dyn NodeCoordinator as *mut dyn NodeCoordinator);
     }
 
     pub(crate) fn set_vtable_placeable_place_at(&mut self, place_at_vtable: Weak<RefCell<dyn PlaceablePlaceAt>>) {
@@ -394,6 +397,17 @@ impl NodeCoordinatorImpl {
         }
     }
 
+    pub(crate) fn distance_in_minimum_touch_target(
+        &self, pointer_position: Offset<f32>, minium_touch_target_size: Size<f32>,
+    ) -> f32 {
+        if self.get_measured_width() as f32 >= minium_touch_target_size.width
+            && self.get_measured_height() as f32 >= minium_touch_target_size.height {
+            return f32::MAX;
+        }
+
+        0f32
+    }
+
     pub(crate) fn update_layer_block(&mut self, size: IntSize, layer_block: Option<Rc<dyn Fn(&mut GraphicsLayerScope)>>, force_update_parameters: bool) {
         let layout_node = self.layout_node.upgrade().unwrap();
         let layout_node_density = layout_node.borrow().get_density();
@@ -410,18 +424,18 @@ impl NodeCoordinatorImpl {
 
         if self.is_attached() && layer_block.is_some() {
             if self.layer.is_none() {
-                let vtable = self.vtable.clone();
+                let vtable = self.vtable_raw.clone();
 
                 self.layer = {
                     let layout_node = self.layout_node.clone();
 
-                    let layer: Box<dyn OwnedLayer> = Box::new(SkiaOwnedLayer::new(move |canvas| {
+                    let layer: Box<dyn OwnedLayer> = Box::new(SkiaOwnedLayer::new(move |canvas| unsafe {
                         let Some(layout_node) = layout_node.upgrade() else {
                             return;
                         };
                         if layout_node.borrow().is_placed() {
-                            let vtable = vtable.as_ref().and_then(|vtable| vtable.upgrade()).unwrap();
-                            vtable.borrow().node_coordinator_ref().draw_contrained_draw_modifiers(canvas);
+                            let vtable = vtable.as_ref().unwrap().as_ref().unwrap();
+                            vtable.node_coordinator_ref().draw_contrained_draw_modifiers(canvas);
                         }
                     }));
 
@@ -564,14 +578,19 @@ impl HitTestSource for PointerInputSource {
     }
 
     fn intercept_out_of_bounds_child_events(&self, node: Rc<RefCell<dyn ModifierNode>>) -> bool {
-        todo!()
+        node.borrow().dispatch_for_kind(NodeKind::PointerInput, |it| {
+            // it.as_pointer_input_modifier_node().unwrap().intercept_out_of_bounds_child_events()
+        });
+
+        true
     }
 
-    fn should_hit_Test_children(&self, parnet_layout_node: Rc<RefCell<LayoutNode>>) -> bool {
-        todo!()
+    fn should_hit_test_children(&self, parnet_layout_node: Rc<RefCell<LayoutNode>>) -> bool {
+        true
     }
 
     fn child_hit_test(&self, layout_node: Rc<RefCell<LayoutNode>>, pointer_position: Offset<f32>, hit_test_result: &mut HitTestResult, is_touch_event: bool, is_in_layer: bool) {
-        todo!()
+        let hit_test_delegate = layout_node.borrow().layout_node_hit_test_delegate.clone();
+        hit_test_delegate.borrow().hit_test(pointer_position, hit_test_result, is_touch_event, is_in_layer);
     }
 }

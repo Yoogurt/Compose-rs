@@ -3,7 +3,7 @@
 use std::cell::{RefCell, RefMut};
 use std::fmt::{Formatter, Write};
 use std::fmt::Debug;
-use std::ops::{Add, BitAnd, Deref};
+use std::ops::{Add, BitAnd, BitOr, Deref};
 use std::rc::{Rc, Weak};
 
 use auto_delegate::delegate;
@@ -11,7 +11,7 @@ use compose_foundation_macro::{Leak, ModifierElement};
 
 use crate::foundation::delegatable_node::{DelegatableKind, DelegatableNode};
 use crate::foundation::node_coordinator::NodeCoordinator;
-use crate::foundation::oop::{AnyConverter, DrawModifierNodeConverter, LayoutAwareModifierNodeConverter, ParentDataModifierNodeConverter};
+use crate::foundation::oop::{AnyConverter, DrawModifierNodeConverter, LayoutAwareModifierNodeConverter, ParentDataModifierNodeConverter, PointerInputModifierNodeConverter};
 use crate::foundation::oop::LayoutModifierNodeConverter;
 use crate::foundation::utils::box_wrapper::WrapWithBox;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
@@ -54,6 +54,13 @@ impl BitAnd<u32> for NodeKind {
     }
 }
 
+impl BitOr<u32> for NodeKind {
+    type Output = u32;
+    fn bitor(self, rhs: u32) -> Self::Output {
+        u32::from(self) | rhs
+    }
+}
+
 #[macro_export]
 macro_rules! impl_node_kind_any {
     ($tt:tt) => {
@@ -75,7 +82,7 @@ pub trait NodeKindParentData: NodeKindPatch {
     }
 }
 
-pub(crate) trait ModifierElement: AnyConverter + LayoutModifierNodeConverter + DrawModifierNodeConverter + ParentDataModifierNodeConverter + LayoutAwareModifierNodeConverter + NodeKindPatch + Debug {
+pub(crate) trait ModifierElement: AnyConverter + LayoutModifierNodeConverter + DrawModifierNodeConverter + ParentDataModifierNodeConverter + LayoutAwareModifierNodeConverter + PointerInputModifierNodeConverter + NodeKindPatch + Debug {
     fn as_modifier_element(&self) -> &dyn ModifierElement;
     fn as_modifier_element_mut(&mut self) -> &mut dyn ModifierElement;
 }
@@ -372,6 +379,7 @@ impl Debug for ModifierInternal {
 }
 
 pub(crate) trait ModifierNodeExtension {
+    fn visit_local_descendants(&self, mask: u32, block: impl FnMut(&dyn ModifierElement));
     fn dispatch_for_kind(&self, kind: NodeKind, block: impl FnMut(&dyn ModifierElement));
     fn dispatch_for_kind_mut(&mut self, kind: NodeKind, block: impl FnMut(&mut dyn ModifierElement));
     fn next_draw_node(&self) -> Option<Rc<RefCell<dyn ModifierNode>>>;
@@ -379,6 +387,23 @@ pub(crate) trait ModifierNodeExtension {
 }
 
 impl<T> ModifierNodeExtension for T where T: ?Sized + ModifierNode {
+    fn visit_local_descendants(&self, mask: u32, block: impl FnMut(&dyn ModifierElement)) {
+        let aggregate_child_kind_set = self.get_aggregate_child_kind_set();
+        if aggregate_child_kind_set & mask == 0 {
+            return;
+        }
+
+        let mut next=  self.get_child();
+        while let Some(node) = next {
+            let node = node.borrow();
+            if node.get_node_kind() & mask != 0 {
+                block(node.deref());
+            }
+
+            next = node.get_child();
+        }
+    }
+
     fn dispatch_for_kind(&self, kind: NodeKind, mut block: impl FnMut(&dyn ModifierElement)) {
         let node = self.get_node_kind();
 

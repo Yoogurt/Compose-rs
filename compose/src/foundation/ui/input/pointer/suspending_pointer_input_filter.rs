@@ -53,7 +53,15 @@ struct SuspendPointerInputElement {
     node_impl: ModifierNodeImpl,
 }
 
-impl PointerInputModifierNode for SuspendPointerInputElement {}
+impl PointerInputModifierNode for SuspendPointerInputElement {
+    fn on_cancel_pointer_input(&self) {
+        todo!()
+    }
+
+    fn on_pointer_event(&self, event: &PointerEvent, pass: PointerEventPass, bounds: IntSize) {
+        todo!()
+    }
+}
 
 impl Debug for SuspendPointerInputElement {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

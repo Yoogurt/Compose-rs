@@ -116,10 +116,9 @@ impl PointerInputEventProcessor {
             if is_hover || pointer_input_change.changed_to_down_ignore_consumed() {
                 let is_touch_event = pointer_input_change.pointer_type == PointerType::Touch;
 
-                self.root.borrow().hit_test(pointer_input_change.position, &mut self.hit_result, is_touch_event, false);
-
+                let hit_test_delegate = self.root.borrow().layout_node_hit_test_delegate.clone();
+                hit_test_delegate.borrow().hit_test(pointer_input_change.position, &mut self.hit_result, is_touch_event, false);
                 if self.hit_result.is_not_empty() {
-
                     self.hit_result.clear();
                 }
             }

@@ -9,12 +9,13 @@ use crate::foundation::geometry::{Density, Offset};
 use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::layout_node_container::LayoutNodeContainer;
 use crate::foundation::layout_node_draw_delegate::LayoutNodeDrawDelegate;
+use crate::foundation::layout_node_hit_test_delegate::LayoutNodeHitTestDelegate;
 use crate::foundation::layout_node_layout_delegate::LayoutNodeLayoutDelegate;
 use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
 use crate::foundation::node::Owner;
 use crate::foundation::node_coordinator::NodeCoordinator;
 use crate::foundation::node_coordinator_impl::NodeCoordinatorImpl;
-use crate::foundation::ui::hit_test_result::HitTestResult;
+use crate::foundation::ui::platform::view_configuration::ViewConfiguration;
 use crate::foundation::usage_by_parent::UsageByParent;
 use crate::foundation::utils::rc_wrapper::WrapWithRcRefCell;
 use crate::foundation::utils::self_reference::SelfReference;
@@ -36,12 +37,15 @@ pub(crate) struct LayoutNode {
     pub(crate) children: Rc<RefCell<Vec<Rc<RefCell<LayoutNode>>>>>,
     pub(crate) layout_node_layout_delegate: Rc<RefCell<LayoutNodeLayoutDelegate>>,
     pub(crate) layout_node_draw_delegate: Rc<RefCell<LayoutNodeDrawDelegate>>,
+    pub(crate) layout_node_hit_test_delegate: Rc<RefCell<LayoutNodeHitTestDelegate>>,
     pub(crate) usage_by_parent: UsageByParent,
     pub(crate) layout_state: Rc<RefCell<LayoutState>>,
     pub(crate) layout_direction: LayoutDirection,
 
     pub(crate) owner: Option<Weak<RefCell<dyn Owner>>>,
     pub(crate) identify: u32,
+
+    pub(crate) view_configuration: ViewConfiguration,
 
     pub(crate) weak_self: Weak<RefCell<Self>>,
 }
@@ -60,10 +64,12 @@ impl LayoutNode {
             children: vec![].wrap_with_rc_refcell(),
             layout_node_layout_delegate: LayoutNodeLayoutDelegate::new(),
             layout_node_draw_delegate: LayoutNodeDrawDelegate::new(),
+            layout_node_hit_test_delegate: LayoutNodeHitTestDelegate::new(),
             usage_by_parent: UsageByParent::NotUsed,
             layout_state: LayoutState::Idle.wrap_with_rc_refcell(),
             layout_direction: LayoutDirection::default(),
 
+            view_configuration: ViewConfiguration::default(),
             owner: None,
             weak_self: Weak::default(),
             identify: IDENTIFY.with(|identity| identity.fetch_add(1, std::sync::atomic::Ordering::SeqCst)),
@@ -97,6 +103,7 @@ impl LayoutNode {
             );
 
             node_ref.layout_node_draw_delegate.borrow_mut().attach(node_chain);
+            node_ref.layout_node_hit_test_delegate.borrow_mut().attach(&node);
         }
 
         node
@@ -312,13 +319,6 @@ impl LayoutNode {
             }
             _ => {}
         }
-    }
-
-    pub(crate) fn hit_test(&self, pointer_position: Offset<f32>, hit_test_result: &mut HitTestResult, is_touch_event: bool, is_in_layer: bool) {
-        let _outer_coordinator = self.get_outer_coordinator();
-        let outer_coordinator = _outer_coordinator.borrow();
-        let position_in_wrapped = outer_coordinator.from_parent_position(pointer_position);
-        outer_coordinator.hit_test(&NodeCoordinatorImpl::PointerInputSource, position_in_wrapped, hit_test_result, is_touch_event, is_in_layer);
     }
 }
 

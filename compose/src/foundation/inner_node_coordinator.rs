@@ -3,6 +3,7 @@ use std::fmt::{Debug, Formatter};
 use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
 use std::rc::Weak;
+use std::result;
 
 use auto_delegate::Delegate;
 use compose_foundation_macro::AnyConverter;
@@ -67,7 +68,7 @@ impl DerefMut for InnerNodeCoordinator {
 }
 
 impl Deref for InnerNodeCoordinator {
-    type Target = dyn NodeCoordinator;
+    type Target = NodeCoordinatorImpl;
 
     fn deref(&self) -> &Self::Target {
         &self.node_coordinator_impl
@@ -89,14 +90,15 @@ impl InnerNodeCoordinator {
             measure_pass_delegate: Weak::new(),
             weak_this: Weak::new(),
             identify: 0,
-        }.wrap_with_rc_refcell();
+        };
 
+        let result = result.wrap_with_rc_refcell();
         {
             let mut result_mut = result.borrow_mut();
             result_mut.weak_this = Rc::downgrade(&result);
-
-            result_mut.node_coordinator_impl.set_vtable(Rc::downgrade(&(result.clone() as Rc<RefCell<dyn NodeCoordinator>>)));
+            result_mut.node_coordinator_impl.set_vtable(result.as_ptr());
         }
+
         result
     }
 
@@ -121,7 +123,48 @@ impl InnerNodeCoordinator {
 
 impl HitTestTrait for InnerNodeCoordinator {
     fn hit_test(&self, hit_test_source: &dyn HitTestSource, pointer_position: Offset<f32>, hit_test_result: &mut HitTestResult, is_touch_event: bool, is_in_layer: bool) {
-        todo!()
+        self.node_coordinator_impl.hit_test(hit_test_source, pointer_position, hit_test_result, is_touch_event, is_in_layer);
+    }
+
+    fn hit_test_child(&self, hit_test_source: &dyn HitTestSource, pointer_position: Offset<f32>, hit_test_result: &mut HitTestResult, is_touch_event: bool, mut is_in_layer: bool) {
+        let mut in_layer = is_in_layer;
+        let mut hit_test_children = false;
+
+        if hit_test_source.should_hit_test_children(self.layout_node.upgrade().unwrap()) {
+            if self.within_layer_bounds(pointer_position) {
+                hit_test_children = true;
+            } else if is_touch_event {
+                is_in_layer = false;
+                hit_test_children = true;
+            }
+        }
+
+        if hit_test_children {
+            hit_test_result.sibling_hits(|hit_test_result| {
+                let children = self.layout_node.upgrade().unwrap().borrow().z_sort_children();
+                children.iter().rev().any(|child| {
+                    if !child.borrow().is_placed() {
+                        return false;
+                    }
+
+                    hit_test_source.child_hit_test(child.clone(), pointer_position, hit_test_result, is_touch_event, is_in_layer);
+                    let was_hit = hit_test_result.has_hit();
+
+                    let continue_hit_test: bool;
+                    if !was_hit {
+                        continue_hit_test = true;
+                    } else {
+                        continue_hit_test = false;
+                    }
+
+                    false
+                });
+            });
+        }
+    }
+
+    fn should_share_pointer_input_with_siblings(&self) -> bool {
+        self.node_coordinator_impl.should_share_pointer_input_with_siblings()
     }
 }
 

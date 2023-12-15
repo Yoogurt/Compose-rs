@@ -302,6 +302,7 @@ impl NodeChain {
                     node = Self::create_and_insert_node_as_child(&mut after[index], parent);
                     index += 1;
                 }
+                self.sync_aggregate_child_kind_set();
             } else if after_size == 0 {
                 todo!()
             } else {
@@ -314,6 +315,22 @@ impl NodeChain {
 
         if coordinator_sync_needed {
             self.sync_coordinators();
+        }
+    }
+
+    fn sync_aggregate_child_kind_set(&self) {
+        let mut node = self.get_tail().borrow().get_parent();
+        let mut aggregate_child_kind_set = 0;
+        while let Some(node_ref) = node {
+            if node_ref.as_ptr() == self.sentine_head.as_ptr() {
+                break
+            }
+
+            let node_ref = node_ref.borrow_mut();
+            aggregate_child_kind_set = node_ref.get_node_kind() | aggregate_child_kind_set;
+            node_ref.set_aggregate_child_kind_set(aggregate_child_kind_set);
+
+            node = node_ref.get_parent();
         }
     }
 

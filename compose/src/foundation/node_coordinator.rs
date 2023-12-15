@@ -56,8 +56,17 @@ pub trait AsNodeCoodinator {
 }
 
 #[delegate]
-pub trait HitTestTrait {
+pub(crate) trait HitTestTrait {
     fn hit_test(&self, hit_test_source: &dyn HitTestSource, pointer_position: Offset<f32>, hit_test_result: &mut HitTestResult, is_touch_event: bool, is_in_layer:bool);
+
+    fn hit_test_child(&self,
+                      hit_test_source: &dyn HitTestSource,
+                      pointer_position: Offset<f32>,
+                      hit_test_result: &mut HitTestResult,
+                      is_touch_event: bool,
+                      is_in_layer: bool);
+
+    fn should_share_pointer_input_with_siblings(&self) -> bool;
 }
 
 #[delegate]
@@ -117,7 +126,7 @@ impl<T> PerformMeasureHelper for T where T: NodeCoordinator {
 pub(crate) trait HitTestSource {
     fn entity_type(&self) -> NodeKind;
     fn intercept_out_of_bounds_child_events(&self, node: Rc<RefCell<dyn ModifierNode>>) -> bool;
-    fn should_hit_Test_children(&self, parnet_layout_node: Rc<RefCell<LayoutNode>>) -> bool;
+    fn should_hit_test_children(&self, parnet_layout_node: Rc<RefCell<LayoutNode>>) -> bool;
 
     fn child_hit_test(&self, layout_node: Rc<RefCell<LayoutNode>>, pointer_position: Offset<f32>, hit_test_result: &mut HitTestResult, is_touch_event: bool, is_in_layer: bool);
 }
