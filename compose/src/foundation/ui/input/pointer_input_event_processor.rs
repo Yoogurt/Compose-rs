@@ -6,6 +6,7 @@ use log::LevelFilter::Off;
 use crate::foundation::geometry::Offset;
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::ui::hit_test_result::HitTestResult;
+use crate::foundation::ui::input::hit_path_tracker::HitPathTracker;
 use crate::foundation::ui::input::internal_pointer_event::InternalPointerEvent;
 use crate::foundation::ui::input::pointer_event::{PointerId, PointerInputChange};
 use crate::foundation::ui::input::pointer_event_type::PointerInputEvent;
@@ -22,6 +23,7 @@ pub(crate) struct PointerInputEventProcessor {
     is_processing: bool,
     pointer_input_change_event_producer: PointerInputChangeEventProducer,
     hit_result: HitTestResult,
+    hit_path_tracker: HitPathTracker,
 }
 
 struct PointerInputData {
@@ -93,11 +95,14 @@ impl PointerInputChangeEventProducer {
 
 impl PointerInputEventProcessor {
     pub(crate) fn new(root: Rc<RefCell<LayoutNode>>) -> PointerInputEventProcessor {
+        let coordinates = root.borrow().get_coodinates();
+
         PointerInputEventProcessor {
             root,
             is_processing: false,
             pointer_input_change_event_producer: PointerInputChangeEventProducer::default(),
             hit_result: HitTestResult::new(),
+            hit_path_tracker: HitPathTracker::new(coordinates),
         }
     }
 
@@ -119,6 +124,7 @@ impl PointerInputEventProcessor {
                 let hit_test_delegate = self.root.borrow().layout_node_hit_test_delegate.clone();
                 hit_test_delegate.borrow().hit_test(pointer_input_change.position, &mut self.hit_result, is_touch_event, false);
                 if self.hit_result.is_not_empty() {
+                    self.hit_path_tracker.add_hit_path(pointer_input_change.id, self.hit_result.collect_node());
                     self.hit_result.clear();
                 }
             }

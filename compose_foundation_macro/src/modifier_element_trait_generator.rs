@@ -1,5 +1,5 @@
 use proc_macro2::TokenStream;
-use quote::quote;
+use quote::{quote, TokenStreamExt};
 use syn::Ident;
 
 pub(crate) fn generate_modifier_element(struct_ident: &Ident) -> TokenStream {
@@ -36,13 +36,16 @@ pub(crate) fn generate_delegate_type(struct_ident: &Ident) -> TokenStream {
 }
 
 pub(crate) fn generate_node_patch(struct_ident: &Ident,
-                                  node_patch: Ident) -> TokenStream {
-    dbg!(format!("node_path_impl {:?} is impl for {}", node_patch, struct_ident.to_string()).as_str());
+                                  node_patchs: Vec<Ident>) -> TokenStream {
+    dbg!(format!("node_path_impl {:?} is impl for {}", node_patchs, struct_ident.to_string()).as_str());
+
+    let mut node_patch_token_stream = TokenStream::default();
+    node_patch_token_stream.append_separated(node_patchs.into_iter().map(|node_patch| quote!({ crate::foundation::modifier::NodeKind::#node_patch })), quote!({ | }));
 
     (quote! {
             impl crate::foundation::modifier::NodeKindPatch for #struct_ident {
-                fn get_node_kind(&self) -> crate::foundation::modifier::NodeKind {
-                    crate::foundation::modifier::NodeKind::#node_patch
+                fn get_node_kind(&self) -> u32 {
+                    (#node_patch_token_stream).into()
                 }
             }
     }).into()

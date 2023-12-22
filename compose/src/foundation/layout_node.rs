@@ -6,6 +6,7 @@ use std::sync::atomic::AtomicU32;
 use crate::foundation::compose_node_lifecycle_callback::ComposeNodeLifecycleCallback;
 
 use crate::foundation::geometry::{Density, Offset};
+use crate::foundation::layout::layout_coordinates::LayoutCoordinates;
 use crate::foundation::layout_direction::LayoutDirection;
 use crate::foundation::layout_node_container::LayoutNodeContainer;
 use crate::foundation::layout_node_draw_delegate::LayoutNodeDrawDelegate;
@@ -43,6 +44,7 @@ pub(crate) struct LayoutNode {
     pub(crate) layout_direction: LayoutDirection,
 
     pub(crate) owner: Option<Weak<RefCell<dyn Owner>>>,
+    pub(crate) deactivated: bool,
     pub(crate) identify: u32,
 
     pub(crate) view_configuration: ViewConfiguration,
@@ -71,6 +73,7 @@ impl LayoutNode {
 
             view_configuration: ViewConfiguration::default(),
             owner: None,
+            deactivated: false,
             weak_self: Weak::default(),
             identify: IDENTIFY.with(|identity| identity.fetch_add(1, std::sync::atomic::Ordering::SeqCst)),
         };
@@ -124,6 +127,10 @@ impl LayoutNode {
         self.for_each_child(|child| {
             child.borrow_mut().attach(Some(self), owner.clone());
         });
+
+        if !self.deactivated {
+            self.node_chain.borrow_mut().mark_as_attached();
+        }
 
         self.layout_node_layout_delegate.borrow().update_parent_data_with_parent(parent);
     }
@@ -212,6 +219,10 @@ impl LayoutNode {
 
     pub(crate) fn get_outer_coordinator(&self) -> Rc<RefCell<dyn NodeCoordinator>> {
         self.node_chain.borrow().outer_coordinator.clone()
+    }
+
+    pub(crate) fn get_coodinates(&self) -> Rc<RefCell<dyn LayoutCoordinates>> {
+        self.get_inner_coordinator() as Rc<RefCell<dyn LayoutCoordinates>>
     }
 
     pub(crate) fn get_inner_coordinator(&self) -> Rc<RefCell<dyn NodeCoordinator>> {
@@ -323,9 +334,13 @@ impl LayoutNode {
 }
 
 impl ComposeNodeLifecycleCallback for LayoutNode {
-    fn on_reuse(&mut self) {}
+    fn on_reuse(&mut self) {
+        self.deactivated = false;
+    }
 
-    fn on_deactivate(&mut self) {}
+    fn on_deactivate(&mut self) {
+        self.deactivated = true;
+    }
 
     fn on_release(&mut self) {}
 }

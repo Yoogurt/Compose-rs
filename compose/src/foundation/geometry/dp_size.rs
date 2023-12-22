@@ -1,4 +1,4 @@
-use crate::foundation::geometry::Dp;
+use crate::foundation::geometry::{Density, Dp, Size};
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct DpSize {
@@ -17,5 +17,9 @@ impl DpSize {
             width,
             height,
         }
+    }
+
+    pub fn to_size(&self, density: Density) -> Size<f32> {
+        Size::<f32>::new(self.width.to_px(density), self.height.to_px(density))
     }
 }

@@ -1,5 +1,4 @@
 #![allow(warnings)]
-#![feature(async_closure)]
 use std::default::{Default as STDefault};
 use std::hash::Hash;
 

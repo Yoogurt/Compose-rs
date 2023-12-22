@@ -189,7 +189,7 @@ pub fn ModifierElement(struct_token_stream: TokenStream) -> TokenStream {
 
         if generate {
             let node_patch_ident = Ident::new(attribute.node_patch, Span::call_site().into());
-            generate_node_patch(&struct_ident, node_patch_ident).to_tokens(&mut token_stream);
+            generate_node_patch(&struct_ident, vec![node_patch_ident]).to_tokens(&mut token_stream);
         }
 
         generate_converter(&struct_ident, converter_ident, as_ref, as_mut, ret_ident, generate).to_tokens(&mut token_stream)

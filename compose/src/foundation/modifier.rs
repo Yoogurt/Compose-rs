@@ -41,6 +41,23 @@ impl NodeKind {
     }
 }
 
+pub(crate) fn calculate_node_kind_set_from(node: impl ModifierNode) {
+    // if node.get_kind_set() {  }
+}
+
+pub(crate) fn calculate_node_kind_set_from_includeing_delegates(node: &Rc<RefCell<dyn ModifierNode>>) -> u32 {
+    let node = node.borrow();
+
+    match node.get_node() {
+        DelegatableKind::This => {
+            node.get_node_kind()
+        }
+        DelegatableKind::Other(other) => {
+            todo!()
+        }
+    }
+}
+
 impl From<NodeKind> for u32 {
     fn from(value: NodeKind) -> Self {
         value as u32
@@ -65,20 +82,18 @@ impl BitOr<u32> for NodeKind {
 macro_rules! impl_node_kind_any {
     ($tt:tt) => {
         impl NodeKindPatch for $tt {
-            fn get_node_kind(&self) -> NodeKind {
-                NodeKind::Any
+            fn get_node_kind(&self) -> u32 {
+                NodeKind::Any as u32
             }
         }
     };
 }
 
 pub trait NodeKindPatch {
-    fn get_node_kind(&self) -> NodeKind;
-}
+    fn get_node_kind(&self) -> u32;
 
-pub trait NodeKindParentData: NodeKindPatch {
-    fn get_node_kind(&self) -> NodeKind {
-        NodeKind::ParentData
+    fn is_node_kind(&self, node_kind: NodeKind) -> bool {
+        (node_kind & self.get_node_kind()) != 0
     }
 }
 
@@ -104,6 +119,16 @@ pub(crate) trait ModifierNode: ModifierElement + DelegatableNode {
     fn get_aggregate_child_kind_set(&self) -> u32;
 
     fn set_aggregate_child_kind_set(&mut self, child_kind_set: u32);
+
+    fn set_kind_set(&mut self, kind_set: u32);
+
+    fn get_kind_set(&self) -> u32;
+
+    fn is_attach(&self) -> bool;
+
+    fn mark_as_attached(&mut self);
+
+    fn mark_as_detached(&mut self);
 }
 
 #[Leak]
@@ -113,10 +138,12 @@ pub(crate) struct ModifierNodeImpl {
     child: Option<Rc<RefCell<dyn ModifierNode>>>,
     coordinator: Option<Weak<RefCell<dyn NodeCoordinator>>>,
     aggregate_child_kind_set: u32,
+    kind_set: u32,
+    is_attach: bool
 }
 
 impl NodeKindPatch for ModifierNodeImpl {
-    fn get_node_kind(&self) -> NodeKind {
+    fn get_node_kind(&self) -> u32 {
         todo!("implement get node kind by yourself")
     }
 }
@@ -152,6 +179,26 @@ impl ModifierNode for ModifierNodeImpl {
 
     fn set_aggregate_child_kind_set(&mut self, child_kind_set: u32) {
         self.aggregate_child_kind_set = child_kind_set;
+    }
+
+    fn get_kind_set(&self) -> u32 {
+        self.kind_set
+    }
+
+    fn set_kind_set(&mut self, kind_set: u32) {
+        self.kind_set = kind_set;
+    }
+
+    fn is_attach(&self) -> bool {
+        self.is_attach
+    }
+
+    fn mark_as_attached(&mut self) {
+        self.is_attach = true;
+    }
+
+    fn mark_as_detached(&mut self) {
+        self.is_attach = false;
     }
 }
 
@@ -387,7 +434,7 @@ pub(crate) trait ModifierNodeExtension {
 }
 
 impl<T> ModifierNodeExtension for T where T: ?Sized + ModifierNode {
-    fn visit_local_descendants(&self, mask: u32, block: impl FnMut(&dyn ModifierElement)) {
+    fn visit_local_descendants(&self, mask: u32, mut block: impl FnMut(&dyn ModifierElement)) {
         let aggregate_child_kind_set = self.get_aggregate_child_kind_set();
         if aggregate_child_kind_set & mask == 0 {
             return;
@@ -407,7 +454,7 @@ impl<T> ModifierNodeExtension for T where T: ?Sized + ModifierNode {
     fn dispatch_for_kind(&self, kind: NodeKind, mut block: impl FnMut(&dyn ModifierElement)) {
         let node = self.get_node_kind();
 
-        if node == kind {
+        if (kind & node) != 0 {
             block(self.as_modifier_element());
         }
     }
@@ -415,7 +462,7 @@ impl<T> ModifierNodeExtension for T where T: ?Sized + ModifierNode {
     fn dispatch_for_kind_mut(&mut self, kind: NodeKind, mut block: impl FnMut(&mut dyn ModifierElement)) {
         let node = self.get_node_kind();
 
-        if node == kind {
+        if (kind & node) != 0 {
             block(self.as_modifier_element_mut());
         }
     }

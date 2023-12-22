@@ -45,7 +45,7 @@ use super::placeable::Placeable;
 #[Leak]
 #[derive(Delegate, AnyConverter)]
 pub struct NodeCoordinatorImpl {
-    #[to(Placeable, Measured, MeasureScope, LookaheadCapablePlaceable)]
+    #[to(Placeable, MeasureScope, LookaheadCapablePlaceable)]
     pub(crate) look_ahead_capable_placeable_impl: LookaheadCapablePlaceableImpl,
     pub(crate) wrapped: Option<Rc<RefCell<dyn NodeCoordinator>>>,
     pub(crate) wrapped_by: Option<Weak<RefCell<dyn NodeCoordinator>>>,
@@ -70,6 +70,16 @@ pub struct NodeCoordinatorImpl {
     vtable_raw: Option<*mut dyn NodeCoordinator>,
 }
 
+impl Measured for NodeCoordinatorImpl {
+    fn get_measured_width(&self) -> usize {
+        self.get_measured_size().width
+    }
+
+    fn get_measured_height(&self) -> usize {
+        self.get_measured_size().height
+    }
+}
+
 impl Debug for NodeCoordinatorImpl {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("NodeCoordinatorImpl").field("wrapped", &self.wrapped)
@@ -86,7 +96,7 @@ impl ParentDataGenerator for NodeCoordinatorImpl {
         let density = self.get_density();
 
         self.node_chain.upgrade().unwrap().borrow_mut().tail_to_head(|node| {
-            if node.get_node_kind() == NodeKind::ParentData {
+            if node.is_node_kind(NodeKind::ParentData) {
                 node.dispatch_for_kind_mut(NodeKind::ParentData, |it| {
                     data = (it.as_parent_data_modifier_node_mut().unwrap().modify_parent_data(density, data.take()));
                 });
@@ -151,8 +161,51 @@ impl NodeCoordinatorImpl {
                 self.hit_test_child(hit_test_source, pointer_position, hit_test_result, is_touch_event, is_in_layer)
             }
             Some(this) => {
-                todo!()
+                hit_test_result.hit(&this, is_in_layer, |hit_test_result| {
+                    let node = Self::next_until(this.clone(), hit_test_source.entity_type(), NodeKind::Layout);
+                    self.hit(node, hit_test_source, pointer_position, hit_test_result, is_touch_event, is_in_layer)
+                });
             }
+        }
+    }
+
+    fn next_until(node: Rc<RefCell<dyn ModifierNode>>, node_kind: NodeKind, stop_type: NodeKind) -> Option<Rc<RefCell<dyn ModifierNode>>> {
+        let child = node.borrow().get_child();
+        let Some(child) = child else {
+            return None;
+        };
+
+        if child.borrow().get_aggregate_child_kind_set() & node_kind.mask() == 0 {
+            return None;
+        }
+
+        let mut next = Some(child.clone());
+        while let Some(ref next_ref) = next {
+            let next_ref = next_ref.borrow();
+            let kind_set = next_ref.get_kind_set();
+            if kind_set & stop_type.mask() != 0 {
+                return None
+            }
+
+            if node_kind & kind_set != 0  {
+                drop(next_ref);
+                return next
+            }
+
+            let next_child = next_ref.get_child();
+            drop(next_ref);
+            next = next_child;
+        }
+
+        None
+    }
+
+    fn hit_near(&self, node: Option<Rc<RefCell<dyn ModifierNode>>>, hit_test_source: &dyn HitTestSource, pointer_position: Offset<f32>, hit_test_result: &mut HitTestResult, is_touch_event: bool, is_in_layer: bool, distance_from_edge: f32) {
+        match node {
+            None => {
+                // self.hit_test_child(hit_test_source, hit_test_result, pointer_position, is_touch_event, is_in_layer)
+            }
+            Some(node) => {}
         }
     }
 }
@@ -287,23 +340,41 @@ impl HitTestTrait for NodeCoordinatorImpl {
                 is_in_layer: bool) {
         let head = self.head(hit_test_source.entity_type());
 
-        if !self.within_layer_bounds(pointer_position) {} else if head.is_none() {
-            self.vtable_raw.as_ref().then(|vtable| unsafe {
-                vtable.as_ref().unwrap().hit_test_child(hit_test_source, pointer_position, hit_test_result, is_touch_event, is_in_layer)
-            });
+        if !self.within_layer_bounds(pointer_position) {
+            let density;
+            let minimum_touch_target_size;
+            {
+                let layout_node = self.layout_node.upgrade().unwrap();
+                let layout_node_ref = layout_node.borrow();
+                density = layout_node_ref.get_density();
+                minimum_touch_target_size = layout_node_ref.view_configuration.minimumTouchTargetSize.to_size(density);
+            }
+
+            let distance_from_edge = self.distance_in_minimum_touch_target(pointer_position, minimum_touch_target_size);
+
+            if distance_from_edge.is_finite()
+                && hit_test_result.is_hit_in_minimum_touch_target_better(distance_from_edge, false) {
+                
+            }
+        } else if head.is_none() {
+            self.hit_test_child(hit_test_source, pointer_position, hit_test_result, is_touch_event, is_in_layer)
         } else if self.is_pointer_in_bounds(pointer_position) {
             self.hit(head, hit_test_source, pointer_position, hit_test_result, is_touch_event, is_in_layer);
+        } else {
         }
     }
 
     fn should_share_pointer_input_with_siblings(&self) -> bool {
-        self.head_node(NodeKind::PointerInput).map_or(false, |start| {
-            false
-        })
+        // self.head_node(NodeKind::PointerInput).map_or(false, |start| {
+        //     false
+        // })
+        false
     }
 
     fn hit_test_child(&self, hit_test_source: &dyn HitTestSource, pointer_position: Offset<f32>, hit_test_result: &mut HitTestResult, is_touch_event: bool, is_in_layer: bool) {
-        todo!()
+        self.vtable_raw.as_ref().then(|vtable| unsafe {
+            vtable.as_ref().unwrap().hit_test_child(hit_test_source, pointer_position, hit_test_result, is_touch_event, is_in_layer)
+        });
     }
 }
 
@@ -520,7 +591,7 @@ impl NodeCoordinatorImpl {
         let mut node = self.head_node(include_tail);
 
         while let Some(visit) = node {
-            if visit.borrow().get_node_kind() == node_kind {
+            if visit.borrow().is_node_kind(node_kind) {
                 return Some(visit);
             }
 

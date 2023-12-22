@@ -153,11 +153,14 @@ impl HitTestTrait for InnerNodeCoordinator {
                     let continue_hit_test: bool;
                     if !was_hit {
                         continue_hit_test = true;
+                    } else if child.borrow().get_outer_coordinator().borrow().should_share_pointer_input_with_siblings() {
+                        hit_test_result.accept_hits();
+                        continue_hit_test = true;
                     } else {
                         continue_hit_test = false;
                     }
 
-                    false
+                    !continue_hit_test
                 });
             });
         }

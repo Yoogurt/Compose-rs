@@ -11,7 +11,7 @@ use crate::foundation::layout_modifier_node_coordinator::LayoutModifierNodeCoord
 use crate::foundation::layout_node::LayoutNode;
 use crate::foundation::layout_node_container::LayoutNodeContainer;
 use crate::foundation::measure_pass_delegate::MeasurePassDelegate;
-use crate::foundation::modifier::{ModifierElement, ModifierInternal, ModifierNode};
+use crate::foundation::modifier::{calculate_node_kind_set_from_includeing_delegates, ModifierElement, ModifierInternal, ModifierNode};
 use crate::foundation::modifier::{ModifierNodeImpl, NodeKind, NodeKindPatch};
 use crate::foundation::modifier_node::LayoutModifierNode;
 use crate::foundation::node::BackwardsCompatNode;
@@ -148,7 +148,12 @@ impl NodeChain {
         parent: Rc<RefCell<dyn ModifierNode>>,
     ) -> Rc<RefCell<dyn ModifierNode>> {
         let node = match &element.inner {
-            ModifierInternal::ModifierNodeElement { name, create, update } => create(),
+            ModifierInternal::ModifierNodeElement { name, create, update } => {
+                let modifier_node = create();
+                let kind_set = calculate_node_kind_set_from_includeing_delegates(&modifier_node);
+                modifier_node.borrow_mut().set_kind_set(kind_set);
+                modifier_node
+            }
             _ => {
                 todo!()
             }
@@ -166,6 +171,14 @@ impl NodeChain {
         while let Some(node_rc) = node {
             block(node_rc.borrow_mut().deref_mut());
             node = node_rc.borrow().get_parent();
+        }
+    }
+
+    pub(crate) fn head_to_tail(&self, mut block: impl FnMut(&mut dyn ModifierNode)) {
+        let mut node = Some(self.head.clone());
+        while let Some(node_rc) = node {
+            block(node_rc.borrow_mut().deref_mut());
+            node = node_rc.borrow().get_child();
         }
     }
 
@@ -196,12 +209,11 @@ impl NodeChain {
         mut node: &'b mut RefMut<'a, dyn ModifierNode>,
     ) -> Option<&'b mut dyn LayoutModifierNode> where 'a: 'b {
         let node_kind = node.get_node_kind();
-        match node_kind {
-            NodeKind::Layout => node.as_layout_modifier_node_mut(),
-            _ => {
-                println!("unknown type: {:?}", node_kind);
-                None
-            }
+        if node.is_node_kind(NodeKind::Layout) {
+            node.as_layout_modifier_node_mut()
+        } else {
+            println!("unknown type: {:?}", node_kind);
+            None
         }
     }
 
@@ -323,10 +335,11 @@ impl NodeChain {
         let mut aggregate_child_kind_set = 0;
         while let Some(node_ref) = node {
             if node_ref.as_ptr() == self.sentine_head.as_ptr() {
-                break
+                break;
             }
+            dbg!(&node_ref);
 
-            let node_ref = node_ref.borrow_mut();
+            let mut node_ref = node_ref.borrow_mut();
             aggregate_child_kind_set = node_ref.get_node_kind() | aggregate_child_kind_set;
             node_ref.set_aggregate_child_kind_set(aggregate_child_kind_set);
 
@@ -356,5 +369,17 @@ impl NodeChain {
             coordinator = wrapped;
             coordinator_ptr = coordinator.as_ptr() as *const ();
         }
+    }
+
+    pub(crate) fn mark_as_attached(&mut self) {
+        self.tail_to_head(|node| {
+            node.mark_as_attached();
+        });
+    }
+
+    pub(crate) fn mark_as_detached(&mut self){
+        self.tail_to_head(|node| {
+            node.mark_as_detached();
+        });
     }
 }

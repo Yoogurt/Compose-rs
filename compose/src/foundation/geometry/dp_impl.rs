@@ -68,6 +68,10 @@ impl Dp {
         (self.value * density.density).round() as i32
     }
 
+    pub fn to_px(&self, density: Density) -> f32 {
+        (self.value * density.density) as f32
+    }
+
     pub fn is_infinite(&self) -> bool {
         self.value == f64::MAX
     }

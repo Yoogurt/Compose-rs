@@ -46,8 +46,26 @@ impl HitTestResult {
         }
     }
 
+    pub(crate) fn collect_node(&self) -> Vec<Rc<RefCell<dyn ModifierNode>>> {
+        self.values.values().cloned().collect::<Vec<_>>()
+    }
+
     pub(crate) fn accept_hits(&mut self) {
         self.hit_depth = self.size as i32 - 1;
+    }
+
+    pub(crate) fn is_hit_in_minimum_touch_target_better(&self, distance_from_edge: f32,  is_in_layer: bool) -> bool {
+        if self.hit_depth == self.size as i32 - 1 {
+            return true;
+        }
+
+        let distance_and_layer = DistanceInLayer {
+            distance: distance_from_edge,
+            is_in_layer: is_in_layer
+        };
+
+        let best_distance = self.find_best_hit_distance();
+        best_distance > distance_and_layer
     }
 
     pub(crate) fn sibling_hits(&mut self, mut block: impl FnMut(&mut Self)) {
@@ -56,7 +74,9 @@ impl HitTestResult {
         self.hit_depth = depth;
     }
 
-    pub(crate) fn hit(&mut self, node: &Rc<RefCell<dyn ModifierNode>>, is_in_layer: bool, child_hit_test: impl Fn()) {}
+    pub(crate) fn hit(&mut self, node: &Rc<RefCell<dyn ModifierNode>>, is_in_layer: bool, child_hit_test: impl Fn(&mut HitTestResult)) {
+        self.hit_in_minimum_touch_target(node, -1f32, is_in_layer, child_hit_test);
+    }
 
     fn resize_to_hit_depth(&mut self) {
         self.size = (self.hit_depth + 1) as usize;
@@ -64,7 +84,7 @@ impl HitTestResult {
 
     fn hit_in_minimum_touch_target(&mut self, node: &Rc<RefCell<dyn ModifierNode>>,
                                    distance_from_edge: f32,
-                                   is_in_layer: bool, child_hit_test: impl Fn()) {
+                                   is_in_layer: bool, child_hit_test: impl Fn(&mut HitTestResult)) {
         let start_depth = self.hit_depth;
         self.hit_depth += 1;
         self.values.insert(self.hit_depth as usize, node.clone());
@@ -74,7 +94,7 @@ impl HitTestResult {
         });
 
         self.resize_to_hit_depth();
-        child_hit_test();
+        child_hit_test(self);
         self.hit_depth = start_depth;
     }
 
